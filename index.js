@@ -1,5 +1,11 @@
-console.log("hello, world");
+var codius = process.binding('async');
+var message = {
+	type: 'api',
+	api: 'fs',
+	method: 'test',
+	data: [ 'sandbox.js' ]
+};
 
-setInterval(function () {
-	console.log("hello, world");
-}, 10000);
+codius.postMessage(JSON.stringify(message), function(error, result) {
+	console.log(error, result);
+});
