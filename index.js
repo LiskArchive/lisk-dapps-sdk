@@ -1,11 +1,28 @@
-var codius = process.binding('async');
-var message = {
-	type: 'api',
-	api: 'fs',
-	method: 'test',
-	data: [ 'sandbox.js' ]
-};
+/*var codius = process.binding('async'),
+	routes = require('./api/routes.js'),
+	jayson = require('jayson'),
+	config = require('./config.json');
 
-codius.postMessage(JSON.stringify(message), function(error, result) {
-	console.log(error, result);
+var server = jayson.server({
+	api: function(route, method, body, callback) {
+		var router = routes.filter(function (r) {
+			return (r.route == route && r.method == method);
+		});
+
+		router(body, function (result) {
+			return callback(null, result);
+		});
+	}
 });
+
+console.log(config.jayson_port)
+server.http().listen(config.jayson_port);
+console.log("launched");
+*/
+
+var http = require('http');
+
+var server = http.createServer(function(req, res){
+});
+
+server.listen(8000);
