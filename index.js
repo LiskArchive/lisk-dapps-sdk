@@ -12,7 +12,7 @@ var server = jayson.server({
 		if (!router) {
 			return callback("Router not found");
 		}
-		
+
 		router.router(body, function (result) {
 			callback(null, result);
 		});
