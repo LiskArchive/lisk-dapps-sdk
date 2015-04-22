@@ -6,6 +6,6 @@ var message = {
 	data: [ 'sandbox.js' ]
 };
 
-codius.postMessage(JSON.stringify(message), function(error, result) {
+codius.postMessage(JSON.stringify(message), function (error, result) {
 	console.log(error, result);
 });
