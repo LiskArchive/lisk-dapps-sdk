@@ -1,11 +1,5 @@
-var codius = process.binding('async');
-var message = {
-	type: 'api',
-	api: 'fs',
-	method: 'test',
-	data: [ 'sandbox.js' ]
-};
+var codius = process.binding('async'),
+	routes = require('./api/routes.js'),
+	config = require('./config.json');
 
-codius.postMessage(JSON.stringify(message), function (error, result) {
-	console.log(error, result);
-});
+console.log("Hello, world!");
