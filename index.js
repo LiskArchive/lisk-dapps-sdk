@@ -2,4 +2,6 @@ var codius = process.binding('async'),
 	routes = require('./api/routes.js'),
 	config = require('./config.json');
 
-console.log("Hello, world!");
+setInterval(function () {
+	console.log("dapp working");
+}, 3000);
