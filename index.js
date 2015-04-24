@@ -2,15 +2,20 @@ var codius = process.binding('async'),
 	routes = require('./api/routes.js'),
 	config = require('./config.json');
 
-var stdin = process.openStdin();
+console.log('started');
 
-var data = "";
-
-stdin.on('data', function(chunk) {
-	data += chunk;
-	console.log("data");
+codius.onMessage(function (msg) {
+	codius.postMessage({
+		type: 'api',
+		api: 'fs',
+		method: 'readFile',
+		data: [ 'sandbox.js' ]
+	}, function (err) {
+	});
 });
 
-stdin.on('end', function() {
-	console.log("DATA:\n" + data + "\nEND DATA");
-});
+setInterval(function () {
+	console.log("working...");
+}, 1000);
+
+console.log("ended");
