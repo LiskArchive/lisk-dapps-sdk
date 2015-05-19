@@ -1,23 +1,17 @@
-var codius = process.binding('async'),
-	routes = require('./api/routes.js'),
-	jayson = require('jayson'),
-	config = require('./config.json');
+var sandbox = process.binding('sandbox');
+var router = require('./api/routes.js');
 
-var server = jayson.server({
-	api: function (path, method, body, callback) {
-		var router = routes.filter(function (r) {
-			return (r.path == path && r.method == method);
-		});
-
-		if (!router) {
-			return callback("Router not found");
+sandbox.onMessage(function (message) {
+	var handler;
+	router.forEach(function (route) {
+		if (route.method == message.method && route.path == message.path) {
+			handler = route.handler;
 		}
-
-		router.router(body, function (result) {
-			callback(null, result);
-		});
-	}
+	});
+	handler && handler(message.query, function (err, response) {
+		if (err){
+			return console.log(err)
+		}
+		sandbox.sendMessage(response);
+	});
 });
-
-server.http().listen(config.jayson_port);
-console.log("launched");

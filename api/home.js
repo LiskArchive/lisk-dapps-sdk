@@ -1,6 +1,5 @@
-module.exports = function (body, cb) {
-	return cb({
-		success: true,
-		message: "Hello, world!"
+module.exports = function (query, cb) {
+	cb(null, {
+		test: "Hello, world!"
 	});
 }

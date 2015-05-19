@@ -1,3 +1,3 @@
 module.exports = [
-	{path: "/", method: "get", router : require("./home.js") }
+	{path: "/", method: "get", handler: require("./home.js")}
 ];
