@@ -1,7 +1,14 @@
 var sandbox = process.binding('sandbox');
+
+sandbox.onMessage(function(message, cb){
+	cb(null, {"test": "response"});
+});
+
+/*
 var router = require('./api/routes.js');
 
-sandbox.onMessage(function (message) {
+sandbox.onMessage(function (message, cb) {
+	console.log(message)
 	var handler;
 	router.forEach(function (route) {
 		if (route.method == message.method && route.path == message.path) {
@@ -12,6 +19,7 @@ sandbox.onMessage(function (message) {
 		if (err){
 			return console.log(err)
 		}
-		sandbox.sendMessage(response);
+		cb(null, response);
 	});
 });
+*/
