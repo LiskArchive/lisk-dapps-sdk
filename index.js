@@ -2,6 +2,7 @@ var sandbox = process.binding('sandbox');
 
 var router = require('./api/routes.js');
 
+/*
 sandbox.onMessage(function (message, cb) {
 	var handler;
 	router.forEach(function (route) {
@@ -20,3 +21,4 @@ sandbox.onMessage(function (message, cb) {
 		cb("api not found");
 	}
 });
+*/
