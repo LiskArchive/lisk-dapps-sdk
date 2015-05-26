@@ -1,7 +1,6 @@
 {
 	"tables": [
 		{
-			"type": "create",
 			"table": "game",
 			"tableFields": [
 				{
