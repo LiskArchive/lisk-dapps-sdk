@@ -1,4 +1,13 @@
 {
+	"master_node": {
+		"secret": ""
+	},
+	"peers": [
+		{
+			"ip": "127.0.0.1",
+			"port": 4060
+		}
+	],
 	"db": [
 		{
 			"table": "test",

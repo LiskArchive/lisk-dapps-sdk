@@ -1,6 +1,5 @@
 var sandbox = process.binding('sandbox');
-
-var router = require('./api/routes.js');
+var router = require('./routes.json');
 
 sandbox.onMessage(function (message, cb) {
 	var handler;
@@ -9,6 +8,7 @@ sandbox.onMessage(function (message, cb) {
 			handler = require(route.handler);
 		}
 	});
+
 	if (handler) {
 		handler(message.query, function (err, response) {
 			if (err) {

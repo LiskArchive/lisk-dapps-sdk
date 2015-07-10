@@ -1,0 +1,35 @@
+{
+	"tables": [
+		{
+			"table": "game",
+			"tableFields": [
+				{
+					"name": "firstPlayerId",
+					"type": "String",
+					"length": 32
+				},
+				{
+					"name": "secondPlayerId",
+					"type": "String",
+					"length": 32
+				},
+				{
+					"name": "score",
+					"type": "Number"
+				}
+			]
+		}
+	],
+	"indexes": [
+		{
+			"name": "first_player_id",
+			"table": "game",
+			"indexOn": "firstPlayerId"
+		},
+		{
+			"name": "second_player_id",
+			"table": "game",
+			"indexOn": "secondPlayerId"
+		}
+	]
+}
