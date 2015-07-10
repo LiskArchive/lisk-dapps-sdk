@@ -1,1 +1,19 @@
-{}
+{
+	"db": [
+		{
+			"table": "test",
+			"type": "table",
+			"tableFields": [
+				{
+					"name": "id",
+					"type": "String",
+					"length": 21
+				},
+				{
+					"name": "t1",
+					"type": "BigInt"
+				}
+			]
+		}
+	]
+}
