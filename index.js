@@ -1,5 +1,5 @@
 var sandbox = process.binding('sandbox');
-var router = require('./rotes.json');
+var router = require('./routes.json');
 
 sandbox.onMessage(function (message, cb) {
 	var handler;
