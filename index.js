@@ -1,8 +1,6 @@
 var sandbox = process.binding('sandbox');
+var router = require('./rotes.json');
 
-var router = require('./api/routes.js');
-
-/*
 sandbox.onMessage(function (message, cb) {
 	var handler;
 	router.forEach(function (route) {
@@ -10,6 +8,7 @@ sandbox.onMessage(function (message, cb) {
 			handler = require(route.handler);
 		}
 	});
+
 	if (handler) {
 		handler(message.query, function (err, response) {
 			if (err) {
@@ -21,4 +20,3 @@ sandbox.onMessage(function (message, cb) {
 		cb("api not found");
 	}
 });
-*/
