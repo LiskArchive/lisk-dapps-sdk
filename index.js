@@ -1,5 +1,11 @@
 var sandbox = process.binding('sandbox');
 var router = require('./routes.json');
+var crypti = require('./lib/crypti.js');
+var modules = {};
+
+crypti.forEach(function (module) {
+	modules.push(new module(sandbox));
+});
 
 sandbox.onMessage(function (message, cb) {
 	var handler;
@@ -10,7 +16,8 @@ sandbox.onMessage(function (message, cb) {
 	});
 
 	if (handler) {
-		handler(message.query, function (err, response) {
+		var query = (message.method == 'get')? req.query : req.body;
+		handler(query, modules, function (err, response) {
 			if (err) {
 				return console.log(err)
 			}
