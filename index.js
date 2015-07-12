@@ -3,9 +3,9 @@ var router = require('./routes.json');
 var crypti = require('./lib/crypti.js');
 var modules = {};
 
-crypti.forEach(function (module) {
-	modules.push(new module(sandbox));
-});
+for (var i in crypti) {
+	modules[i] = new crypti[i](sandbox);
+}
 
 sandbox.onMessage(function (message, cb) {
 	var handler;
@@ -16,8 +16,7 @@ sandbox.onMessage(function (message, cb) {
 	});
 
 	if (handler) {
-		var query = (message.method == 'get')? req.query : req.body;
-		handler(query, modules, function (err, response) {
+		handler(message.query, modules, function (err, response) {
 			if (err) {
 				return console.log(err)
 			}

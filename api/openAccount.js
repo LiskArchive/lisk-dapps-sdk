@@ -1,6 +1,9 @@
 module.exports = function (body, crypti, cb) {
-
-	cb(null, {
-		test: "Hello, world!"
+	crypti.accounts.open(body.secret, function (err, account) {
+		if (err) {
+			return cb(null, {err: err});
+		} else {
+			return cb(null, {account: account});
+		}
 	});
 }

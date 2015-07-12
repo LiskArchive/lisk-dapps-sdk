@@ -1,3 +1,4 @@
 [
-  {"path": "/", "method": "get", "handler": "./api/home.js"}
+  {"path": "/", "method": "get", "handler": "./api/home.js"},
+  {"path": "/openAccount", "method": "post", "handler": "./api/openAccount.js"}
 ]
