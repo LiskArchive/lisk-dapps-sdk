@@ -1,8 +1,9 @@
 var sandbox = process.binding('sandbox');
 var router = require('./routes.json');
-var background = require('./api/background.js');
 
-background.onRun(sandbox);
+for (var i in crypti) {
+	modules[i] = new crypti[i](sandbox);
+}
 
 sandbox.onMessage(function (message, cb) {
 	var handler;
@@ -13,7 +14,7 @@ sandbox.onMessage(function (message, cb) {
 	});
 
 	if (handler) {
-		handler(message.query, function (err, response) {
+		handler(message.query, modules, function (err, response) {
 			if (err) {
 				return console.log(err)
 			}
