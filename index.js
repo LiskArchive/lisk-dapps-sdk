@@ -1,5 +1,8 @@
 var sandbox = process.binding('sandbox');
 var router = require('./routes.json');
+var background = require('./api/background.js');
+
+background.onRun(sandbox);
 
 sandbox.onMessage(function (message, cb) {
 	var handler;
