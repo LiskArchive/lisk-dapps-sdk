@@ -1,5 +1,7 @@
 var sandbox = process.binding('sandbox');
 var router = require('./routes.json');
+var crypti = require('./lib/crypti.js');
+var modules = {};
 
 for (var i in crypti) {
 	modules[i] = new crypti[i](sandbox);

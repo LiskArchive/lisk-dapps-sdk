@@ -1,5 +1,6 @@
 [
   {"path": "/", "method": "get", "handler": "./api/home.js"},
+  {"path": "/message", "method": "post", "handler": "./api/message.js"},
   {"path": "/openAccount", "method": "post", "handler": "./api/openAccount.js"},
   {"path": "/encrypt", "method": "post", "handler": "./api/encrypt.js"},
   {"path": "/decrypt", "method": "post", "handler": "./api/decrypt.js"}
