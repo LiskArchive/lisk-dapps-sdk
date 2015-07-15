@@ -1,8 +1,4 @@
-module.exports = function (query, cb) {
-	setTimeout(function () {
-		cb(null, {
-			msg: "Incoming message",
-			body: query
-		});
-	}, 100);
+module.exports = function (query, modules, cb) {
+	modules.background.onMessage(query);
+	cb();
 }

@@ -7,6 +7,11 @@ for (var i in crypti) {
 	modules[i] = new crypti[i](sandbox);
 }
 
+for (var i in modules) {
+	modules[i].onBind && modules[i].onBind(modules);
+}
+
+
 sandbox.onMessage(function (message, cb) {
 	var handler;
 	router.forEach(function (route) {
