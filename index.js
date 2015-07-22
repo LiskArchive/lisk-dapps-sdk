@@ -62,9 +62,14 @@ async.auto({
 
 		Object.keys(lib).forEach(function (name) {
 			tasks[name] = function (cb) {
-				var obj = new lib[name](cb, scope);
-
-				modules.push(obj);
+				var d = require('domain').create();
+				d.on('error', function (err) {
+					console.log('domain ' + name, {message: err.message, stack: err.stack});
+				});
+				d.run(function () {
+					var obj = new lib[name](cb, scope);
+					modules.push(obj);
+				});
 			}
 		})
 		async.parallel(tasks, function (err, results) {
