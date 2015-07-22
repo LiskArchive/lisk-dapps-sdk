@@ -1,4 +1,4 @@
-module.exports = function (body, modules, cb) {
+module.exports = function (body, library, modules, cb) {
 	modules.accounts.open(body.secret, function (err, account) {
 		if (err) {
 			return cb(null, {error: err});

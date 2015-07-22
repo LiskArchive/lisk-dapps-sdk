@@ -1,4 +1,4 @@
-module.exports = function (body, modules, cb) {
+module.exports = function (body, library, modules, cb) {
 	modules.crypto.decrypt(body.secret, body.nonce, body.message, function (err, resp) {
 		if (err) {
 			return cb(null, {error: err});
