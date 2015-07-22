@@ -1,28 +1,83 @@
-var sandbox = process.binding('sandbox');
-var router = require('./routes.json');
-var crypti = require('./lib/crypti.js');
-var modules = {};
-var apies = {};
+var lib = require('./lib');
+var async = require('async');
+var modules = [];
 
-for (var i in crypti) {
-	modules[i] = new crypti[i](sandbox);
-}
+async.auto({
+	sandbox: function (cb) {
+		cb(null, process.binding('sandbox'));
+	},
 
-for (var i in modules) {
-	modules[i].onBind && modules[i].onBind(modules);
-}
+	logger: function (cb) {
+		cb(null, console.log);
+	},
 
-router.forEach(function (route) {
-	apies[route.method + " " + route.path] = require(route.handler);
-});
+	bus: function (cb) {
+		var changeCase = require('change-case');
+		var bus = function () {
+			this.message = function () {
+				var args = [];
+				Array.prototype.push.apply(args, arguments);
+				var topic = args.shift();
+				modules.forEach(function (module) {
+					var eventName = 'on' + changeCase.pascalCase(topic);
+					if (typeof(module[eventName]) == 'function') {
+						module[eventName].apply(module[eventName], args);
+					}
+				})
+			}
+		}
+		cb(null, new bus)
+	},
 
-sandbox.onMessage(function (message, cb) {
-	var handler = apies[message.method + " " + message.path];
-	if (handler) {
-		handler(message.query, modules, function (err, response) {
-			cb(err, response);
+	sequence: function (cb) {
+		var sequence = [];
+		process.nextTick(function nextSequenceTick() {
+			var task = sequence.shift();
+			if (!task) {
+				return setTimeout(nextSequenceTick, 100);
+			}
+			task(function () {
+				setTimeout(nextSequenceTick, 100);
+			});
 		});
-	} else {
-		cb("api not found");
-	}
+		cb(null, {
+			add: function (worker, done) {
+				sequence.push(function (cb) {
+					if (worker && typeof(worker) == 'function') {
+						worker(function (err, res) {
+							setImmediate(cb);
+							done && setImmediate(done, err, res);
+						});
+					} else {
+						setImmediate(cb);
+						done && setImmediate(done);
+					}
+				});
+			}
+		});
+	},
+
+	modules: ["sandbox", "logger", "bus", "sequence", function (cb, scope) {
+		var tasks = {};
+
+		Object.keys(lib).forEach(function (name) {
+			tasks[name] = function (cb) {
+				var obj = new lib[name](cb, scope);
+
+				modules.push(obj);
+			}
+		})
+		async.parallel(tasks, function (err, results) {
+			cb(err, results);
+		});
+	}],
+
+	ready: ['modules', function (cb, scope) {
+		for (var name in scope.modules) {
+			if (typeof(scope.modules[name].onBind) == 'function') {
+				scope.modules[name].onBind(scope.modules);
+			}
+		}
+		cb();
+	}]
 });

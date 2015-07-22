@@ -9,6 +9,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "js-nacl": "^0.6.0"
+    "js-nacl": "^0.6.0",
+    "change-case": "*",
+    "async": "*"
   }
 }
