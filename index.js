@@ -1,4 +1,3 @@
-var lib = require('./lib');
 var async = require('async');
 var modules = [];
 
@@ -69,6 +68,8 @@ d.run(function () {
 		},
 
 		modules: ["sandbox", "logger", "bus", "sequence", function (cb, scope) {
+			var lib = require('./lib');
+
 			var tasks = {};
 
 			Object.keys(lib).forEach(function (name) {
