@@ -11,7 +11,6 @@ d.on('error', function (err) {
 	console.log('domain master', {message: err.message, stack: err.stack});
 });
 d.run(function () {
-
 	async.auto({
 		sandbox: function (cb) {
 			cb(null, process.binding('sandbox'));
