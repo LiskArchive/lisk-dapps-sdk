@@ -67,7 +67,7 @@ d.run(function () {
 		},
 
 		modules: ["sandbox", "logger", "bus", "sequence", function (cb, scope) {
-			var lib = require('./lib');
+			var lib = require('./modules');
 
 			var tasks = {};
 

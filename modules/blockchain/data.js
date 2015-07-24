@@ -7,6 +7,10 @@ function Data(cb, library) {
 	cb(null, this);
 }
 
+Data.prototype.getUnconfirmedList = function(){
+	return [];
+}
+
 Data.prototype.onBind = function (modules) {
 	private.modules = modules;
 }

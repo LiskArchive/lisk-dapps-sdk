@@ -19,9 +19,33 @@ function Round(cb, library) {
 	});
 }
 
-private.getSequence = function (slot, height, cb) {
+private.loop = function (cd) {
+	if (!private.library.env.address) {
+		private.library.logger('loop', 'exit: secret doesn´t found');
+		return cb();
+	}
+
+	private.library.sequence.add(function (cb) {
+		private.getState(private.modules.hash.getHeight() + 1, function (err, currentDelegate) {
+			if (currentDelegate) {
+				private.modules.hash.createHash(currentDelegate, cb)
+			}else{
+				cb()
+			}
+		})
+	}, function (err) {
+		if (err) {
+			private.library.logger("Problem in hash generation", err);
+		}
+		cb(err)
+	})
+}
+
+private.getState = function (height, cb) {
 	self.generateDelegateList(height, function (err, delegates) {
-		var currentSlot = slot;
+		return cb(err);
+
+		var currentSlot = height;
 		var lastSlot = currentSlot + delegates.length;
 
 		for (; currentSlot < lastSlot; currentSlot += 1) {
