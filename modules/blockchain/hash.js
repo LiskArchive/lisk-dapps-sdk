@@ -10,6 +10,7 @@ function Hash(cb, library) {
 
 Hash.prototype.createHash = function (delegate, cb) {
 	var unconfirmedList = private.modules.data.getUnconfirmedList();
+	private.modules.transport.message("hash", {"hash": "", "sign": ""})
 }
 
 Hash.prototype.getHeight = function () {

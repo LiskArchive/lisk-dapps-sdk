@@ -63,7 +63,7 @@ private.getState = function (height, cb) {
 
 Round.prototype.getDelegates = function (cb) {
 	var message = {
-		call: "dapp#getDelegates",
+		call: "dapps#getDelegates",
 		args: {}
 	};
 

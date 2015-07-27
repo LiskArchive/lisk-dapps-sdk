@@ -7,10 +7,13 @@ function Transport(cb, library) {
 	cb(null, this);
 }
 
-Transport.prototype.message = function (message, cb) {
+Transport.prototype.message = function (topic, message, cb) {
 	var message = {
 		call: "transport#message",
-		args: message
+		args: {
+			message: message,
+			topic: topic
+		}
 	};
 
 	private.library.sandbox.sendMessage(message, cb);

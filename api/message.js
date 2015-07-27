@@ -1,7 +1,6 @@
 module.exports = function (query, library, modules, cb) {
-	modules.transport.message(query, function () {
+	modules.transport.message(query.topic, query.message, function () {
 
 	});
-	console.log("message", query)
 	library.bus.message("message", query)
 }

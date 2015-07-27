@@ -10,13 +10,15 @@ function Background(cb, library) {
 Background.prototype.onBind = function (modules) {
 	private.modules = modules;
 
-	private.modules.transport.message({test: "wakeup"}, function (err, data) {
+	private.modules.transport.message("test", {test: "wakeup"}, function (err, data) {
 
 	})
 }
 
 Background.prototype.onMessage = function (msg) {
-	private.modules.transport.message({test: "resend"}, function (err, data) {
+	console.log("recieved", msg)
+
+	private.modules.transport.message("test", {test: "resend"}, function (err, data) {
 
 	})
 }
