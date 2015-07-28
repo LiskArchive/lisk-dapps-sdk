@@ -5,7 +5,7 @@ private.library = null;
 private.modules = null;
 private.last = null;
 
-function Hash(cb, library) {
+function Blocks(cb, library) {
 	private.library = library;
 	cb(null, this);
 }
