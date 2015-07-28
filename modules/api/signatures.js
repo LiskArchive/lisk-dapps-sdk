@@ -1,9 +1,9 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Signatures(cb, library) {
-	private.library = library;
+function Signatures(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -14,7 +14,7 @@ Signatures.prototype.getFee = function (cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Signatures.prototype.addSignature = function (secret, secondSecret, publicKey, cb) {
@@ -27,11 +27,11 @@ Signatures.prototype.addSignature = function (secret, secondSecret, publicKey, c
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Signatures.prototype.onBind = function (modules) {
-	private.modules = modules;
+Signatures.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Signatures;

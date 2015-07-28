@@ -3,11 +3,11 @@
  */
 
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Contacts(cb, library) {
-	private.library = library;
+function Contacts(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -19,7 +19,7 @@ Contacts.prototype.getContacts = function (publicKey, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Contacts.prototype.addContact = function (secret, publicKey, secondSecret, following, cb) {
@@ -33,7 +33,7 @@ Contacts.prototype.addContact = function (secret, publicKey, secondSecret, follo
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Contacts.prototype.getHeight = function (cb) {
@@ -42,7 +42,7 @@ Contacts.prototype.getHeight = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Contacts.prototype.getFee = function (cb) {
@@ -51,11 +51,11 @@ Contacts.prototype.getFee = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Contacts.prototype.onBind = function (modules) {
-	private.modules = modules;
+Contacts.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Contacts;

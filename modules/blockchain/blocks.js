@@ -1,12 +1,12 @@
 var bytebuffer = require('bytebuffer');
 
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 private.last = null;
 
-function Blocks(cb, library) {
-	private.library = library;
+function Blocks(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -28,7 +28,7 @@ Blocks.prototype.processBlock = function (hash, cb) {
 }
 
 Blocks.prototype.createBlock = function (delegate, cb) {
-	var unconfirmedList = private.modules.data.getUnconfirmedList();
+	var unconfirmedList = modules.blockchain.transactions.getUnconfirmedList();
 
 	// get bytes
 	var bytes = new Buffer(0);
@@ -57,7 +57,7 @@ Blocks.prototype.createBlock = function (delegate, cb) {
 				hashObj.signature = signature;
 				hashObj.hash = hashObj.hash.toString('hex');
 
-				private.modules.transport.message("hash", hashObj);
+				modules.api.transport.message("hash", hashObj);
 			});
 		}
 	});
@@ -76,8 +76,8 @@ Blocks.prototype.getHeight = function () {
 	return private.last.height;
 }
 
-Blocks.prototype.onBind = function (modules) {
-	private.modules = modules;
+Blocks.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Blocks;

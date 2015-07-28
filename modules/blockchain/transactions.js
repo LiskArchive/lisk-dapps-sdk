@@ -1,16 +1,16 @@
 var async = require('async');
 
 var private = {}, self = null;
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 private.unconfirmedTransactions = [];
 private.unconfirmedTransactionsIdIndex = {};
 private.doubleSpendingTransactions = {};
 
-function Transactions(cb, library) {
+function Transactions(cb, _library) {
 	self = this;
 
-	private.library = library;
+	library = _library;
 	cb(null, this);
 }
 
@@ -76,7 +76,7 @@ private.processUnconfirmedTransaction = function (transaction, cb) {
 			private.applyUnconfirmedTransaction(transaction, cb);
 		},
 		function (cb) {
-			private.modules.api.transport.message("transaction", transaction, cb);
+			modules.api.transport.message("transaction", transaction, cb);
 		}
 	], cb);
 
@@ -128,8 +128,8 @@ Transactions.prototype.onMessage = function (query) {
 	}
 }
 
-Transactions.prototype.onBind = function (modules) {
-	private.modules = modules;
+Transactions.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Transactions;

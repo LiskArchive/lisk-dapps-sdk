@@ -1,9 +1,9 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Sql(cb, library) {
-	private.library = library;
+function Sql(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -13,7 +13,7 @@ Sql.prototype.select = function (request, cb) {
 		args: request
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Sql.prototype.insert = function (request, cb) {
@@ -22,7 +22,7 @@ Sql.prototype.insert = function (request, cb) {
 		args: request
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Sql.prototype.update = function (request, cb) {
@@ -31,7 +31,7 @@ Sql.prototype.update = function (request, cb) {
 		args: request
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Sql.prototype.remove = function (request, cb) {
@@ -40,11 +40,11 @@ Sql.prototype.remove = function (request, cb) {
 		args: request
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Sql.prototype.onBind = function (modules) {
-	private.modules = modules;
+Sql.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Sql;

@@ -2,14 +2,14 @@ var async = require('async');
 
 var self = null;
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 private.delegates = [];
 
-function Round(cb, library) {
+function Round(cb, _library) {
 	self = this;
 
-	private.library = library;
+	library = _library;
 
 	this.getDelegates(function (err, res) {
 		private.delegates = res.multisignature || [];
@@ -20,22 +20,22 @@ function Round(cb, library) {
 }
 
 private.loop = function (cd) {
-	if (!private.library.env.address) {
-		private.library.logger('loop', 'exit: secret doesn´t found');
+	if (!library.env.address) {
+		library.logger('loop', 'exit: secret doesn´t found');
 		return cb();
 	}
 
-	private.library.sequence.add(function (cb) {
-		private.getState(private.modules.blockchain.hash.getHeight() + 1, function (err, currentDelegate) {
+	library.sequence.add(function (cb) {
+		private.getState(modules.blockchain.hash.getHeight() + 1, function (err, currentDelegate) {
 			if (currentDelegate) {
-				private.modules.blockchain.hash.createHash(currentDelegate, cb)
+				modules.blockchain.hash.createHash(currentDelegate, cb)
 			}else{
 				cb()
 			}
 		})
 	}, function (err) {
 		if (err) {
-			private.library.logger("Problem in hash generation", err);
+			library.logger("Problem in hash generation", err);
 		}
 		cb(err)
 	})
@@ -53,8 +53,8 @@ private.getState = function (height, cb) {
 
 			var delegate_id = delegates[delegate_pos];
 
-			if (delegate_id && private.library.env.address == delegate_id) {
-				return cb(null, private.library.env);
+			if (delegate_id && library.env.address == delegate_id) {
+				return cb(null, library.env);
 			}
 		}
 		return cb(null, null);
@@ -67,7 +67,7 @@ Round.prototype.getDelegates = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Round.prototype.calc = function (height) {
@@ -79,7 +79,7 @@ Round.prototype.generateDelegateList = function (height, cb) {
 
 	var delegates = private.delegates.slice(0);
 
-	private.modules.api.crypto.sha256(seedSource, function (err, currentSeed) {
+	modules.api.crypto.sha256(seedSource, function (err, currentSeed) {
 		var i = 0, x = 0;
 		async.whilst(function () {
 			return i < delegates.length;
@@ -96,7 +96,7 @@ Round.prototype.generateDelegateList = function (height, cb) {
 				delegates[i] = b;
 				setImmediate(x_cb);
 			}, function (err) {
-				private.modules.api.crypto.sha256(seedSource, function (err, _currentSeed) {
+				modules.api.crypto.sha256(seedSource, function (err, _currentSeed) {
 					currentSeed = _currentSeed;
 					i_cd(err);
 				});
@@ -107,8 +107,8 @@ Round.prototype.generateDelegateList = function (height, cb) {
 	});
 }
 
-Round.prototype.onBind = function (modules) {
-	private.modules = modules;
+Round.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Round;

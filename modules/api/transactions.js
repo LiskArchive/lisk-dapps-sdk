@@ -3,11 +3,11 @@
  */
 
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Transactions(cb, library) {
-	private.library = library;
+function Transactions(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -32,7 +32,7 @@ Transactions.prototype.getTransactions = function (filter, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Transactions.prototype.getTransaction = function (id, cb) {
@@ -43,7 +43,7 @@ Transactions.prototype.getTransaction = function (id, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Transactions.prototype.getUnconfirmedTransaction = function (id, cb) {
@@ -54,7 +54,7 @@ Transactions.prototype.getUnconfirmedTransaction = function (id, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Transactions.prototype.getUnconfirmedTransactions = function (filter, cb) {
@@ -69,7 +69,7 @@ Transactions.prototype.getUnconfirmedTransactions = function (filter, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Transactions.prototype.addTransactions = function (secret, amount, recipientId, publicKey, secondSecret) {
@@ -84,11 +84,11 @@ Transactions.prototype.addTransactions = function (secret, amount, recipientId, 
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Transactions.prototype.onBind = function (modules) {
-	private.modules = modules;
+Transactions.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Transactions;

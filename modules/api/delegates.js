@@ -3,11 +3,11 @@
  */
 
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Delegates(cb, library) {
-	private.library = library;
+function Delegates(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -21,7 +21,7 @@ Delegates.prototype.getDelegate = function (filter, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Delegates.prototype.getDelegates = function (filter, cb) {
@@ -34,7 +34,7 @@ Delegates.prototype.getDelegates = function (filter, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Delegates.prototype.getFee = function (cb) {
@@ -43,7 +43,7 @@ Delegates.prototype.getFee = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Delegates.prototype.getForgedByAccount = function (generatorPublicKey, cb) {
@@ -54,7 +54,7 @@ Delegates.prototype.getForgedByAccount = function (generatorPublicKey, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Delegates.prototype.enableForging = function (secret, publicKey, cb) {
@@ -66,7 +66,7 @@ Delegates.prototype.enableForging = function (secret, publicKey, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Delegates.prototype.disableForging = function (secret, publicKey, cb) {
@@ -78,7 +78,7 @@ Delegates.prototype.disableForging = function (secret, publicKey, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Delegates.prototype.statusForging = function (publicKey, cb) {
@@ -89,7 +89,7 @@ Delegates.prototype.statusForging = function (publicKey, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Delegates.prototype.addDelegate = function (secret, publicKey, secondSecret, username, cb) {
@@ -103,11 +103,11 @@ Delegates.prototype.addDelegate = function (secret, publicKey, secondSecret, use
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Delegates.prototype.onBind = function (modules) {
-	private.modules = modules;
+Delegates.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Delegates;

@@ -1,9 +1,9 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Accounts(cb, library) {
-	private.library = library;
+function Accounts(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -15,7 +15,7 @@ Accounts.prototype.open = function (secret, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.getBalance = function (address, cb) {
@@ -26,7 +26,7 @@ Accounts.prototype.getBalance = function (address, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.getPublickey = function (address, cb) {
@@ -37,7 +37,7 @@ Accounts.prototype.getPublickey = function (address, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.generatePublickey = function (secret, cb) {
@@ -48,7 +48,7 @@ Accounts.prototype.generatePublickey = function (secret, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.getDelegates = function (address, cb) {
@@ -59,7 +59,7 @@ Accounts.prototype.getDelegates = function (address, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.getDelegatesFee = function (cb) {
@@ -68,7 +68,7 @@ Accounts.prototype.getDelegatesFee = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.addDelegates = function (secret, publicKey, secondSecret, cb) {
@@ -81,7 +81,7 @@ Accounts.prototype.addDelegates = function (secret, publicKey, secondSecret, cb)
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.getUsernameFee = function (cb) {
@@ -90,7 +90,7 @@ Accounts.prototype.getUsernameFee = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.addUsername = function (secret, publicKey, secondSecret, username, cb) {
@@ -104,7 +104,7 @@ Accounts.prototype.addUsername = function (secret, publicKey, secondSecret, user
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Accounts.prototype.getAccount = function (address, cb) {
@@ -115,11 +115,11 @@ Accounts.prototype.getAccount = function (address, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Accounts.prototype.onBind = function (modules) {
-	private.modules = modules;
+Accounts.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Accounts;

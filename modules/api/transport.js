@@ -1,9 +1,9 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Transport(cb, library) {
-	private.library = library;
+function Transport(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -16,11 +16,11 @@ Transport.prototype.message = function (topic, message, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Transport.prototype.onBind = function (modules) {
-	private.modules = modules;
+Transport.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Transport;

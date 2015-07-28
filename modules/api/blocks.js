@@ -2,11 +2,11 @@
  Crypti blocks API calls
  */
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Blocks(cb, library) {
-	private.library = library;
+function Blocks(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -18,7 +18,7 @@ Blocks.prototype.getBlock = function (id, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Blocks.prototype.getBlocks = function (filter, cb) {
@@ -36,7 +36,7 @@ Blocks.prototype.getBlocks = function (filter, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Blocks.prototype.getHeight = function (cb) {
@@ -45,7 +45,7 @@ Blocks.prototype.getHeight = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Blocks.prototype.getFee = function (cb) {
@@ -54,11 +54,11 @@ Blocks.prototype.getFee = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Blocks.prototype.onBind = function (modules) {
-	private.modules = modules;
+Blocks.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Blocks;

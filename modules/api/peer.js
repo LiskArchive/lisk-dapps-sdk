@@ -1,9 +1,9 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Peer(cb, library) {
-	private.library = library;
+function Peer(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -22,7 +22,7 @@ Peer.prototype.getPeers = function (filter, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Peer.prototype.getPeer = function (ip_str, port, cb) {
@@ -34,7 +34,7 @@ Peer.prototype.getPeer = function (ip_str, port, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Peer.prototype.version = function (cb) {
@@ -43,11 +43,11 @@ Peer.prototype.version = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Peer.prototype.onBind = function (modules) {
-	private.modules = modules;
+Peer.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Peer;

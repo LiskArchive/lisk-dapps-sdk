@@ -1,9 +1,9 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Loader(cb, library) {
-	private.library = library;
+function Loader(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -13,7 +13,7 @@ Loader.prototype.status = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Loader.prototype.sync = function (cb) {
@@ -22,11 +22,11 @@ Loader.prototype.sync = function (cb) {
 		args: {}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Loader.prototype.onBind = function (modules) {
-	private.modules = modules;
+Loader.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Loader;

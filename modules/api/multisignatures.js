@@ -1,9 +1,9 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Multisignatures(cb, library) {
-	private.library = library;
+function Multisignatures(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -15,7 +15,7 @@ Multisignatures.prototype.pending = function (publicKey, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Multisignatures.prototype.sign = function (secret, publicKey, transactionId, cb) {
@@ -28,7 +28,7 @@ Multisignatures.prototype.sign = function (secret, publicKey, transactionId, cb)
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Multisignatures.prototype.addMultisignature = function (secret, publicKey, secondSecret, min, lifetime, keysgroup, cb) {
@@ -44,11 +44,11 @@ Multisignatures.prototype.addMultisignature = function (secret, publicKey, secon
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Multisignatures.prototype.onBind = function (modules) {
-	private.modules = modules;
+Multisignatures.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Multisignatures;

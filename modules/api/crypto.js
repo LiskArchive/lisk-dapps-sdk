@@ -1,9 +1,9 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Crypto(cb, library) {
-	private.library = library;
+function Crypto(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
@@ -15,7 +15,7 @@ Crypto.prototype.keypair = function (secret, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Crypto.prototype.sign = function (secret, data, cb) {
@@ -27,7 +27,7 @@ Crypto.prototype.sign = function (secret, data, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Crypto.prototype.sha256 = function (data, cb) {
@@ -38,7 +38,7 @@ Crypto.prototype.sha256 = function (data, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Crypto.prototype.encrypt = function (secret, message, cb) {
@@ -50,7 +50,7 @@ Crypto.prototype.encrypt = function (secret, message, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
 Crypto.prototype.decrypt = function (secret, nonce, message, cb) {
@@ -63,11 +63,11 @@ Crypto.prototype.decrypt = function (secret, nonce, message, cb) {
 		}
 	};
 
-	private.library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, cb);
 }
 
-Crypto.prototype.onBind = function (modules) {
-	private.modules = modules;
+Crypto.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 module.exports = Crypto;

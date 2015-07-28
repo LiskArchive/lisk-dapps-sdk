@@ -1,16 +1,16 @@
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 
-function Background(cb, library) {
-	private.library = library;
+function Background(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
-Background.prototype.onBind = function (modules) {
-	private.modules = modules;
+Background.prototype.onBind = function (_modules) {
+	modules = _modules;
 
-	private.modules.api.transport.message("test", {test: "wakeup"}, function (err, data) {
+	modules.api.transport.message("test", {test: "wakeup"}, function (err, data) {
 
 	})
 }
@@ -18,7 +18,7 @@ Background.prototype.onBind = function (modules) {
 Background.prototype.onMessage = function (msg) {
 	console.log("recieved", msg)
 
-	private.modules.api.transport.message("test", {test: "resend"}, function (err, data) {
+	modules.api.transport.message("test", {test: "resend"}, function (err, data) {
 
 	})
 }

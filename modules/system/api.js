@@ -1,27 +1,27 @@
 var router = require('../../routes.json');
 
 var private = {};
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 private.apies = {};
 
 
-function Api(cb, library) {
-	private.library = library;
+function Api(cb, _library) {
+	library = _library;
 	cb(null, this);
 }
 
-Api.prototype.onBind = function (modules) {
-	private.modules = modules;
+Api.prototype.onBind = function (_modules) {
+	modules = _modules;
 
 	router.forEach(function (route) {
 		private.apies[route.method + " " + route.path] = require(route.handler);
 	});
 
-	private.library.sandbox.onMessage(function (message, cb) {
+	library.sandbox.onMessage(function (message, cb) {
 		var handler = private.apies[message.method + " " + message.path];
 		if (handler) {
-			handler(message.query, private.library, private.modules, function (err, response) {
+			handler(message.query, library, modules, function (err, response) {
 				cb(err, response);
 			});
 		} else {

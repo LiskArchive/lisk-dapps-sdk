@@ -1,13 +1,13 @@
 var private = {}, self = null;
-private.library = null;
-private.modules = null;
+var library = null;
+var modules = null;
 private.types = {};
 
 //constructor
-function Base(cb, library) {
+function Base(cb, _library) {
 	self = this;
 
-	private.library = library;
+	library = _library;
 	cb(null, this);
 }
 
@@ -443,8 +443,8 @@ Base.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	}.bind(this));
 }
 
-Base.prototype.onBind = function (modules) {
-	private.modules = modules;
+Base.prototype.onBind = function (_modules) {
+	modules = _modules;
 }
 
 //export
