@@ -1,17 +1,85 @@
 var async = require('async');
 
-var private = {}, self = null;
-var library = null;
-var modules = null;
+var private = {}, self = null,
+library = null, modules = null;
 private.unconfirmedTransactions = [];
 private.unconfirmedTransactionsIdIndex = {};
 private.doubleSpendingTransactions = {};
 
+function Transfer() {
+	this.create = function (data, trs) {
+		trs.recipientId = data.recipientId;
+		trs.recipientUsername = data.recipientUsername;
+		trs.amount = data.amount;
+
+		return trs;
+	}
+
+	this.calculateFee = function (trs) {
+		var fee = parseInt(trs.amount / 100 * 0.1);
+		return fee || 1;
+	}
+
+	this.verify = function (trs, sender, cb) {
+		var isAddress = /^[0-9]+[C|c]$/g;
+		if (!isAddress.test(trs.recipientId.toLowerCase())) {
+			return cb(errorCode("TRANSACTIONS.INVALID_RECIPIENT", trs));
+		}
+
+		if (trs.amount <= 0) {
+			return cb(errorCode("TRANSACTIONS.INVALID_AMOUNT", trs));
+		}
+
+		cb(null, trs);
+	}
+
+	this.process = function (trs, sender, cb) {
+		setImmediate(cb, null, trs);
+	}
+
+	this.getBytes = function (trs) {
+		return null;
+	}
+
+	this.apply = function (trs, sender, cb) {
+		modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+			if (err) {
+				return cb(err);
+			}
+			modules.accounts.mergeAccountAndGet({
+				address: trs.recipientId,
+				balance: trs.amount,
+				u_balance: trs.amount
+			}, cb);
+		});
+	}
+
+	this.undo = function (trs, sender, cb) {
+		modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+			if (err) {
+				return cb(err);
+			}
+			modules.accounts.mergeAccountAndGet({
+				address: trs.recipientId,
+				balance: -trs.amount,
+				u_balance: -trs.amount
+			}, cb);
+		});
+	}
+
+	this.applyUnconfirmed = function (trs, sender, cb) {
+		setImmediate(cb);
+	}
+
+	this.undoUnconfirmed = function (trs, sender, cb) {
+		setImmediate(cb);
+	}
+}
+
 function Transactions(cb, _library) {
 	self = this;
-
 	library = _library;
-	cb(null, this);
+	cb(null, self);
 }
 
 private.addUnconfirmedTransaction = function (transaction, cb) {
@@ -130,6 +198,8 @@ Transactions.prototype.onMessage = function (query) {
 
 Transactions.prototype.onBind = function (_modules) {
 	modules = _modules;
+
+	modules.blockchain.base.attachAssetType(0, new Transfer());
 }
 
 module.exports = Transactions;

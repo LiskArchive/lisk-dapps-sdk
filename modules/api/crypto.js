@@ -1,10 +1,10 @@
-var private = {};
-var library = null;
-var modules = null;
+var private = {}, self = null,
+library = null, modules = null;
 
 function Crypto(cb, _library) {
+	self = this;
 	library = _library;
-	cb(null, this);
+	cb(null, self);
 }
 
 Crypto.prototype.keypair = function (secret, cb) {

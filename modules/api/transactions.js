@@ -2,13 +2,13 @@
 	Crypti transactions API calls
  */
 
-var private = {};
-var library = null;
-var modules = null;
+var private = {}, self = null,
+library = null, modules = null;
 
 function Transactions(cb, _library) {
+	self = this;
 	library = _library;
-	cb(null, this);
+	cb(null, self);
 }
 
 Transactions.prototype.getTransactions = function (filter, cb) {

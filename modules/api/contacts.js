@@ -2,13 +2,13 @@
  Crypti contacts API calls
  */
 
-var private = {};
-var library = null;
-var modules = null;
+var private = {}, self = null,
+library = null, modules = null;
 
 function Contacts(cb, _library) {
+	self = this;
 	library = _library;
-	cb(null, this);
+	cb(null, self);
 }
 
 Contacts.prototype.getContacts = function (publicKey, cb) {

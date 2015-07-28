@@ -1,17 +1,14 @@
 var async = require('async');
 
-var self = null;
-var private = {};
-var library = null;
-var modules = null;
+var private = {}, self = null,
+library = null, modules = null;
 private.delegates = [];
 
 function Round(cb, _library) {
 	self = this;
-
 	library = _library;
 
-	this.getDelegates(function (err, res) {
+	self.getDelegates(function (err, res) {
 		private.delegates = res.multisignature || [];
 		private.delegates.push(res.authorId);
 		private.delegates.sort();
