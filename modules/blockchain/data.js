@@ -76,9 +76,6 @@ private.processUnconfirmedTransaction = function (transaction, cb) {
 			private.applyUnconfirmedTransaction(transaction, cb);
 		},
 		function (cb) {
-			private.applyTransaction(transaction, cb);
-		},
-		function (cb) {
 			private.modules.transport.message("transactions", transaction, cb);
 		}
 	], cb);
@@ -112,8 +109,9 @@ private.undoTransaction = function (transaction, cb) {
 private.applyTransactionList = function (transactions, cb) {
 	async.eachSeries(transactions, function (transaction, cb) {
 		private.applyTransaction(transaction, function (err) {
-			private.removeUnconfirmedTransaction(transaction.id);
-			setImmediate(cb, err);
+			private.removeUnconfirmedTransaction(transaction.id, function () {
+				setImmediate(cb, err);
+			});
 		});
 	}, cb);
 }
@@ -125,10 +123,9 @@ private.addDoubleSpending = function (transaction, cb) {
 
 Data.prototype.onMessage = function (query) {
 	if (query.topic == "transactions") {
-		async.eachSeries(query.message, function (transaction, cb) {
+		var transactions = query.message;
+		async.eachSeries(transactions, function (transaction, cb) {
 			private.processUnconfirmedTransaction(transaction, cb);
-		}, function (err) {
-			cb(err, transactions);
 		});
 	}
 }
