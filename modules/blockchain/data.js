@@ -17,15 +17,16 @@ function Data(cb, library) {
 private.addUnconfirmedTransaction = function (transaction, cb) {
 	private.applyUnconfirmed(transaction, function (err) {
 		if (err) {
-			private.addDoubleSpending(transaction);
-			return setImmediate(cb, err);
+			private.addDoubleSpending(transaction, function () {
+				setImmediate(cb, err);
+			});
+		} else {
+			private.unconfirmedTransactions.push(transaction);
+			var index = private.unconfirmedTransactions.length - 1;
+			private.unconfirmedTransactionsIdIndex[transaction.id] = index;
+
+			setImmediate(cb);
 		}
-
-		private.unconfirmedTransactions.push(transaction);
-		var index = private.unconfirmedTransactions.length - 1;
-		private.unconfirmedTransactionsIdIndex[transaction.id] = index;
-
-		setImmediate(cb);
 	});
 }
 
@@ -45,10 +46,17 @@ private.applyUnconfirmedTransactionList = function (ids, cb) {
 		var transaction = private.getUnconfirmedTransaction(id);
 		private.applyUnconfirmed(transaction, function (err) {
 			if (err) {
-				private.removeUnconfirmedTransaction(id);
-				private.addDoubleSpending(transaction);
+				async.series([
+					function (cb) {
+						private.removeUnconfirmedTransaction(id, cb);
+					},
+					function (cb) {
+						private.addDoubleSpending(transaction, cb);
+					}
+				], cb);
+			} else {
+				setImmediate(cb);
 			}
-			setImmediate(cb);
 		});
 	}, cb);
 }
@@ -69,6 +77,9 @@ private.processUnconfirmedTransaction = function (transaction, cb) {
 		},
 		function (cb) {
 			private.applyTransaction(transaction, cb);
+		},
+		function (cb) {
+			private.modules.transport.message("transactions", transaction, cb);
 		}
 	], cb);
 
@@ -112,12 +123,14 @@ private.addDoubleSpending = function (transaction, cb) {
 	setImmediate(cb);
 }
 
-Data.prototype.receiveTransactions = function (transactions, cb) {
-	async.eachSeries(transactions, function (transaction, cb) {
-		private.processUnconfirmedTransaction(transaction, cb);
-	}, function (err) {
-		cb(err, transactions);
-	});
+Data.prototype.onMessage = function (query) {
+	if (query.topic == "transactions") {
+		async.eachSeries(query.message, function (transaction, cb) {
+			private.processUnconfirmedTransaction(transaction, cb);
+		}, function (err) {
+			cb(err, transactions);
+		});
+	}
 }
 
 Data.prototype.onBind = function (modules) {
