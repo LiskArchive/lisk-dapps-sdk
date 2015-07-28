@@ -1,5 +1,5 @@
 var async = require('async');
-var modules = [];
+var modules = {};
 
 process.on('uncaughtException', function (err) {
 	// handle the error safely
@@ -27,12 +27,14 @@ d.run(function () {
 					var args = [];
 					Array.prototype.push.apply(args, arguments);
 					var topic = args.shift();
-					modules.forEach(function (module) {
-						var eventName = 'on' + changeCase.pascalCase(topic);
-						if (typeof(module[eventName]) == 'function') {
-							module[eventName].apply(module[eventName], args);
-						}
-					})
+					Object.keys(modules).forEach(function (namespace) {
+						Object.keys(modules[namespace]).forEach(function (moduleName) {
+							var eventName = 'on' + changeCase.pascalCase(topic);
+							if (typeof(modules[namespace][moduleName][eventName]) == 'function') {
+								modules[namespace][moduleName][eventName].apply(modules[namespace][moduleName][eventName], args);
+							}
+						});
+					});
 				}
 			}
 			cb(null, new bus)
@@ -69,31 +71,31 @@ d.run(function () {
 		modules: ["sandbox", "logger", "bus", "sequence", function (cb, scope) {
 			var lib = require('./modules');
 
-			var tasks = {};
+			var tasks = [];
 
-			Object.keys(lib).forEach(function (name) {
-				tasks[name] = function (cb) {
+			Object.keys(lib).forEach(function (path) {
+				var raw = path.split("/");
+				var namespace = raw[0];
+				var moduleName = raw[1];
+				tasks.push(function (cb) {
 					var d = require('domain').create();
 					d.on('error', function (err) {
-						console.log('domain ' + name, {message: err.message, stack: err.stack});
+						console.log('domain ' + moduleName, {message: err.message, stack: err.stack});
 					});
 					d.run(function () {
-						var obj = new lib[name](cb, scope);
-						modules.push(obj);
+						var obj = new lib[path](cb, scope);
+						modules[namespace] = modules[namespace] || {};
+						modules[namespace][moduleName] = obj;
 					});
-				}
+				});
 			})
-			async.parallel(tasks, function (err, results) {
-				cb(err, results);
+			async.parallel(tasks, function (err) {
+				cb(err, modules);
 			});
 		}],
 
-		ready: ['modules', function (cb, scope) {
-			for (var name in scope.modules) {
-				if (typeof(scope.modules[name].onBind) == 'function') {
-					scope.modules[name].onBind(scope.modules);
-				}
-			}
+		ready: ['modules', 'bus', function (cb, scope) {
+			scope.bus.message("bind", scope.modules);
 			cb();
 		}]
 	});

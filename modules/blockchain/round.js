@@ -26,9 +26,9 @@ private.loop = function (cd) {
 	}
 
 	private.library.sequence.add(function (cb) {
-		private.getState(private.modules.hash.getHeight() + 1, function (err, currentDelegate) {
+		private.getState(private.modules.blockchain.hash.getHeight() + 1, function (err, currentDelegate) {
 			if (currentDelegate) {
-				private.modules.hash.createHash(currentDelegate, cb)
+				private.modules.blockchain.hash.createHash(currentDelegate, cb)
 			}else{
 				cb()
 			}
@@ -79,7 +79,7 @@ Round.prototype.generateDelegateList = function (height, cb) {
 
 	var delegates = private.delegates.slice(0);
 
-	private.modules.crypto.sha256(seedSource, function (err, currentSeed) {
+	private.modules.api.crypto.sha256(seedSource, function (err, currentSeed) {
 		var i = 0, x = 0;
 		async.whilst(function () {
 			return i < delegates.length;
@@ -96,7 +96,7 @@ Round.prototype.generateDelegateList = function (height, cb) {
 				delegates[i] = b;
 				setImmediate(x_cb);
 			}, function (err) {
-				private.modules.crypto.sha256(seedSource, function (err, _currentSeed) {
+				private.modules.api.crypto.sha256(seedSource, function (err, _currentSeed) {
 					currentSeed = _currentSeed;
 					i_cd(err);
 				});

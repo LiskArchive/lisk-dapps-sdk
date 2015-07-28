@@ -10,7 +10,7 @@ function Background(cb, library) {
 Background.prototype.onBind = function (modules) {
 	private.modules = modules;
 
-	private.modules.transport.message("test", {test: "wakeup"}, function (err, data) {
+	private.modules.api.transport.message("test", {test: "wakeup"}, function (err, data) {
 
 	})
 }
@@ -18,7 +18,7 @@ Background.prototype.onBind = function (modules) {
 Background.prototype.onMessage = function (msg) {
 	console.log("recieved", msg)
 
-	private.modules.transport.message("test", {test: "resend"}, function (err, data) {
+	private.modules.api.transport.message("test", {test: "resend"}, function (err, data) {
 
 	})
 }

@@ -7,7 +7,7 @@ private.unconfirmedTransactions = [];
 private.unconfirmedTransactionsIdIndex = {};
 private.doubleSpendingTransactions = {};
 
-function Data(cb, library) {
+function Transactions(cb, library) {
 	self = this;
 
 	private.library = library;
@@ -76,7 +76,7 @@ private.processUnconfirmedTransaction = function (transaction, cb) {
 			private.applyUnconfirmedTransaction(transaction, cb);
 		},
 		function (cb) {
-			private.modules.transport.message("transaction", transaction, cb);
+			private.modules.api.transport.message("transaction", transaction, cb);
 		}
 	], cb);
 
@@ -121,15 +121,15 @@ private.addDoubleSpending = function (transaction, cb) {
 	setImmediate(cb);
 }
 
-Data.prototype.onMessage = function (query) {
+Transactions.prototype.onMessage = function (query) {
 	if (query.topic == "transaction") {
 		var transactions = query.message;
 		private.processUnconfirmedTransaction(transaction, cb);
 	}
 }
 
-Data.prototype.onBind = function (modules) {
+Transactions.prototype.onBind = function (modules) {
 	private.modules = modules;
 }
 
-module.exports = Data;
+module.exports = Transactions;
