@@ -76,7 +76,7 @@ private.processUnconfirmedTransaction = function (transaction, cb) {
 			private.applyUnconfirmedTransaction(transaction, cb);
 		},
 		function (cb) {
-			private.modules.transport.message("transactions", transaction, cb);
+			private.modules.transport.message("transaction", transaction, cb);
 		}
 	], cb);
 
@@ -122,11 +122,9 @@ private.addDoubleSpending = function (transaction, cb) {
 }
 
 Data.prototype.onMessage = function (query) {
-	if (query.topic == "transactions") {
+	if (query.topic == "transaction") {
 		var transactions = query.message;
-		async.eachSeries(transactions, function (transaction, cb) {
-			private.processUnconfirmedTransaction(transaction, cb);
-		});
+		private.processUnconfirmedTransaction(transaction, cb);
 	}
 }
 
