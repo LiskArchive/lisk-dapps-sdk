@@ -1,7 +1,7 @@
 var async = require('async');
 
 var private = {}, self = null,
-library = null, modules = null;
+	library = null, modules = null;
 private.unconfirmedTransactions = [];
 private.unconfirmedTransactionsIdIndex = {};
 private.doubleSpendingTransactions = {};
@@ -42,11 +42,8 @@ function Transfer() {
 	}
 
 	this.apply = function (trs, sender, cb) {
-		modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
-			if (err) {
-				return cb(err);
-			}
-			modules.accounts.mergeAccountAndGet({
+		modules.logic.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+			modules.logic.accounts.mergeAccountAndGet({
 				address: trs.recipientId,
 				balance: trs.amount,
 				u_balance: trs.amount
@@ -55,14 +52,11 @@ function Transfer() {
 	}
 
 	this.undo = function (trs, sender, cb) {
-		modules.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
-			if (err) {
-				return cb(err);
-			}
-			modules.accounts.mergeAccountAndGet({
+		modules.logic.accounts.setAccountAndGet({address: trs.recipientId}, function (err, recipient) {
+			modules.logic.accounts.undoMerging({
 				address: trs.recipientId,
-				balance: -trs.amount,
-				u_balance: -trs.amount
+				balance: trs.amount,
+				u_balance: trs.amount
 			}, cb);
 		});
 	}
@@ -148,16 +142,23 @@ private.processUnconfirmedTransaction = function (transaction, cb) {
 		}
 	], cb);
 
-
 	// processUnconfirmedTransaction
 }
 
 private.applyUnconfirmedTransaction = function (transaction, cb) {
-	// applyUnconfirmedTransaction
+	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (!sender && transaction.blockId != genesisblock.block.id) {
+			return cb('Failed account: ' + transaction.id);
+		} else {
+			modules.logic.transaction.applyUnconfirmed(transaction, sender, cb);
+		}
+	});
 }
 
 private.undoUnconfirmedTransaction = function (transaction, cb) {
-	// undoUnconfirmedTransaction
+	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		modules.logic.transaction.undoUnconfirmed(transaction, sender, cb);
+	});
 }
 
 private.removeUnconfirmedTransaction = function (id, cb) {
@@ -167,11 +168,15 @@ private.removeUnconfirmedTransaction = function (id, cb) {
 }
 
 private.applyTransaction = function (transaction, cb) {
-
+	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		modules.logic.transaction.apply(transaction, sender, cb);
+	});
 }
 
 private.undoTransaction = function (transaction, cb) {
-
+	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		modules.logic.transaction.undo(transaction, sender, cb);
+	});
 }
 
 private.applyTransactionList = function (transactions, cb) {
@@ -199,7 +204,7 @@ Transactions.prototype.onMessage = function (query) {
 Transactions.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	modules.blockchain.base.attachAssetType(0, new Transfer());
+	modules.blockchain.transaction.attachAssetType(0, new Transfer());
 }
 
 module.exports = Transactions;

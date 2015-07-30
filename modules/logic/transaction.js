@@ -3,14 +3,14 @@ library = null, modules = null;
 private.types = {};
 
 //constructor
-function Base(cb, _library) {
+function Transaction(cb, _library) {
 	self = this;
 	library = _library;
 	cb(null, self);
 }
 
 //public methods
-Base.prototype.create = function (data) {
+Transaction.prototype.create = function (data) {
 	if (!private.types[data.type]) {
 		throw Error('Unknown transaction type ' + data.type);
 	}
@@ -35,10 +35,6 @@ Base.prototype.create = function (data) {
 
 	trs.signature = self.sign(data.keypair, trs);
 
-	if (data.sender.secondSignature && data.secondKeypair) {
-		trs.signSignature = self.sign(data.secondKeypair, trs);
-	}
-
 	trs.id = self.getId(trs);
 
 	trs.fee = private.types[trs.type].calculateFee.call(this, trs) || false;
@@ -46,7 +42,7 @@ Base.prototype.create = function (data) {
 	return trs;
 }
 
-Base.prototype.attachAssetType = function (typeId, instance) {
+Transaction.prototype.attachAssetType = function (typeId, instance) {
 	if (instance && typeof instance.create == 'function' && typeof instance.getBytes == 'function' &&
 		typeof instance.calculateFee == 'function' && typeof instance.verify == 'function' &&
 		typeof instance.apply == 'function' && typeof instance.undo == 'function' &&
@@ -59,12 +55,12 @@ Base.prototype.attachAssetType = function (typeId, instance) {
 	}
 }
 
-Base.prototype.sign = function (keypair, trs) {
+Transaction.prototype.sign = function (keypair, trs) {
 	var hash = self.getHash(trs);
 	return ed.Sign(hash, keypair).toString('hex');
 }
 
-Base.prototype.getId = function (trs) {
+Transaction.prototype.getId = function (trs) {
 	var hash = self.getHash(trs);
 	var temp = new Buffer(8);
 	for (var i = 0; i < 8; i++) {
@@ -75,11 +71,11 @@ Base.prototype.getId = function (trs) {
 	return id;
 }
 
-Base.prototype.getHash = function (trs) {
+Transaction.prototype.getHash = function (trs) {
 	return crypto.createHash('sha256').update(self.getBytes(trs)).digest();
 }
 
-Base.prototype.getBytes = function (trs, skipSignature) {
+Transaction.prototype.getBytes = function (trs, skipSignature) {
 	if (!private.types[trs.type]) {
 		throw Error('Unknown transaction type ' + trs.type);
 	}
@@ -132,7 +128,7 @@ Base.prototype.getBytes = function (trs, skipSignature) {
 	return bb.toBuffer();
 }
 
-Base.prototype.process = function (trs, sender, cb) {
+Transaction.prototype.process = function (trs, sender, cb) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
@@ -183,7 +179,7 @@ Base.prototype.process = function (trs, sender, cb) {
 	}.bind(this));
 }
 
-Base.prototype.verify = function (trs, sender, cb) { //inheritance
+Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
@@ -258,7 +254,7 @@ Base.prototype.verify = function (trs, sender, cb) { //inheritance
 	private.types[trs.type].verify.call(this, trs, sender, cb);
 }
 
-Base.prototype.verifySignature = function (trs, publicKey, signature) {
+Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
 	if (!private.types[trs.type]) {
 		throw Error('Unknown transaction type ' + trs.type);
 	}
@@ -275,7 +271,7 @@ Base.prototype.verifySignature = function (trs, publicKey, signature) {
 	return res;
 }
 
-Base.prototype.verifyBytes = function (bytes, publicKey, signature) {
+Transaction.prototype.verifyBytes = function (bytes, publicKey, signature) {
 	try {
 		var data2 = new Buffer(bytes.length);
 
@@ -294,7 +290,7 @@ Base.prototype.verifyBytes = function (bytes, publicKey, signature) {
 	return res;
 }
 
-Base.prototype.apply = function (trs, sender, cb) {
+Transaction.prototype.apply = function (trs, sender, cb) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
@@ -324,7 +320,7 @@ Base.prototype.apply = function (trs, sender, cb) {
 	}.bind(this));
 }
 
-Base.prototype.undo = function (trs, sender, cb) {
+Transaction.prototype.undo = function (trs, sender, cb) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
@@ -346,7 +342,7 @@ Base.prototype.undo = function (trs, sender, cb) {
 	}.bind(this));
 }
 
-Base.prototype.applyUnconfirmed = function (trs, sender, cb) {
+Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
@@ -382,31 +378,27 @@ Base.prototype.applyUnconfirmed = function (trs, sender, cb) {
 	}.bind(this));
 }
 
-Base.prototype.undoUnconfirmed = function (trs, sender, cb) {
+Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
 	var amount = trs.amount + trs.fee;
 
-	self.scope.account.merge(sender.address, {u_balance: amount}, function (err, sender) {
-		if (err) {
-			return cb(err);
-		}
-
-		private.types[trs.type].undoUnconfirmed.call(this, trs, sender, function (err) {
+	modules.account.mergeAccountAndGet({address: sender.address, u_balance: amount}, function (err, sender) {
+		private.types[trs.type].undoUnconfirmed.call(self, trs, sender, function (err) {
 			if (err) {
-				self.scope.account.merge(sender.address, {u_balance: -amount}, cb);
+				modules.account.mergeAccountAndGet({address: sender.address, u_balance: -amount}, cb);
 			} else {
-				setImmediate(cb, err);
+				setImmediate(cb);
 			}
-		}.bind(this));
-	}.bind(this));
+		});
+	});
 }
 
-Base.prototype.onBind = function (_modules) {
+Transaction.prototype.onBind = function (_modules) {
 	modules = _modules;
 }
 
 //export
-module.exports = Base;
+module.exports = Transaction;
