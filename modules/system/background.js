@@ -10,7 +10,7 @@ function Background(cb, _library) {
 Background.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	modules.api.transport.message("test", {test: "wakeup"}, function (err, data) {
+	modules.api.transport.message("transaction", {sender: "wakeup"}, function (err, data) {
 
 	})
 }

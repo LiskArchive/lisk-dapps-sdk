@@ -13,8 +13,8 @@ module.exports = {
 	"api/transport": require('./api/transport.js'),
 
 	"logic/transaction": require('./logic/transaction.js'),
-	"logic/account": require('./logic/account.js'),
 
+	"blockchain/accounts": require('./blockchain/accounts.js'),
 	"blockchain/blocks": require('./blockchain/blocks.js'),
 	"blockchain/round": require('./blockchain/round.js'),
 	"blockchain/transactions": require('./blockchain/transactions.js'),

@@ -146,8 +146,11 @@ private.processUnconfirmedTransaction = function (transaction, cb) {
 }
 
 private.applyUnconfirmedTransaction = function (transaction, cb) {
-	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
-		if (!sender && transaction.blockId != genesisblock.block.id) {
+	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+		if (!sender) {
 			return cb('Failed account: ' + transaction.id);
 		} else {
 			modules.logic.transaction.applyUnconfirmed(transaction, sender, cb);
@@ -156,7 +159,10 @@ private.applyUnconfirmedTransaction = function (transaction, cb) {
 }
 
 private.undoUnconfirmedTransaction = function (transaction, cb) {
-	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
 		modules.logic.transaction.undoUnconfirmed(transaction, sender, cb);
 	});
 }
@@ -168,13 +174,19 @@ private.removeUnconfirmedTransaction = function (id, cb) {
 }
 
 private.applyTransaction = function (transaction, cb) {
-	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
 		modules.logic.transaction.apply(transaction, sender, cb);
 	});
 }
 
 private.undoTransaction = function (transaction, cb) {
-	modules.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
 		modules.logic.transaction.undo(transaction, sender, cb);
 	});
 }
@@ -196,15 +208,18 @@ private.addDoubleSpending = function (transaction, cb) {
 
 Transactions.prototype.onMessage = function (query) {
 	if (query.topic == "transaction") {
-		var transactions = query.message;
-		private.processUnconfirmedTransaction(transaction, cb);
+		var transaction = query.message;
+		private.processUnconfirmedTransaction(transaction, function (err) {
+			console.log("processUnconfirmedTransaction", err)
+
+		});
 	}
 }
 
 Transactions.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	modules.blockchain.transaction.attachAssetType(0, new Transfer());
+	modules.logic.transaction.attachAssetType(0, new Transfer());
 }
 
 module.exports = Transactions;

@@ -11,7 +11,7 @@ function Accounts(cb, _library) {
 	self = this;
 	library = _library;
 
-	cb(err, self);
+	cb(null, self);
 }
 
 function reverseDiff(diff) {
@@ -78,7 +78,7 @@ private.removeAccount = function (address) {
 }
 
 private.getAccount = function (address) {
-	var index = private.accountsIndexById[account.address];
+	var index = private.accountsIndexById[address];
 	return private.accounts[index];
 }
 
@@ -99,7 +99,7 @@ Accounts.prototype.getAccount = function (filter, cb) {
 		address = self.generateAddressByPublicKey(filter.publicKey);
 	}
 	if (!address) {
-		cb("must provide address or publicKey");
+		return cb("must provide address or publicKey");
 	}
 
 	cb(null, private.getAccount(address));
@@ -119,7 +119,7 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 		if (data.publicKey) {
 			address = self.generateAddressByPublicKey(data.publicKey);
 		} else {
-			cb("must provide address or publicKey");
+			return cb("must provide address or publicKey");
 		}
 	}
 	var account = private.getAccount(address);
@@ -139,7 +139,7 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 		if (data.publicKey) {
 			address = self.generateAddressByPublicKey(data.publicKey);
 		} else {
-			cb("must provide address or publicKey");
+			return cb("must provide address or publicKey");
 		}
 	}
 	var account = private.getAccount(address);
@@ -162,7 +162,7 @@ Accounts.prototype.undoMerging = function (data, cb) {
 		if (data.publicKey) {
 			address = self.generateAddressByPublicKey(data.publicKey);
 		} else {
-			cb("must provide address or publicKey");
+			return cb("must provide address or publicKey");
 		}
 	}
 	var account = private.getAccount(address);
@@ -178,6 +178,21 @@ Accounts.prototype.undoMerging = function (data, cb) {
 	})
 
 	cb(null, account);
+}
+
+Accounts.prototype.onMessage = function (query) {
+	if (query.topic == "balance") {
+		var balance = query.message;
+		modules.logic.accounts.setAccountAndGet({address: balance.address, balance: balance.value}, function (err, recipient) {
+			modules.logic.accounts.mergeAccountAndGet({
+				address: trs.recipientId,
+				balance: trs.amount,
+				u_balance: trs.amount
+			}, function (err, account) {
+				console.log("account", account)
+			});
+		});
+	}
 }
 
 Accounts.prototype.onBind = function (_modules) {

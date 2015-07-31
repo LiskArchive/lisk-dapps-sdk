@@ -47,7 +47,7 @@ Transaction.prototype.attachAssetType = function (typeId, instance) {
 		typeof instance.calculateFee == 'function' && typeof instance.verify == 'function' &&
 		typeof instance.apply == 'function' && typeof instance.undo == 'function' &&
 		typeof instance.applyUnconfirmed == 'function' && typeof instance.undoUnconfirmed == 'function' &&
-		typeof instance.ready == 'function' && typeof instance.process == 'function'
+		typeof instance.process == 'function'
 	) {
 		private.types[typeId] = instance;
 	} else {
@@ -301,7 +301,7 @@ Transaction.prototype.apply = function (trs, sender, cb) {
 
 	var amount = trs.amount + trs.fee;
 
-	if (trs.blockId != genesisblock.block.id && sender.balance < amount) {
+	if (sender.balance < amount) {
 		return setImmediate(cb, "Balance has no XCR: " + trs.id);
 	}
 
@@ -357,18 +357,18 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
 
 	var amount = trs.amount + trs.fee;
 
-	if (sender.u_balance < amount && trs.blockId != genesisblock.block.id) {
+	if (sender.u_balance < amount) {
 		return setImmediate(cb, 'Account has no balance: ' + trs.id);
 	}
 
-	self.scope.account.merge(sender.address, {u_balance: -amount}, function (err, sender) {
+	modules.blockchain.accounts.merge(sender.address, {u_balance: -amount}, function (err, sender) {
 		if (err) {
 			return cb(err);
 		}
 
 		private.types[trs.type].applyUnconfirmed.call(this, trs, sender, function (err) {
 			if (err) {
-				self.scope.account.merge(sender.address, {u_balance: amount}, function (err2) {
+				modules.blockchain.accounts.merge(sender.address, {u_balance: amount}, function (err2) {
 					cb(err);
 				});
 			} else {
