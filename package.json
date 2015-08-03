@@ -12,6 +12,8 @@
     "async": "*",
     "bytebuffer": "^4.0.0",
     "change-case": "*",
-    "js-nacl": "^0.6.0"
+    "js-nacl": "^0.6.0",
+    "crypto-browserify": "*",
+    "browserify-bignum": "*"
   }
 }

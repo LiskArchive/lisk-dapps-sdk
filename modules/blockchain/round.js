@@ -16,18 +16,18 @@ function Round(cb, _library) {
 	});
 }
 
-private.loop = function (cd) {
+private.loop = function (point, cd) {
 	if (!library.env.address) {
 		library.logger('loop', 'exit: secret doesn´t found');
 		return cb();
 	}
 
 	library.sequence.add(function (cb) {
-		private.getState(modules.blockchain.hash.getHeight() + 1, function (err, currentDelegate) {
+		private.getState(point.height, function (err, currentDelegate) {
 			if (currentDelegate) {
-				modules.blockchain.hash.createHash(currentDelegate, cb)
+				modules.blockchain.blocks.createBlock(currentDelegate, point, cb);
 			}else{
-				cb()
+				cb();
 			}
 		})
 	}, function (err) {
@@ -106,6 +106,16 @@ Round.prototype.generateDelegateList = function (height, cb) {
 
 Round.prototype.onBind = function (_modules) {
 	modules = _modules;
+}
+
+Round.prototype.onMessage = function (query) {
+	if (query.topic == "point") {
+		var blockId = query.message;
+		private.loop(blockId, function (err) {
+			console.log("loop", err)
+
+		});
+	}
 }
 
 module.exports = Round;

@@ -1,5 +1,9 @@
+var nacl = require('js-nacl');
+var crypto = require('crypto-browserify');
+var bignum = require('browserify-bignum');
+
 var private = {}, self = null,
-library = null, modules = null;
+	library = null, modules = null;
 
 function Crypto(cb, _library) {
 	self = this;
@@ -7,63 +11,43 @@ function Crypto(cb, _library) {
 	cb(null, self);
 }
 
-Crypto.prototype.keypair = function (secret, cb) {
-	var message = {
-		call: "crypto#keypair",
-		args: {
-			secret: secret
-		}
-	};
+Crypto.prototype.keypair = function (secret) {
+	var hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
+	var kp = nacl.crypto_sign_keypair_from_seed(hash);
 
-	library.sandbox.sendMessage(message, cb);
+	var keypair = {
+		publicKey: new Buffer(kp.signPk).toString('hex'),
+		privateKey: new Buffer(kp.signSk).toString('hex')
+	}
+
+	return keypair;
 }
 
-Crypto.prototype.sign = function (secret, data, cb) {
-	var message = {
-		call: "crypto#sign",
-		args: {
-			data: data,
-			secret: secret
-		}
-	};
-
-	library.sandbox.sendMessage(message, cb);
+Crypto.prototype.sign = function (secret, data) {
+	var keypair = this.keypair(secret);
+	var signature = nacl.crypto_sign_detached(data, new Buffer(keypair.privateKey, 'hex'));
+	return new Buffer(signature).toString('hex');
 }
 
-Crypto.prototype.sha256 = function (data, cb) {
-	var message = {
-		call: "crypto#sha256",
-		args: {
-			data: data
-		}
-	};
-
-	library.sandbox.sendMessage(message, cb);
+Crypto.prototype.verify = function (publicKey, signature, data) {
+	var signatureBuffer = new Buffer(transaction.signature, 'hex');
+	var senderPublicKeyBuffer = new Buffer(transaction.senderPublicKey, 'hex');
+	return nacl.crypto_sign_verify_detached(signatureBuffer, data, senderPublicKeyBuffer);
 }
 
-Crypto.prototype.encrypt = function (secret, message, cb) {
-	var message = {
-		call: "crypto#encryptbox",
-		args: {
-			message: message,
-			secret: secret
-		}
-	};
-
-	library.sandbox.sendMessage(message, cb);
+Crypto.prototype.sha256 = function (data) {
+	return crypto.createHash('sha256').update(data).toString('utf8');
 }
 
-Crypto.prototype.decrypt = function (secret, nonce, message, cb) {
-	var message = {
-		call: "crypto#decryptbox",
-		args: {
-			message: message,
-			secret: secret,
-			nonce: nonce
-		}
-	};
+Crypto.prototype.getId = function (data) {
+	var hash = this.sha256(data);
+	var temp = new Buffer(8);
+	for (var i = 0; i < 8; i++) {
+		temp[i] = hash[7 - i];
+	}
 
-	library.sandbox.sendMessage(message, cb);
+	var id = bignum.fromBuffer(temp).toString();
+	return id;
 }
 
 Crypto.prototype.onBind = function (_modules) {

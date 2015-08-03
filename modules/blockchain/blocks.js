@@ -1,7 +1,8 @@
 var bytebuffer = require('bytebuffer');
+var crypto = require('crypto-browserify');
 
 var private = {}, self = null,
-library = null, modules = null;
+	library = null, modules = null;
 private.last = null;
 
 function Blocks(cb, _library) {
@@ -10,61 +11,46 @@ function Blocks(cb, _library) {
 	cb(null, self);
 }
 
-private.getBytes = function (hashObj) {
+private.getBytes = function (blockObj) {
 	var bb = new ByteBuffer(32 + 4, true);
 
 	for (var i = 0; i < 32; i++) {
-		bb.writeByte(hashObj.hash[i]);
+		bb.writeByte(blockObj.block[i]);
 	}
 
-	bb.writeInt(hashObj.count);
+	bb.writeInt(blockObj.count);
 
 	bb.flip();
 	return bb.toBuffer();
 }
 
-Blocks.prototype.processBlock = function (hash, cb) {
+Blocks.prototype.processBlock = function (block, cb) {
 	setImmediate(cb);
 }
 
-Blocks.prototype.createBlock = function (delegate, cb) {
+Blocks.prototype.createBlock = function (delegate, point, cb) {
 	var unconfirmedList = modules.blockchain.transactions.getUnconfirmedList();
 
-	// get bytes
-	var bytes = new Buffer(0);
+	// object
+	var blockObj = {
+		delegate: delegate.publicKey,
+		point: point,
+		transactions: unconfirmedList,
+		count: unconfirmedList.length
+	};
 
-	unconfirmedList.forEach(function (trs) {
-		bytes = Buffer.concat([bytes, trs.getBytes()]);
-	});
+	var blockJSON = JSON.stringify(blockObj);
 
-	// generate hash
-	var hash = modules.api.crypto.sha256(bytes.toString('hex'), function (err, hash) {
-		if (err) {
-			return cb(err);
-		} else {
-			// object
-			var hashObj = {
-				transactions: unconfirmedList,
-				count: unconfirmedList.length,
-				hash: hash
-			};
+	var blockBin = (new Buffer(blockJSON)).toString('hex');
 
-			// get bytes of data
-			bytes = private.getBytes(hashObj);
+	blockObj.id = modules.api.crypto.getId(blockBin);
+	blockObj.signature = modules.api.crypto.sign(library.config.secret, blockBin);
 
-			// sign
-			modules.api.crypto.sign(library.config.secret, bytes.toString('hex'), function (err, signature) {
-				hashObj.signature = signature;
-				hashObj.hash = hashObj.hash.toString('hex');
-
-				modules.api.transport.message("hash", hashObj);
-			});
-		}
-	});
+	modules.api.transport.message("block", blockObj);
 }
 
-Blocks.prototype.saveBlock = function (hash, cb) {
-	// save hash
+Blocks.prototype.saveBlock = function (block, cb) {
+	// save block
 	setImmediate(cb);
 }
 

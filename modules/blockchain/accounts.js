@@ -1,5 +1,7 @@
 var extend = require('extend');
 var util = require('util');
+var crypto = require('crypto-browserify');
+var bignum = require('browserify-bignum');
 
 var private = {}, self = null,
 	library = null, modules = null;
