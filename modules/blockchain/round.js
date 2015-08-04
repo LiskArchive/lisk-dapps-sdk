@@ -27,7 +27,7 @@ private.loop = function (point, cb) {
 		var currentDelegate = private.getState(executor, point.height);
 
 		if (currentDelegate) {
-			modules.blockchain.blocks.createBlock(currentDelegate, point, cb);
+			modules.blockchain.blocks.createBlock(executor, point, cb);
 		} else {
 			cb();
 		}

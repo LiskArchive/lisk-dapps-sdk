@@ -1,9 +1,10 @@
-var bytebuffer = require('bytebuffer');
+var ByteBuffer = require('bytebuffer');
 var crypto = require('crypto-browserify');
+var bignum = require('browserify-bignum');
 
 var private = {}, self = null,
 	library = null, modules = null;
-private.last = null;
+private.lastBlock = {};
 
 function Blocks(cb, _library) {
 	self = this;
@@ -25,29 +26,70 @@ private.getBytes = function (blockObj) {
 }
 
 Blocks.prototype.processBlock = function (block, cb) {
-	setImmediate(cb);
+	var newDappBlock = block;
+	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
+		if (cryptiBlock.previousBlock == private.lastBlock.pointId && cryptiBlock.height == private.lastBlock.pointHeight + 1) { // new correct block
+			console.log("new block");
+			cb();
+		} else {
+			cb();
+		}
+	})
 }
 
-Blocks.prototype.createBlock = function (delegate, point, cb) {
+Blocks.prototype.getBytes = function (block, withSignature) {
+	var size = 32 + 8 + 4 + 4;
+
+	if (withSignature && block.signature) {
+		size = size + 64;
+	}
+
+	var bb = new ByteBuffer(size, true);
+
+	var pb = new Buffer(block.delegate, 'hex');
+	for (var i = 0; i < pb.length; i++) {
+		bb.writeByte(pb[i]);
+	}
+
+	var pb = bignum(block.pointId).toBuffer({size: '8'});
+	for (var i = 0; i < 8; i++) {
+		bb.writeByte(pb[i]);
+	}
+
+	bb.writeInt(block.pointHeight);
+
+	bb.writeInt(block.count);
+
+	if (withSignature && block.signature) {
+		var pb = new Buffer(block.signature, 'hex');
+		for (var i = 0; i < pb.length; i++) {
+			bb.writeByte(pb[i]);
+		}
+	}
+
+	bb.flip();
+	var b = bb.toBuffer();
+
+	return b;
+}
+
+Blocks.prototype.createBlock = function (executor, point, cb) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
 		// object
 		var blockObj = {
-			delegate: delegate.publicKey,
-			point: point,
-			transactions: unconfirmedList,
-			count: unconfirmedList.length
+			delegate: executor.keypair.publicKey,
+			pointId: point.id,
+			pointHeight: point.height,
+			count: unconfirmedList.length,
+			transactions: unconfirmedList
 		};
 
-		var executor = modules.blockchain.accounts.getExecutor();
+		var blockHash = self.getBytes(blockObj);
 
-		var blockJSON = JSON.stringify(blockObj);
+		blockObj.id = modules.api.crypto.getId(blockHash);
+		blockObj.signature = modules.api.crypto.sign(executor.secret, blockHash);
 
-		var blockBin = (new Buffer(blockJSON)).toString('hex');
-
-		blockObj.id = modules.api.crypto.getId(blockBin);
-		blockObj.signature = modules.api.crypto.sign(executor.secret, blockBin);
-
-		private.last = blockObj;
+		private.lastBlock = blockObj;
 		modules.api.transport.message("block", blockObj, cb);
 	});
 }
@@ -62,7 +104,19 @@ Blocks.prototype.loadBlocksOffset = function (cb) {
 }
 
 Blocks.prototype.getHeight = function () {
-	return private.last.height;
+	return private.lastBlock.height;
+}
+
+Blocks.prototype.onMessage = function (query) {
+	if (query.topic == "block") {
+		console.log(query)
+
+		var block = query.message;
+		self.processBlock(block, function (err) {
+			console.log("processBlock", err)
+
+		});
+	}
 }
 
 Blocks.prototype.onBind = function (_modules) {
