@@ -38,13 +38,11 @@ Crypto.prototype.verify = function (publicKey, signature, data) {
 }
 
 Crypto.prototype.sha256 = function (data) {
-	console.log(data)
-
 	return crypto.createHash('sha256').update(data).toString('utf8');
 }
 
 Crypto.prototype.getId = function (data) {
-	var hash = self.sha256(data);
+	var hash = crypto.createHash('sha256').update(data).digest();
 	var temp = new Buffer(8);
 	for (var i = 0; i < 8; i++) {
 		temp[i] = hash[7 - i];
