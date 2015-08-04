@@ -109,12 +109,9 @@ Blocks.prototype.getHeight = function () {
 
 Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block") {
-		console.log(query)
-
 		var block = query.message;
 		self.processBlock(block, function (err) {
 			console.log("processBlock", err)
-
 		});
 	}
 }
