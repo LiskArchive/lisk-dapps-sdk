@@ -3,6 +3,7 @@ var async = require('async');
 var private = {}, self = null,
 library = null, modules = null;
 private.delegates = [];
+private.executor = null;
 
 function Round(cb, _library) {
 	self = this;
@@ -17,7 +18,7 @@ function Round(cb, _library) {
 }
 
 private.loop = function (point, cd) {
-	if (!library.env.address) {
+	if (!private.executor.address) {
 		library.logger('loop', 'exit: secret doesn´t found');
 		return cb();
 	}
@@ -50,8 +51,8 @@ private.getState = function (height, cb) {
 
 			var delegate_id = delegates[delegate_pos];
 
-			if (delegate_id && library.env.address == delegate_id) {
-				return cb(null, library.env);
+			if (delegate_id && private.executor.address == delegate_id) {
+				return cb(null, private.executor);
 			}
 		}
 		return cb(null, null);
@@ -106,6 +107,8 @@ Round.prototype.generateDelegateList = function (height, cb) {
 
 Round.prototype.onBind = function (_modules) {
 	modules = _modules;
+
+	private.executor = modules.blockchain.accounts.getExecutor();
 }
 
 Round.prototype.onMessage = function (query) {

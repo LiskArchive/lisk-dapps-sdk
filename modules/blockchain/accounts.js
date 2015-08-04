@@ -62,8 +62,16 @@ function applyDiff(source, diff) {
 	return res;
 }
 
+private.getExecutor = function () {
+	var keypair = modules.api.crypto.keypair(process.argv[2]);
+	return {
+		address: private.generateAddressByPublicKey(keypair.publicKey),
+		keypair: keypair
+	}
+}
+
 private.addAccount = function (account) {
-	if (!account.address){
+	if (!account.address) {
 		account.address = self.generateAddressByPublicKey(account.publicKey);
 	}
 	private.accounts.push(account);
@@ -126,9 +134,9 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 	}
 	var account = private.getAccount(address);
 
-	if (!account){
+	if (!account) {
 		account = private.addAccount(data);
-	}else{
+	} else {
 		extend(account, data);
 	}
 
@@ -185,7 +193,10 @@ Accounts.prototype.undoMerging = function (data, cb) {
 Accounts.prototype.onMessage = function (query) {
 	if (query.topic == "balance") {
 		var balance = query.message;
-		modules.logic.accounts.setAccountAndGet({address: balance.address, balance: balance.value}, function (err, recipient) {
+		modules.logic.accounts.setAccountAndGet({
+			address: balance.address,
+			balance: balance.value
+		}, function (err, recipient) {
 			modules.logic.accounts.mergeAccountAndGet({
 				address: trs.recipientId,
 				balance: trs.amount,
