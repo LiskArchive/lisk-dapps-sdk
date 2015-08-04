@@ -1,6 +1,8 @@
-var nacl = require('js-nacl');
+var nacl_factory = require('js-nacl');
 var crypto = require('crypto-browserify');
 var bignum = require('browserify-bignum');
+
+var nacl = nacl_factory.instantiate();
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -24,7 +26,7 @@ Crypto.prototype.keypair = function (secret) {
 }
 
 Crypto.prototype.sign = function (secret, data) {
-	var keypair = this.keypair(secret);
+	var keypair = self.keypair(secret);
 	var signature = nacl.crypto_sign_detached(data, new Buffer(keypair.privateKey, 'hex'));
 	return new Buffer(signature).toString('hex');
 }
@@ -36,11 +38,13 @@ Crypto.prototype.verify = function (publicKey, signature, data) {
 }
 
 Crypto.prototype.sha256 = function (data) {
+	console.log(data)
+
 	return crypto.createHash('sha256').update(data).toString('utf8');
 }
 
 Crypto.prototype.getId = function (data) {
-	var hash = this.sha256(data);
+	var hash = self.sha256(data);
 	var temp = new Buffer(8);
 	for (var i = 0; i < 8; i++) {
 		temp[i] = hash[7 - i];

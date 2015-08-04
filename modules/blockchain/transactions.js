@@ -92,7 +92,7 @@ private.addUnconfirmedTransaction = function (transaction, cb) {
 	});
 }
 
-private.getUnconfirmedTransactionList = function (reverse, cb) {
+Transactions.prototype.getUnconfirmedTransactionList = function (reverse, cb) {
 	var a = [];
 	for (var i = 0; i < private.unconfirmedTransactions.length; i++) {
 		if (private.unconfirmedTransactions[i] !== false) {

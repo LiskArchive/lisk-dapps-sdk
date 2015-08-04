@@ -29,24 +29,27 @@ Blocks.prototype.processBlock = function (block, cb) {
 }
 
 Blocks.prototype.createBlock = function (delegate, point, cb) {
-	var unconfirmedList = modules.blockchain.transactions.getUnconfirmedList();
+	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
+		// object
+		var blockObj = {
+			delegate: delegate.publicKey,
+			point: point,
+			transactions: unconfirmedList,
+			count: unconfirmedList.length
+		};
 
-	// object
-	var blockObj = {
-		delegate: delegate.publicKey,
-		point: point,
-		transactions: unconfirmedList,
-		count: unconfirmedList.length
-	};
+		var executor = modules.blockchain.accounts.getExecutor();
 
-	var blockJSON = JSON.stringify(blockObj);
+		var blockJSON = JSON.stringify(blockObj);
 
-	var blockBin = (new Buffer(blockJSON)).toString('hex');
+		var blockBin = (new Buffer(blockJSON)).toString('hex');
 
-	blockObj.id = modules.api.crypto.getId(blockBin);
-	blockObj.signature = modules.api.crypto.sign(library.config.secret, blockBin);
+		blockObj.id = modules.api.crypto.getId(blockBin);
+		blockObj.signature = modules.api.crypto.sign(executor.secret, blockBin);
 
-	modules.api.transport.message("block", blockObj);
+		private.last = blockObj;
+		modules.api.transport.message("block", blockObj, cb);
+	});
 }
 
 Blocks.prototype.saveBlock = function (block, cb) {

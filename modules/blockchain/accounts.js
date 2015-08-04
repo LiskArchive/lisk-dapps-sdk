@@ -8,6 +8,7 @@ var private = {}, self = null,
 
 private.accounts = [];
 private.accountsIndexById = {};
+private.executor = null;
 
 function Accounts(cb, _library) {
 	self = this;
@@ -62,14 +63,6 @@ function applyDiff(source, diff) {
 	return res;
 }
 
-private.getExecutor = function () {
-	var keypair = modules.api.crypto.keypair(process.argv[2]);
-	return {
-		address: private.generateAddressByPublicKey(keypair.publicKey),
-		keypair: keypair
-	}
-}
-
 private.addAccount = function (account) {
 	if (!account.address) {
 		account.address = self.generateAddressByPublicKey(account.publicKey);
@@ -90,6 +83,20 @@ private.removeAccount = function (address) {
 private.getAccount = function (address) {
 	var index = private.accountsIndexById[address];
 	return private.accounts[index];
+}
+
+Accounts.prototype.getExecutor = function () {
+	if (private.executor) {
+		return private.executor
+	}
+	var keypair = modules.api.crypto.keypair(process.argv[2]);
+	private.executor = {
+		address: self.generateAddressByPublicKey(keypair.publicKey),
+		keypair: keypair,
+		secret: process.argv[2]
+	}
+
+	return private.executor
 }
 
 Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
