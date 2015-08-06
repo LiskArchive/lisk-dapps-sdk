@@ -24,7 +24,7 @@ function Blocks(cb, _library) {
 			private.saveBlock(private.genesisBlock, function (err) {
 				cb(err, self);
 			});
-		}else{
+		} else {
 			cb(err);
 		}
 	});
@@ -40,7 +40,16 @@ private.getGenesis = function (cb) {
 }
 
 private.saveBlock = function (block, cb) {
-	// save block
+	modules.api.sql.insert({
+		table: "blocks",
+		values: {
+			id: block.id,
+			pointId: block.pointId,
+			pointHeight: block.pointHeight,
+			delegate: block.delegate,
+			signature: block.signature
+		}
+	}, cb);
 	setImmediate(cb);
 }
 
@@ -67,7 +76,9 @@ private.verify = function (block, cb) {
 			cb(err);
 		}
 		if (cryptiBlock.previousBlock == private.lastBlock.pointId && cryptiBlock.height == private.lastBlock.pointHeight + 1) { // new correct block
-			private.verifySignatures(block, cb);
+			modules.api.sql.select({table: "blocks"}, function (err, found) {
+				private.verifySignatures(block, cb);
+			});
 		} else {
 			cb("skip block");
 		}

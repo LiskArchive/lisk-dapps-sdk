@@ -7,7 +7,7 @@
 	],
 	"db": [
 		{
-			"table": "test",
+			"table": "blocks",
 			"type": "table",
 			"tableFields": [
 				{
@@ -16,8 +16,56 @@
 					"length": 21
 				},
 				{
-					"name": "t1",
+					"name": "pointId",
+					"type": "String",
+					"length": 21
+				},
+				{
+					"name": "pointHeight",
 					"type": "BigInt"
+				},
+				{
+					"name": "delegate",
+					"type": "Binary",
+					"length": 32
+				},
+				{
+					"name": "signature",
+					"type": "Binary",
+					"length": 64
+				}
+			]
+		},
+		{
+			"table": "transactions",
+			"type": "table",
+			"tableFields": [
+				{
+					"name": "id",
+					"type": "String",
+					"length": 21
+				},
+				{
+					"name": "type",
+					"type": "BigInt"
+				},
+				{
+					"name": "blockId",
+					"type": "String",
+					"length": 21
+				},
+				{
+					"name": "amount",
+					"type": "BigInt"
+				},
+				{
+					"name": "fee",
+					"type": "BigInt"
+				},
+				{
+					"name": "signature",
+					"type": "Binary",
+					"length": 64
 				}
 			]
 		}
