@@ -8,12 +8,7 @@ function Round(cb, _library) {
 	self = this;
 	library = _library;
 
-	self.getDelegates(function (err, res) {
-		private.delegates = res.multisignature || [];
-		private.delegates.push(res.authorId);
-		private.delegates.sort();
-		cb(err, self);
-	});
+	cb(null, self);
 }
 
 private.loop = function (point, cb) {
@@ -58,15 +53,6 @@ private.getState = function (executor, height) {
 	return null;
 }
 
-Round.prototype.getDelegates = function (cb) {
-	var message = {
-		call: "dapps#getDelegates",
-		args: {}
-	};
-
-	library.sandbox.sendMessage(message, cb);
-}
-
 Round.prototype.calc = function (height) {
 	return Math.floor(height / private.delegates.length) + (height % private.delegates.length > 0 ? 1 : 0);
 }
@@ -92,6 +78,11 @@ Round.prototype.generateDelegateList = function (height) {
 
 Round.prototype.onBind = function (_modules) {
 	modules = _modules;
+
+	var genesisBlock = modules.blockchain.blocks.genesisBlock();
+	private.delegates = genesisBlock.associate;
+	private.delegates.push(genesisBlock.authorId);
+	private.delegates.sort();
 }
 
 Round.prototype.onMessage = function (query) {
@@ -99,7 +90,6 @@ Round.prototype.onMessage = function (query) {
 		var blockId = query.message;
 		private.loop(blockId, function (err) {
 			console.log("loop", err)
-
 		});
 	}
 }

@@ -4,12 +4,35 @@ var bignum = require('browserify-bignum');
 
 var private = {}, self = null,
 	library = null, modules = null;
-private.lastBlock = {};
+private.lastBlock = null;
+private.genesisBlock = null;
 
 function Blocks(cb, _library) {
 	self = this;
 	library = _library;
-	cb(null, self);
+	private.getGenesis(function (err, res) {
+		console.log(err, res)
+		if (!err) {
+			private.genesisBlock = {
+				associate: res.associate,
+				authorId: res.authorId,
+				pointId: res.pointId,
+				pointHeight: res.pointHeight
+			}
+
+			private.lastBlock = private.genesisBlock;
+		}
+		cb(err, self);
+	});
+}
+
+private.getGenesis = function (cb) {
+	var message = {
+		call: "dapps#getGenesis",
+		args: {}
+	};
+
+	library.sandbox.sendMessage(message, cb);
 }
 
 private.getBytes = function (blockObj) {
@@ -25,13 +48,23 @@ private.getBytes = function (blockObj) {
 	return bb.toBuffer();
 }
 
+Blocks.prototype.genesisBlock = function () {
+	return private.genesisBlock;
+}
+
 Blocks.prototype.processBlock = function (block, cb) {
 	var newDappBlock = block;
+
+	if (private.lastBlock.pointId == private.genesisBlock.pointId) {
+		console.log("first block after genesis", newDappBlock);
+		return cb();
+	}
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
 		if (cryptiBlock.previousBlock == private.lastBlock.pointId && cryptiBlock.height == private.lastBlock.pointHeight + 1) { // new correct block
-			console.log("new block");
+			console.log("new block", newDappBlock);
 			cb();
 		} else {
+			console.log("wrong block", newDappBlock);
 			cb();
 		}
 	})
