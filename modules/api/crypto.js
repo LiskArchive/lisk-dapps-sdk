@@ -32,8 +32,8 @@ Crypto.prototype.sign = function (secret, data) {
 }
 
 Crypto.prototype.verify = function (publicKey, signature, data) {
-	var signatureBuffer = new Buffer(transaction.signature, 'hex');
-	var senderPublicKeyBuffer = new Buffer(transaction.senderPublicKey, 'hex');
+	var signatureBuffer = new Buffer(signature, 'hex');
+	var senderPublicKeyBuffer = new Buffer(publicKey, 'hex');
 	return nacl.crypto_sign_verify_detached(signatureBuffer, data, senderPublicKeyBuffer);
 }
 

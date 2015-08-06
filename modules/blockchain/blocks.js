@@ -11,7 +11,6 @@ function Blocks(cb, _library) {
 	self = this;
 	library = _library;
 	private.getGenesis(function (err, res) {
-		console.log(err, res)
 		if (!err) {
 			private.genesisBlock = {
 				associate: res.associate,
@@ -21,8 +20,13 @@ function Blocks(cb, _library) {
 			}
 
 			private.lastBlock = private.genesisBlock;
+
+			private.saveBlock(private.genesisBlock, function (err) {
+				cb(err, self);
+			});
+		}else{
+			cb(err);
 		}
-		cb(err, self);
 	});
 }
 
@@ -35,17 +39,39 @@ private.getGenesis = function (cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
-private.getBytes = function (blockObj) {
-	var bb = new ByteBuffer(32 + 4, true);
+private.saveBlock = function (block, cb) {
+	// save block
+	setImmediate(cb);
+}
 
-	for (var i = 0; i < 32; i++) {
-		bb.writeByte(blockObj.block[i]);
+private.verifySignatures = function (block, cb) {
+	var blockHash = self.getBytes(block);
+
+	if (block.id != modules.api.crypto.getId(blockHash)) {
+		return cb("wrong id");
 	}
 
-	bb.writeInt(blockObj.count);
+	if (!modules.api.crypto.verify(block.delegate, block.signature, blockHash)) {
+		return cb("wrong sign verify");
+	}
 
-	bb.flip();
-	return bb.toBuffer();
+	cb();
+}
+
+private.verify = function (block, cb) {
+	if (private.lastBlock.pointId == private.genesisBlock.pointId) {
+		return private.verifySignatures(block, cb);
+	}
+	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
+		if (err) {
+			cb(err);
+		}
+		if (cryptiBlock.previousBlock == private.lastBlock.pointId && cryptiBlock.height == private.lastBlock.pointHeight + 1) { // new correct block
+			private.verifySignatures(block, cb);
+		} else {
+			cb("skip block");
+		}
+	})
 }
 
 Blocks.prototype.genesisBlock = function () {
@@ -53,21 +79,12 @@ Blocks.prototype.genesisBlock = function () {
 }
 
 Blocks.prototype.processBlock = function (block, cb) {
-	var newDappBlock = block;
-
-	if (private.lastBlock.pointId == private.genesisBlock.pointId) {
-		console.log("first block after genesis", newDappBlock);
-		return cb();
-	}
-	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
-		if (cryptiBlock.previousBlock == private.lastBlock.pointId && cryptiBlock.height == private.lastBlock.pointHeight + 1) { // new correct block
-			console.log("new block", newDappBlock);
-			cb();
-		} else {
-			console.log("wrong block", newDappBlock);
-			cb();
+	private.verify(block, function (err) {
+		if (err) {
+			return cb(err);
 		}
-	})
+		private.saveBlock(block, cb);
+	});
 }
 
 Blocks.prototype.getBytes = function (block, withSignature) {
@@ -127,11 +144,6 @@ Blocks.prototype.createBlock = function (executor, point, cb) {
 	});
 }
 
-Blocks.prototype.saveBlock = function (block, cb) {
-	// save block
-	setImmediate(cb);
-}
-
 Blocks.prototype.loadBlocksOffset = function (cb) {
 	setImmediate(cb);
 }
@@ -144,7 +156,9 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block") {
 		var block = query.message;
 		self.processBlock(block, function (err) {
-			console.log("processBlock", err)
+			if (err) {
+				console.log("processBlock", err);
+			}
 		});
 	}
 }

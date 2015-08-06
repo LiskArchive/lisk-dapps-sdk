@@ -31,13 +31,13 @@ Transaction.prototype.create = function (data) {
 		asset: {}
 	};
 
-	trs = private.types[trs.type].create.call(this, data, trs);
+	trs = private.types[trs.type].create.call(self, data, trs);
 
 	trs.signature = self.sign(data.keypair, trs);
 
 	trs.id = self.getId(trs);
 
-	trs.fee = private.types[trs.type].calculateFee.call(this, trs) || false;
+	trs.fee = private.types[trs.type].calculateFee.call(self, trs) || false;
 
 	return trs;
 }
@@ -81,7 +81,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 	}
 
 	try {
-		var assetBytes = private.types[trs.type].getBytes.call(this, trs, skipSignature);
+		var assetBytes = private.types[trs.type].getBytes.call(self, trs, skipSignature);
 		var assetSize = assetBytes ? assetBytes.length : 0;
 
 		var bb = new ByteBuffer(1 + 4 + 32 + 8 + 8 + 64 + 64 + assetSize, true);
@@ -158,7 +158,7 @@ Transaction.prototype.process = function (trs, sender, cb) {
 		return setImmediate(cb, "Can't verify signature");
 	}
 
-	private.types[trs.type].process.call(this, trs, sender, function (err, trs) {
+	private.types[trs.type].process.call(self, trs, sender, function (err, trs) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
@@ -176,7 +176,7 @@ Transaction.prototype.process = function (trs, sender, cb) {
 
 			cb(null, trs);
 		});
-	}.bind(this));
+	});
 }
 
 Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
@@ -237,7 +237,7 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	}
 
 	//calc fee
-	var fee = private.types[trs.type].calculateFee.call(this, trs) || false;
+	var fee = private.types[trs.type].calculateFee.call(self, trs) || false;
 	if (!fee || trs.fee != fee) {
 		return setImmediate(cb, "Invalid transaction type/fee: " + trs.id);
 	}
@@ -251,7 +251,7 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	}
 
 	//spec
-	private.types[trs.type].verify.call(this, trs, sender, cb);
+	private.types[trs.type].verify.call(self, trs, sender, cb);
 }
 
 Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
@@ -310,14 +310,14 @@ Transaction.prototype.apply = function (trs, sender, cb) {
 			return cb(err);
 		}
 
-		private.types[trs.type].apply.call(this, trs, sender, function (err) {
+		private.types[trs.type].apply.call(self, trs, sender, function (err) {
 			if (err) {
 				self.scope.account.merge(sender.address, {balance: amount}, cb);
 			} else {
 				setImmediate(cb);
 			}
-		}.bind(this));
-	}.bind(this));
+		});
+	});
 }
 
 Transaction.prototype.undo = function (trs, sender, cb) {
@@ -332,14 +332,14 @@ Transaction.prototype.undo = function (trs, sender, cb) {
 			return cb(err);
 		}
 
-		private.types[trs.type].undo.call(this, trs, sender, function (err) {
+		private.types[trs.type].undo.call(self, trs, sender, function (err) {
 			if (err) {
 				self.scope.account.merge(sender.address, {balance: amount}, cb);
 			} else {
 				setImmediate(cb);
 			}
-		}.bind(this));
-	}.bind(this));
+		});
+	});
 }
 
 Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
@@ -366,7 +366,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
 			return cb(err);
 		}
 
-		private.types[trs.type].applyUnconfirmed.call(this, trs, sender, function (err) {
+		private.types[trs.type].applyUnconfirmed.call(self, trs, sender, function (err) {
 			if (err) {
 				modules.blockchain.accounts.merge(sender.address, {u_balance: amount}, function (err2) {
 					cb(err);
@@ -374,8 +374,8 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
 			} else {
 				setImmediate(cb, err);
 			}
-		}.bind(this));
-	}.bind(this));
+		});
+	});
 }
 
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
