@@ -36,7 +36,7 @@ private.getGenesis = function (cb) {
 }
 
 private.saveBlock = function (block, cb) {
-	console.log(block)
+	//console.log(block)
 	modules.api.sql.insert({
 		table: "blocks",
 		values: {
@@ -48,7 +48,7 @@ private.saveBlock = function (block, cb) {
 			count: block.count
 		}
 	}, cb);
-	setImmediate(cb);
+	//setImmediate(cb);
 }
 
 private.verify = function (block, cb) {
