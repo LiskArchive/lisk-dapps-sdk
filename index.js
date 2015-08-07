@@ -1,4 +1,5 @@
 var async = require('async');
+var path = require('path');
 var modules = {};
 
 process.on('uncaughtException', function (err) {
@@ -69,7 +70,7 @@ d.run(function () {
 		},
 
 		modules: ["sandbox", "logger", "bus", "sequence", function (cb, scope) {
-			var lib = require('./modules');
+			var lib = require((process.argv[3] && path.join("./", process.argv[3])) || './modules.full.json');
 
 			var tasks = [];
 
@@ -83,7 +84,8 @@ d.run(function () {
 						console.log('domain ' + moduleName, {message: err.message, stack: err.stack});
 					});
 					d.run(function () {
-						var obj = new lib[path](cb, scope);
+						var library = require(lib[path]);
+						var obj = new library(cb, scope);
 						modules[namespace] = modules[namespace] || {};
 						modules[namespace][moduleName] = obj;
 					});

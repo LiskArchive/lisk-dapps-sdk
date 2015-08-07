@@ -1,6 +1,4 @@
-var ByteBuffer = require('bytebuffer');
 var crypto = require('crypto-browserify');
-var bignum = require('browserify-bignum');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -21,9 +19,7 @@ function Blocks(cb, _library) {
 
 			private.lastBlock = private.genesisBlock;
 
-			private.saveBlock(private.genesisBlock, function (err) {
-				cb(err, self);
-			});
+			cb(err, self);
 		} else {
 			cb(err);
 		}
@@ -40,6 +36,7 @@ private.getGenesis = function (cb) {
 }
 
 private.saveBlock = function (block, cb) {
+	console.log(block)
 	modules.api.sql.insert({
 		table: "blocks",
 		values: {
@@ -47,37 +44,33 @@ private.saveBlock = function (block, cb) {
 			pointId: block.pointId,
 			pointHeight: block.pointHeight,
 			delegate: block.delegate,
-			signature: block.signature
+			signature: block.signature,
+			count: block.count
 		}
 	}, cb);
 	setImmediate(cb);
 }
 
-private.verifySignatures = function (block, cb) {
-	var blockHash = self.getBytes(block);
-
-	if (block.id != modules.api.crypto.getId(blockHash)) {
-		return cb("wrong id");
-	}
-
-	if (!modules.api.crypto.verify(block.delegate, block.signature, blockHash)) {
-		return cb("wrong sign verify");
-	}
-
-	cb();
-}
-
 private.verify = function (block, cb) {
 	if (private.lastBlock.pointId == private.genesisBlock.pointId) {
-		return private.verifySignatures(block, cb);
+		return modules.logic.block.verifySignatures(block, cb);
 	}
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
 		if (err) {
 			cb(err);
 		}
 		if (cryptiBlock.previousBlock == private.lastBlock.pointId && cryptiBlock.height == private.lastBlock.pointHeight + 1) { // new correct block
-			modules.api.sql.select({table: "blocks"}, function (err, found) {
-				private.verifySignatures(block, cb);
+			modules.api.sql.select({
+				table: "blocks",
+				condition: {
+					id: block.id,
+					fields: ["id"]
+				}
+			}, function (err, found) {
+				if (err || found.length) {
+					return cb("wrong block");
+				}
+				modules.logic.block.verifySignatures(block, cb);
 			});
 		} else {
 			cb("skip block");
@@ -98,42 +91,6 @@ Blocks.prototype.processBlock = function (block, cb) {
 	});
 }
 
-Blocks.prototype.getBytes = function (block, withSignature) {
-	var size = 32 + 8 + 4 + 4;
-
-	if (withSignature && block.signature) {
-		size = size + 64;
-	}
-
-	var bb = new ByteBuffer(size, true);
-
-	var pb = new Buffer(block.delegate, 'hex');
-	for (var i = 0; i < pb.length; i++) {
-		bb.writeByte(pb[i]);
-	}
-
-	var pb = bignum(block.pointId).toBuffer({size: '8'});
-	for (var i = 0; i < 8; i++) {
-		bb.writeByte(pb[i]);
-	}
-
-	bb.writeInt(block.pointHeight);
-
-	bb.writeInt(block.count);
-
-	if (withSignature && block.signature) {
-		var pb = new Buffer(block.signature, 'hex');
-		for (var i = 0; i < pb.length; i++) {
-			bb.writeByte(pb[i]);
-		}
-	}
-
-	bb.flip();
-	var b = bb.toBuffer();
-
-	return b;
-}
-
 Blocks.prototype.createBlock = function (executor, point, cb) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
 		// object
@@ -145,10 +102,10 @@ Blocks.prototype.createBlock = function (executor, point, cb) {
 			transactions: unconfirmedList
 		};
 
-		var blockHash = self.getBytes(blockObj);
+		var blockBytes = modules.logic.block.getBytes(blockObj);
 
-		blockObj.id = modules.api.crypto.getId(blockHash);
-		blockObj.signature = modules.api.crypto.sign(executor.secret, blockHash);
+		blockObj.id = modules.api.crypto.getId(blockBytes);
+		blockObj.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
 
 		private.lastBlock = blockObj;
 		modules.api.transport.message("block", blockObj, cb);
@@ -176,6 +133,10 @@ Blocks.prototype.onMessage = function (query) {
 
 Blocks.prototype.onBind = function (_modules) {
 	modules = _modules;
+
+	private.saveBlock(private.genesisBlock, function (err) {
+		console.log(err)
+	})
 }
 
 module.exports = Blocks;

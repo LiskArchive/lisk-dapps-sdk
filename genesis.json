@@ -1,0 +1,20 @@
+{
+	"id": "",
+	"delegate": "db769b826286d86f23855eb86d1a0e2324f550a4933f22b8e6bc88bc9d329b59",
+	"pointId": "1904506138016700155",
+	"pointHeight": 1,
+	"transactions": [
+		{
+			"id": "",
+			"type": 1,
+			"blockId": "",
+			"fee": 50,
+			"amount": 0,
+			"sender": "8089060562636229509C",
+			"recipient": "8089060562636229509C",
+			"signature": ""
+		}
+	],
+	"count": 1,
+	"signature": ""
+}

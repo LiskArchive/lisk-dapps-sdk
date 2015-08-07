@@ -33,6 +33,10 @@
 					"name": "signature",
 					"type": "Binary",
 					"length": 64
+				},
+				{
+					"name": "count",
+					"type": "BigInt"
 				}
 			]
 		},

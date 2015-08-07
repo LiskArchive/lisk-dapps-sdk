@@ -27,15 +27,15 @@ Transaction.prototype.create = function (data) {
 		type: data.type,
 		amount: 0,
 		senderPublicKey: data.sender.publicKey,
-		timestamp: slots.getTime(),
 		asset: {}
 	};
 
 	trs = private.types[trs.type].create.call(self, data, trs);
 
-	trs.signature = self.sign(data.keypair, trs);
+	var trsBytes = self.getBytes(trs);
+	trs.signature = modules.api.crypto.sign(data.keypair, trsBytes);
 
-	trs.id = self.getId(trs);
+	trs.id = modules.api.crypto.getId(trsBytes);
 
 	trs.fee = private.types[trs.type].calculateFee.call(self, trs) || false;
 
@@ -55,26 +55,6 @@ Transaction.prototype.attachAssetType = function (typeId, instance) {
 	}
 }
 
-Transaction.prototype.sign = function (keypair, trs) {
-	var hash = self.getHash(trs);
-	return ed.Sign(hash, keypair).toString('hex');
-}
-
-Transaction.prototype.getId = function (trs) {
-	var hash = self.getHash(trs);
-	var temp = new Buffer(8);
-	for (var i = 0; i < 8; i++) {
-		temp[i] = hash[7 - i];
-	}
-
-	var id = bignum.fromBuffer(temp).toString();
-	return id;
-}
-
-Transaction.prototype.getHash = function (trs) {
-	return crypto.createHash('sha256').update(self.getBytes(trs)).digest();
-}
-
 Transaction.prototype.getBytes = function (trs, skipSignature) {
 	if (!private.types[trs.type]) {
 		throw Error('Unknown transaction type ' + trs.type);
@@ -84,9 +64,8 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 		var assetBytes = private.types[trs.type].getBytes.call(self, trs, skipSignature);
 		var assetSize = assetBytes ? assetBytes.length : 0;
 
-		var bb = new ByteBuffer(1 + 4 + 32 + 8 + 8 + 64 + 64 + assetSize, true);
+		var bb = new ByteBuffer(1 + 32 + 8 + 8 + 64 + 64 + assetSize, true);
 		bb.writeByte(trs.type);
-		bb.writeInt(trs.timestamp);
 
 		var senderPublicKeyBuffer = new Buffer(trs.senderPublicKey, 'hex');
 		for (var i = 0; i < senderPublicKeyBuffer.length; i++) {
@@ -131,10 +110,6 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 Transaction.prototype.process = function (trs, sender, cb) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
-	}
-
-	if (!self.ready(trs, sender)) {
-		return setImmediate(cb, "Transaction is not ready: " + trs.id);
 	}
 
 	try {
@@ -182,10 +157,6 @@ Transaction.prototype.process = function (trs, sender, cb) {
 Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
-	}
-
-	if (!self.ready(trs, sender)) {
-		return setImmediate(cb, "Transaction is not ready: " + trs.id);
 	}
 
 	//check sender
@@ -245,58 +216,14 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	if (trs.amount < 0 || trs.amount > 100000000 * constants.fixedPoint || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
 		return setImmediate(cb, "Invalid transaction amount: " + trs.id);
 	}
-	//check timestamp
-	if (slots.getSlotNumber(trs.timestamp) > slots.getSlotNumber()) {
-		return setImmediate(cb, "Invalid transaction timestamp");
-	}
 
 	//spec
 	private.types[trs.type].verify.call(self, trs, sender, cb);
 }
 
-Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
-	if (!private.types[trs.type]) {
-		throw Error('Unknown transaction type ' + trs.type);
-	}
-
-	if (!signature) return false;
-
-	try {
-		var bytes = self.getBytes(trs, true, true);
-		var res = self.verifyBytes(bytes, publicKey, signature);
-	} catch (e) {
-		throw Error(e.toString());
-	}
-
-	return res;
-}
-
-Transaction.prototype.verifyBytes = function (bytes, publicKey, signature) {
-	try {
-		var data2 = new Buffer(bytes.length);
-
-		for (var i = 0; i < data2.length; i++) {
-			data2[i] = bytes[i];
-		}
-
-		var hash = crypto.createHash('sha256').update(data2).digest();
-		var signatureBuffer = new Buffer(signature, 'hex');
-		var publicKeyBuffer = new Buffer(publicKey, 'hex');
-		var res = ed.Verify(hash, signatureBuffer || ' ', publicKeyBuffer || ' ');
-	} catch (e) {
-		throw Error(e.toString());
-	}
-
-	return res;
-}
-
 Transaction.prototype.apply = function (trs, sender, cb) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
-	}
-
-	if (!self.ready(trs, sender)) {
-		return setImmediate(cb, "Transaction is not ready: " + trs.id);
 	}
 
 	var amount = trs.amount + trs.fee;
@@ -305,14 +232,14 @@ Transaction.prototype.apply = function (trs, sender, cb) {
 		return setImmediate(cb, "Balance has no XCR: " + trs.id);
 	}
 
-	self.scope.account.merge(sender.address, {balance: -amount}, function (err, sender) {
+	modules.blockchain.accounts.mergeAccountAndGet(sender.address, {balance: -amount}, function (err, sender) {
 		if (err) {
 			return cb(err);
 		}
 
 		private.types[trs.type].apply.call(self, trs, sender, function (err) {
 			if (err) {
-				self.scope.account.merge(sender.address, {balance: amount}, cb);
+				modules.blockchain.accounts.undoMerging(sender.address, {balance: _amount}, cb);
 			} else {
 				setImmediate(cb);
 			}
@@ -327,14 +254,14 @@ Transaction.prototype.undo = function (trs, sender, cb) {
 
 	var amount = trs.amount + trs.fee;
 
-	self.scope.account.merge(sender.address, {balance: amount}, function (err, sender) {
+	modules.blockchain.accounts.mergeAccountAndGet(sender.address, {balance: amount}, function (err, sender) {
 		if (err) {
 			return cb(err);
 		}
 
 		private.types[trs.type].undo.call(self, trs, sender, function (err) {
 			if (err) {
-				self.scope.account.merge(sender.address, {balance: amount}, cb);
+				modules.blockchain.accounts.undoMerging(sender.address, {balance: amount}, cb);
 			} else {
 				setImmediate(cb);
 			}
@@ -347,28 +274,20 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	if (sender.secondSignature && !trs.signSignature) {
-		return setImmediate(cb, 'Failed second signature: ' + trs.id);
-	}
-
-	if (!sender.secondSignature && (trs.signSignature && trs.signSignature.length > 0)) {
-		return setImmediate(cb, "Account doesn't have second signature");
-	}
-
 	var amount = trs.amount + trs.fee;
 
 	if (sender.u_balance < amount) {
 		return setImmediate(cb, 'Account has no balance: ' + trs.id);
 	}
 
-	modules.blockchain.accounts.merge(sender.address, {u_balance: -amount}, function (err, sender) {
+	modules.blockchain.accounts.mergeAccountAndGet(sender.address, {u_balance: -amount}, function (err, sender) {
 		if (err) {
 			return cb(err);
 		}
 
 		private.types[trs.type].applyUnconfirmed.call(self, trs, sender, function (err) {
 			if (err) {
-				modules.blockchain.accounts.merge(sender.address, {u_balance: amount}, function (err2) {
+				modules.blockchain.accounts.undoMerging(sender.address, {u_balance: -amount}, function (err2) {
 					cb(err);
 				});
 			} else {
@@ -385,10 +304,10 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
 	var amount = trs.amount + trs.fee;
 
-	modules.account.mergeAccountAndGet({address: sender.address, u_balance: amount}, function (err, sender) {
+	modules.blockchain.account.mergeAccountAndGet({address: sender.address, u_balance: amount}, function (err, sender) {
 		private.types[trs.type].undoUnconfirmed.call(self, trs, sender, function (err) {
 			if (err) {
-				modules.account.mergeAccountAndGet({address: sender.address, u_balance: -amount}, cb);
+				modules.blockchain.account.undoMerging({address: sender.address, u_balance: amount}, cb);
 			} else {
 				setImmediate(cb);
 			}

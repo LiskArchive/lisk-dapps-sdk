@@ -25,20 +25,17 @@ Crypto.prototype.keypair = function (secret) {
 	return keypair;
 }
 
-Crypto.prototype.sign = function (secret, data) {
-	var keypair = self.keypair(secret);
-	var signature = nacl.crypto_sign_detached(data, new Buffer(keypair.privateKey, 'hex'));
+Crypto.prototype.sign = function (keypair, data) {
+	var hash = crypto.createHash('sha256').update(data).digest();
+	var signature = nacl.crypto_sign_detached(hash, new Buffer(keypair.privateKey, 'hex'));
 	return new Buffer(signature).toString('hex');
 }
 
 Crypto.prototype.verify = function (publicKey, signature, data) {
+	var hash = crypto.createHash('sha256').update(data).digest();
 	var signatureBuffer = new Buffer(signature, 'hex');
 	var senderPublicKeyBuffer = new Buffer(publicKey, 'hex');
-	return nacl.crypto_sign_verify_detached(signatureBuffer, data, senderPublicKeyBuffer);
-}
-
-Crypto.prototype.sha256 = function (data) {
-	return crypto.createHash('sha256').update(data).toString('utf8');
+	return nacl.crypto_sign_verify_detached(signatureBuffer, hash, senderPublicKeyBuffer);
 }
 
 Crypto.prototype.getId = function (data) {
