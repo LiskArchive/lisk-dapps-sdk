@@ -1,9 +1,7 @@
 var fs = require('fs');
 
 var private = {}, self = null,
-library = null, modules = null;
-
-private.genesisBlock = null;
+	library = null, modules = null;
 
 function Generator(cb, _library) {
 	self = this;
@@ -20,32 +18,36 @@ private.getGenesis = function (cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
-private.saveGenesis = function () {
-	fs.writeFile(outputFilename, JSON.stringify(myData, null, 4), function(err) {
-    if(err) {
-      console.log(err);
-    } else {
-      console.log("JSON saved to " + outputFilename);
-    }
-});
-}
-
 Generator.prototype.onBind = function (_modules) {
 	modules = _modules;
 
 	private.getGenesis(function (err, res) {
-		if (!err) {
-			private.genesisBlock = {
-				associate: res.associate,
-				authorId: res.authorId,
-				pointId: res.pointId,
-				pointHeight: res.pointHeight
-			}
-
-			cb(err, self);
-		} else {
-			cb(err);
+		if (err) {
+			return console.log(err)
 		}
+
+		var executor = modules.blockchain.accounts.getExecutor();
+		if (res.authorId == executor.address) {
+
+		}
+		var q = {
+			associate: res.associate
+		}
+
+		var genesisBlock = {
+			delegate: executor.keypair.publicKey,
+			pointId: res.pointId,
+			pointHeight: res.pointHeight,
+			count: 0,
+			transactions: []
+		}
+
+		var blockBytes = modules.logic.block.getBytes(genesisBlock);
+
+		genesisBlock.id = modules.api.crypto.getId(blockBytes);
+		genesisBlock.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
+
+		console.log(JSON.stringify(genesisBlock, null, 2))
 	});
 }
 

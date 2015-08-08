@@ -1,42 +1,25 @@
 var crypto = require('crypto-browserify');
+var path = require('path');
 
 var private = {}, self = null,
 	library = null, modules = null;
 private.lastBlock = null;
 private.genesisBlock = null;
+private.loaded = false;
 
 function Blocks(cb, _library) {
 	self = this;
 	library = _library;
-	private.getGenesis(function (err, res) {
-		if (!err) {
-			private.genesisBlock = {
-				associate: res.associate,
-				authorId: res.authorId,
-				pointId: res.pointId,
-				pointHeight: res.pointHeight
-			}
 
-			private.lastBlock = private.genesisBlock;
+	private.genesisBlock = require(path.join(__dirname, "../../genesis.json"));
 
-			cb(err, self);
-		} else {
-			cb(err);
-		}
-	});
-}
+	private.lastBlock = private.genesisBlock;
 
-private.getGenesis = function (cb) {
-	var message = {
-		call: "dapps#getGenesis",
-		args: {}
-	};
-
-	library.sandbox.sendMessage(message, cb);
+	cb(null, self);
 }
 
 private.saveBlock = function (block, cb) {
-	//console.log(block)
+	console.log(block)
 	modules.api.sql.insert({
 		table: "blocks",
 		values: {
@@ -53,7 +36,7 @@ private.saveBlock = function (block, cb) {
 
 private.verify = function (block, cb) {
 	if (private.lastBlock.pointId == private.genesisBlock.pointId) {
-		return modules.logic.block.verifySignatures(block, cb);
+		return modules.logic.block.verifySignature(block, cb);
 	}
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
 		if (err) {
@@ -63,14 +46,14 @@ private.verify = function (block, cb) {
 			modules.api.sql.select({
 				table: "blocks",
 				condition: {
-					id: block.id,
-					fields: ["id"]
-				}
+					id: block.id
+				},
+				fields: ["id"]
 			}, function (err, found) {
 				if (err || found.length) {
 					return cb("wrong block");
 				}
-				modules.logic.block.verifySignatures(block, cb);
+				modules.logic.block.verifySignature(block, cb);
 			});
 		} else {
 			cb("skip block");
@@ -85,6 +68,7 @@ Blocks.prototype.genesisBlock = function () {
 Blocks.prototype.processBlock = function (block, cb) {
 	private.verify(block, function (err) {
 		if (err) {
+			console.log(err)
 			return cb(err);
 		}
 		private.saveBlock(block, cb);
@@ -121,7 +105,7 @@ Blocks.prototype.getHeight = function () {
 }
 
 Blocks.prototype.onMessage = function (query) {
-	if (query.topic == "block") {
+	if (query.topic == "block" && private.loaded) {
 		var block = query.message;
 		self.processBlock(block, function (err) {
 			if (err) {
@@ -131,12 +115,32 @@ Blocks.prototype.onMessage = function (query) {
 	}
 }
 
+Blocks.prototype.onBlockchainReady = function () {
+	private.loaded = true;
+}
+
 Blocks.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	private.saveBlock(private.genesisBlock, function (err) {
-		console.log(err)
-	})
+	modules.api.sql.select({
+		table: "blocks",
+		condition: {
+			id: private.genesisBlock.id
+		},
+		fields: ["id"]
+	}, function (err, found) {
+		if (err) {
+			console.log(err)
+			process.exit(0);
+		}
+		if (!found.length) {
+			self.processBlock(private.genesisBlock, function (err) {
+				if (!err) {
+					library.bus.message("blockchainReady");
+				}
+			})
+		}
+	});
 }
 
 module.exports = Blocks;

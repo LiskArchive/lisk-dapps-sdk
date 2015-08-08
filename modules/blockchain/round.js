@@ -4,6 +4,8 @@ var crypto = require('crypto-browserify');
 var private = {}, self = null,
 	library = null, modules = null;
 private.delegates = [];
+private.loaded = false;
+
 function Round(cb, _library) {
 	self = this;
 	library = _library;
@@ -78,15 +80,19 @@ Round.prototype.generateDelegateList = function (height) {
 
 Round.prototype.onBind = function (_modules) {
 	modules = _modules;
+}
 
+Round.prototype.onBlockchainReady = function () {
 	var genesisBlock = modules.blockchain.blocks.genesisBlock();
-	private.delegates = genesisBlock.associate;
-	private.delegates.push(genesisBlock.authorId);
+	//private.delegates = genesisBlock.associate;
+	private.delegates.push(modules.blockchain.accounts.generateAddressByPublicKey(genesisBlock.delegate));
 	private.delegates.sort();
+
+	private.loaded = true;
 }
 
 Round.prototype.onMessage = function (query) {
-	if (query.topic == "point") {
+	if (query.topic == "point" && private.loaded) {
 		var blockId = query.message;
 		private.loop(blockId, function (err) {
 			console.log("loop", err)

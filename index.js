@@ -71,7 +71,8 @@ d.run(function () {
 		},
 
 		modules: ["sandbox", "logger", "bus", "sequence", function (cb, scope) {
-			var lib = require((process.argv[3] && path.join("./", process.argv[3])) || './modules.full.json');
+			var module = path.join(__dirname, process.argv[3] || 'modules.full.json');
+			var lib = require(module);
 
 			var tasks = [];
 
