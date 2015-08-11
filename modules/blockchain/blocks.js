@@ -30,8 +30,14 @@ private.saveBlock = function (block, cb) {
 			signature: block.signature,
 			count: block.count
 		}
-	}, cb);
-	//setImmediate(cb);
+	}, function (err) {
+		if (!err) {
+			private.lastBlock = block;
+			modules.api.transport.message("block", block, cb);
+		} else {
+			setImmediate(cb);
+		}
+	});
 }
 
 private.verify = function (block, cb) {
@@ -68,7 +74,6 @@ Blocks.prototype.genesisBlock = function () {
 Blocks.prototype.processBlock = function (block, cb) {
 	private.verify(block, function (err) {
 		if (err) {
-			console.log(err)
 			return cb(err);
 		}
 		private.saveBlock(block, cb);
@@ -91,8 +96,7 @@ Blocks.prototype.createBlock = function (executor, point, cb) {
 		blockObj.id = modules.api.crypto.getId(blockBytes);
 		blockObj.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
 
-		private.lastBlock = blockObj;
-		modules.api.transport.message("block", blockObj, cb);
+		self.processBlock(blockObj, cb);
 	});
 }
 
@@ -139,6 +143,8 @@ Blocks.prototype.onBind = function (_modules) {
 					library.bus.message("blockchainReady");
 				}
 			})
+		} else {
+			library.bus.message("blockchainReady");
 		}
 	});
 }

@@ -31,7 +31,7 @@ private.loop = function (point, cb) {
 
 	}, function (err) {
 		if (err) {
-			library.logger("Problem in hash generation", err);
+			library.logger("Problem in block generation", err);
 		}
 		cb(err)
 	})

@@ -219,4 +219,11 @@ Accounts.prototype.onBind = function (_modules) {
 	modules = _modules;
 }
 
+Accounts.prototype.open = function (query, cb) {
+	var keypair = modules.api.crypto.keypair(query.secret);
+	var address = self.generateAddressByPublicKey(keypair.publicKey);
+
+	cb(null, {account: self.getAccount(address)});
+}
+
 module.exports = Accounts;
