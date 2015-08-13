@@ -9,19 +9,10 @@ function Generator(cb, _library) {
 	cb(null, self);
 }
 
-private.getGenesis = function (cb) {
-	var message = {
-		call: "dapps#getGenesis",
-		args: {}
-	};
-
-	library.sandbox.sendMessage(message, cb);
-}
-
 Generator.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	private.getGenesis(function (err, res) {
+	modules.api.dapps.getGenesis(function (err, res) {
 		if (err) {
 			return console.log(err)
 		}

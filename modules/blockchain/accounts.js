@@ -161,6 +161,10 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 	}
 	var account = private.getAccount(address);
 
+	if (!account) {
+		account = private.addAccount({address: address});
+	}
+
 	Object.keys(data).forEach(function (key) {
 		var trueValue = data[key];
 		if (typeof trueValue == "number") {
@@ -184,6 +188,10 @@ Accounts.prototype.undoMerging = function (data, cb) {
 	}
 	var account = private.getAccount(address);
 
+	if (!account) {
+		account = private.addAccount({address: address});
+	}
+
 	Object.keys(data).forEach(function (key) {
 		var trueValue = data[key];
 		if (typeof trueValue == "number") {
@@ -198,18 +206,21 @@ Accounts.prototype.undoMerging = function (data, cb) {
 }
 
 Accounts.prototype.onMessage = function (query) {
-	if (query.topic == "balance") {
-		var balance = query.message;
-		modules.logic.accounts.setAccountAndGet({
-			address: balance.address,
-			balance: balance.value
-		}, function (err, recipient) {
-			modules.logic.accounts.mergeAccountAndGet({
-				address: trs.recipientId,
-				balance: trs.amount,
-				u_balance: trs.amount
-			}, function (err, account) {
-				console.log("account", account)
+	if (query.topic == "incoming") {
+		var transactionId = query.message;
+		modules.api.transactions.getTransaction(transactionId, function (err, transaction) {
+			self.mergeAccountAndGet({
+				publicKey: transaction.senderPublicKey,
+				balance: transaction.amount,
+				u_balance: transaction.amount
+			}, function (err, recipient) {
+				self.mergeAccountAndGet({
+					address: transaction.recipientId,
+					balance: -transaction.amount,
+					u_balance: -transaction.amount
+				}, function (err, account) {
+					console.log("account", account, "recipient", recipient)
+				});
 			});
 		});
 	}
