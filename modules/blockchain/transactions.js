@@ -130,7 +130,16 @@ function OutsideTransfer() {
 	}
 
 	this.save = function (cb) {
-		setImmediate(cb);
+		modules.api.sql.insert({
+			table: "asset_dapptransfer",
+			values: {
+				senderId: trs.senderId,
+				amount: trs.amount,
+				src_id: trs.src_id,
+				src_height: trs.src_height,
+				transactionId: trs.transactionId
+			}
+		}, cb);
 	}
 }
 

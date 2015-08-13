@@ -54,7 +54,12 @@
 					"type": "BigInt"
 				},
 				{
-					"name": "blockId",
+					"name": "senderId",
+					"type": "String",
+					"length": 21
+				},
+				{
+					"name": "recipientId",
 					"type": "String",
 					"length": 21
 				},
@@ -70,6 +75,11 @@
 					"name": "signature",
 					"type": "Binary",
 					"length": 64
+				},
+				{
+					"name": "blockId",
+					"type": "String",
+					"length": 21
 				}
 			]
 		},
