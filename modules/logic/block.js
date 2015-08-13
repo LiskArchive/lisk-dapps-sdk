@@ -64,6 +64,27 @@ Block.prototype.verifySignature = function (block, cb) {
 	cb();
 }
 
+Block.prototype.save = function (block, cb) {
+	modules.api.sql.insert({
+		table: "blocks",
+		values: {
+			id: block.id,
+			pointId: block.pointId,
+			pointHeight: block.pointHeight,
+			delegate: block.delegate,
+			signature: block.signature,
+			count: block.count
+		}
+	}, function (err) {
+		if (!err) {
+			private.lastBlock = block;
+			modules.api.transport.message("block", block, cb);
+		} else {
+			setImmediate(cb);
+		}
+	});
+}
+
 Block.prototype.onBind = function (_modules) {
 	modules = _modules;
 }

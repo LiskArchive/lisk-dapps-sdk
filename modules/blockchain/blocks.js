@@ -19,24 +19,10 @@ function Blocks(cb, _library) {
 }
 
 private.saveBlock = function (block, cb) {
-	console.log(block)
-	modules.api.sql.insert({
-		table: "blocks",
-		values: {
-			id: block.id,
-			pointId: block.pointId,
-			pointHeight: block.pointHeight,
-			delegate: block.delegate,
-			signature: block.signature,
-			count: block.count
-		}
-	}, function (err) {
-		if (!err) {
-			private.lastBlock = block;
-			modules.api.transport.message("block", block, cb);
-		} else {
-			setImmediate(cb);
-		}
+	modules.logic.block.save(block, function (err) {
+		async.eachSeries(block.transactions, function (trs, cb) {
+			modules.logic.transaction.save(trs, cb);
+		}, cb);
 	});
 }
 
