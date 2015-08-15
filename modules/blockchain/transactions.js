@@ -9,7 +9,6 @@ private.doubleSpendingTransactions = {};
 function InsideTransfer() {
 	this.create = function (data, trs) {
 		trs.recipientId = data.recipientId;
-		trs.recipientUsername = data.recipientUsername;
 		trs.amount = data.amount;
 
 		return trs;
@@ -72,9 +71,12 @@ function InsideTransfer() {
 
 function OutsideTransfer() {
 	this.create = function (data, trs) {
-		trs.recipientId = data.recipientId;
-		trs.recipientUsername = data.recipientUsername;
+		trs.recipientId = data.sender.address;
 		trs.amount = data.amount;
+
+		trs.asset.outsidetransfer = {
+			src_id: data.src_id
+		}
 
 		return trs;
 	}
@@ -133,10 +135,9 @@ function OutsideTransfer() {
 		modules.api.sql.insert({
 			table: "asset_dapptransfer",
 			values: {
-				senderId: trs.senderId,
+				recipientId: trs.recipientId,
 				amount: trs.amount,
 				src_id: trs.src_id,
-				src_height: trs.src_height,
 				transactionId: trs.transactionId
 			}
 		}, cb);
@@ -281,11 +282,22 @@ private.addDoubleSpending = function (transaction, cb) {
 }
 
 Transactions.prototype.onMessage = function (query) {
-	if (query.topic == "transaction") {
-		var transaction = query.message;
+	if (query.topic == "transaction" || query.topic == "balance") {
+		var transaction = null;
+		if (query.topic == "balance") {
+			var trs = {
+				type: 1,
+				senderId: query.message.recipientId,
+				recipientId: query.message.recipientId,
+				amount: query.message.amount,
+				src_id: query.message.transactionId
+			};
+			transaction = modules.logic.transaction.create(transaction);
+		} else {
+			transaction = query.message;
+		}
 		private.processUnconfirmedTransaction(transaction, function (err) {
 			console.log("processUnconfirmedTransaction", err)
-
 		});
 	}
 }

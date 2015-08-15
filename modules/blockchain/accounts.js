@@ -206,24 +206,7 @@ Accounts.prototype.undoMerging = function (data, cb) {
 }
 
 Accounts.prototype.onMessage = function (query) {
-	if (query.topic == "incoming") {
-		var transactionId = query.message;
-		modules.api.transactions.getTransaction(transactionId, function (err, transaction) {
-			self.mergeAccountAndGet({
-				publicKey: transaction.senderPublicKey,
-				balance: transaction.amount,
-				u_balance: transaction.amount
-			}, function (err, recipient) {
-				self.mergeAccountAndGet({
-					address: transaction.recipientId,
-					balance: -transaction.amount,
-					u_balance: -transaction.amount
-				}, function (err, account) {
-					console.log("account", account, "recipient", recipient)
-				});
-			});
-		});
-	}
+
 }
 
 Accounts.prototype.onBind = function (_modules) {

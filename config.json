@@ -88,22 +88,9 @@
 			"type": "table",
 			"tableFields": [
 				{
-					"name": "senderId",
-					"type": "String",
-					"length": 21
-				},
-				{
-					"name": "amount",
-					"type": "BigInt"
-				},
-				{
 					"name": "src_id",
 					"type": "String",
 					"length": 21
-				},
-				{
-					"name": "src_height",
-					"type": "BigInt"
 				},
 				{
 					"name": "transactionId",
