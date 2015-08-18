@@ -1,5 +1,6 @@
 var crypto = require('crypto-browserify');
 var path = require('path');
+var async = require('async');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -90,8 +91,35 @@ Blocks.prototype.loadBlocksOffset = function (cb) {
 	setImmediate(cb);
 }
 
-Blocks.prototype.getHeight = function () {
-	return private.lastBlock.height;
+Blocks.prototype.getHeight = function (query, cb) {
+	cb(null, private.lastBlock.height);
+}
+
+Blocks.prototype.getBlock = function (query, cb) {
+	modules.api.sql.select({
+		table: "blocks",
+		condition: {
+			id: query.id
+		},
+		fields: ["id", "pointId", "pointHeight", "delegate", "signature", "count"],
+	}, cb);
+}
+
+Blocks.prototype.getBlocks = function (query, cb) {
+	modules.api.sql.select({
+		table: "blocks",
+		join: [{
+			type: 'left outer',
+			table: 'transactions',
+			on: {"blocks.id": "transactions.blockId"}
+		}, {
+			type: 'left outer',
+			table: 'asset_dapptransfer',
+			on: {"transactions.id": "asset_dapptransfer.transactionId"}
+		}],
+		limit: query.limit,
+		offset: query.offset
+	}, cb);
 }
 
 Blocks.prototype.onMessage = function (query) {

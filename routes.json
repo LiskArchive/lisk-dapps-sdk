@@ -1,5 +1,32 @@
 [
-  {"path": "/", "method": "get", "handler": "system.api.helloworld"},
-  {"path": "/message", "method": "post", "handler": "system.api.message"},
-  {"path": "/openAccount", "method": "post", "handler": "blockchain.accounts.open"}
+	{
+		"path": "/",
+		"method": "get",
+		"handler": "system.api.helloworld"
+	},
+	{
+		"path": "/message",
+		"method": "post",
+		"handler": "system.api.message"
+	},
+	{
+		"path": "/openAccount",
+		"method": "post",
+		"handler": "blockchain.accounts.open"
+	},
+	{
+		"path": "/blocks/get",
+		"method": "get",
+		"handler": "blockchain.blocks.getBlock"
+	},
+	{
+		"path": "/blocks",
+		"method": "get",
+		"handler": "blockchain.blocks.getBlocks"
+	},
+	{
+		"path": "/blocks/height",
+		"method": "get",
+		"handler": "blockchain.blocks.getHeight"
+	}
 ]

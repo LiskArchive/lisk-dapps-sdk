@@ -9,7 +9,7 @@ function Sync(cb, _library) {
 
 private.loadBalances = function (lastBlockHeight, cb) {
 	modules.api.dapps.getCommonBlock(lastBlockHeight, function (err, rawBalances) {
-		if (err){
+		if (err) {
 			cb(err);
 		}
 		//b.height, t.id, t.senderId, t.amount
@@ -26,8 +26,9 @@ Sync.prototype.onBind = function (_modules) {
 Sync.prototype.onBlockchainReady = function () {
 	process.nextTick(function nextLoadBalances() {
 		library.sequence.add(function (cb) {
-			var lastBlockHeight = modules.blockchain.getHeight();
-			private.loadBalances(lastBlockHeight, cb);
+			modules.blockchain.getHeight(null, function (err, lastBlockHeight) {
+				private.loadBalances(lastBlockHeight, cb);
+			});
 		}, function (err) {
 			err && library.logger('loadBalances timer', err);
 
