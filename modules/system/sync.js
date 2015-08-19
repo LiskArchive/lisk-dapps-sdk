@@ -26,7 +26,7 @@ Sync.prototype.onBind = function (_modules) {
 Sync.prototype.onBlockchainReady = function () {
 	process.nextTick(function nextLoadBalances() {
 		library.sequence.add(function (cb) {
-			modules.blockchain.getHeight(null, function (err, lastBlockHeight) {
+			modules.blockchain.getHeight(function (err, lastBlockHeight) {
 				private.loadBalances(lastBlockHeight, cb);
 			});
 		}, function (err) {

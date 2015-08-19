@@ -33,22 +33,22 @@ Api.prototype.onBind = function (_modules) {
 	library.sandbox.onMessage(function (message, cb) {
 		var handler = private.apies[message.method + " " + message.path];
 		if (handler) {
-			handler(message.query, function (err, response) {
+			handler(function (err, response) {
 				cb(err, {response: response});
-			});
+			}, message.query);
 		} else {
 			cb("api not found");
 		}
 	});
 }
 
-Api.prototype.helloworld = function (query, cb) {
+Api.prototype.helloworld = function (cb) {
 	cb(null, {
 		test: "Hello, world!"
 	});
 }
 
-Api.prototype.message = function (query, cb) {
+Api.prototype.message = function (cb, query) {
 	library.bus.message("message", query);
 	cb(null, {});
 }

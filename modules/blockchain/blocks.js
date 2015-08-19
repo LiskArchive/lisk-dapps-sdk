@@ -88,11 +88,11 @@ Blocks.prototype.createBlock = function (executor, point, cb) {
 	});
 }
 
-Blocks.prototype.loadBlocksOffset = function (cb) {
+Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 	setImmediate(cb);
 }
 
-Blocks.prototype.count = function (query, cb) {
+Blocks.prototype.count = function (cb) {
 	modules.api.sql.select({
 		table: "blocks",
 		fields: [{
@@ -104,11 +104,11 @@ Blocks.prototype.count = function (query, cb) {
 	});
 }
 
-Blocks.prototype.getHeight = function (query, cb) {
+Blocks.prototype.getHeight = function (cb) {
 	cb(null, private.lastBlock.pointHeight);
 }
 
-Blocks.prototype.getBlock = function (query, cb) {
+Blocks.prototype.getBlock = function (cb, query) {
 	modules.api.sql.select({
 		table: "blocks",
 		condition: {
@@ -118,7 +118,7 @@ Blocks.prototype.getBlock = function (query, cb) {
 	}, cb);
 }
 
-Blocks.prototype.getBlocks = function (query, cb) {
+Blocks.prototype.getBlocks = function (cb, query) {
 	modules.api.sql.select({
 		table: "blocks",
 		join: [{
