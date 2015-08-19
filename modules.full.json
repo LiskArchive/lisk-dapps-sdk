@@ -17,6 +17,7 @@
 	"blockchain/blocks": "./modules/blockchain/blocks.js",
 	"blockchain/round": "./modules/blockchain/round.js",
 	"blockchain/transactions": "./modules/blockchain/transactions.js",
+	"blockchain/loader": "./modules/blockchain/loader.js",
 	"system/background": "./modules/system/background.js",
 	"system/api": "./modules/system/api.js"
 }

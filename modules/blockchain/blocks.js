@@ -63,6 +63,7 @@ Blocks.prototype.processBlock = function (block, cb) {
 		if (err) {
 			return cb(err);
 		}
+		private.lastBlock = block;
 		private.saveBlock(block, cb);
 	});
 }
@@ -92,7 +93,7 @@ Blocks.prototype.loadBlocksOffset = function (cb) {
 }
 
 Blocks.prototype.getHeight = function (query, cb) {
-	cb(null, private.lastBlock.height);
+	cb(null, private.lastBlock.pointHeight);
 }
 
 Blocks.prototype.getBlock = function (query, cb) {

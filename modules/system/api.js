@@ -34,7 +34,7 @@ Api.prototype.onBind = function (_modules) {
 		var handler = private.apies[message.method + " " + message.path];
 		if (handler) {
 			handler(message.query, function (err, response) {
-				cb(err, response);
+				cb(err, {response: response});
 			});
 		} else {
 			cb("api not found");
