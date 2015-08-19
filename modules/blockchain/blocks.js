@@ -92,6 +92,18 @@ Blocks.prototype.loadBlocksOffset = function (cb) {
 	setImmediate(cb);
 }
 
+Blocks.prototype.count = function (query, cb) {
+	modules.api.sql.select({
+		table: "blocks",
+		fields: [{
+			expression: 'count(*)'
+		}]
+	}, function (err, rows) {
+		var count = !err && Number(rows[0][0]);
+		cb(err, count);
+	});
+}
+
 Blocks.prototype.getHeight = function (query, cb) {
 	cb(null, private.lastBlock.pointHeight);
 }

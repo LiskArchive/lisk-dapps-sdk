@@ -28,5 +28,10 @@
 		"path": "/blocks/height",
 		"method": "get",
 		"handler": "blockchain.blocks.getHeight"
+	},
+	{
+		"path": "/blocks/count",
+		"method": "get",
+		"handler": "blockchain.blocks.count"
 	}
 ]
