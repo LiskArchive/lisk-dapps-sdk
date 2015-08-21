@@ -1,3 +1,5 @@
+var extend = require("extend");
+
 var private = {}, self = null,
 	library = null, modules = null;
 private.types = {};
@@ -47,7 +49,8 @@ Transaction.prototype.attachAssetType = function (typeId, instance) {
 		typeof instance.calculateFee == 'function' && typeof instance.verify == 'function' &&
 		typeof instance.apply == 'function' && typeof instance.undo == 'function' &&
 		typeof instance.applyUnconfirmed == 'function' && typeof instance.undoUnconfirmed == 'function' &&
-		typeof instance.process == 'function' && typeof instance.save == 'function'
+		typeof instance.process == 'function' && typeof instance.save == 'function' &&
+		typeof instance.dbRead == 'function'
 	) {
 		private.types[typeId] = instance;
 	} else {
@@ -344,6 +347,35 @@ Transaction.prototype.save = function (trs, cb) {
 		}
 		private.types[trs.type].save.call(this, trs, cb);
 	});
+}
+
+Transaction.prototype.dbRead = function (row) {
+	if (!row.t_id) {
+		return null;
+	}
+
+	var trs = {
+		id: row.t_id,
+		type: row.t_type,
+		senderId: row.t_senderId,
+		recipientId: row.t_recipientId,
+		amount: row.t_amount,
+		fee: row.t_fee,
+		signature: row.t_signature,
+		blockId: row.t_blockId,
+		asset: {}
+	};
+
+	if (!private.types[trs.type]) {
+		return cb('Unknown transaction type ' + trs.type);
+	}
+
+	var asset = private.types[trs.type].dbRead(row);
+	if (asset) {
+		trs.asset = extend(trs.asset, asset);
+	}
+
+	return trs;
 }
 
 Transaction.prototype.onBind = function (_modules) {

@@ -8,6 +8,7 @@
 	"db": [
 		{
 			"table": "blocks",
+			"alias": "b",
 			"type": "table",
 			"tableFields": [
 				{
@@ -42,6 +43,7 @@
 		},
 		{
 			"table": "transactions",
+			"alias": "t",
 			"type": "table",
 			"tableFields": [
 				{
@@ -85,6 +87,7 @@
 		},
 		{
 			"table": "asset_dapptransfer",
+			"alias": "t_dt",
 			"type": "table",
 			"tableFields": [
 				{

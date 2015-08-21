@@ -1,6 +1,7 @@
 var crypto = require('crypto-browserify');
 var path = require('path');
 var async = require('async');
+var util = require('util');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -17,6 +18,48 @@ function Blocks(cb, _library) {
 	private.lastBlock = private.genesisBlock;
 
 	cb(null, self);
+}
+
+private.row2object = function (row) {
+	for (var
+			 out = {},
+			 length = this.length,
+			 i = 0; i < length; i++
+	) {
+		out[this[i]] = row[i];
+	}
+	return out;
+}
+
+private.readDbRows = function (rows) {
+	var blocks = {};
+	var order = [];
+	for (var i = 0, length = rows.length; i < length; i++) {
+		var __block = modules.logic.block.dbRead(rows[i]);
+		if (__block) {
+			if (!blocks[__block.id]) {
+				order.push(__block.id);
+				blocks[__block.id] = __block;
+			}
+
+			var __transaction = modules.logic.transaction.dbRead(rows[i]);
+			blocks[__block.id].transactions = blocks[__block.id].transactions || {};
+			if (__transaction) {
+				if (!blocks[__block.id].transactions[__transaction.id]) {
+					blocks[__block.id].transactions[__transaction.id] = __transaction;
+				}
+			}
+		}
+	}
+
+	blocks = order.map(function (v) {
+		blocks[v].transactions = Object.keys(blocks[v].transactions).map(function (t) {
+			return blocks[v].transactions[t];
+		});
+		return blocks[v];
+	});
+
+	return blocks;
 }
 
 private.saveBlock = function (block, cb) {
@@ -89,6 +132,31 @@ Blocks.prototype.createBlock = function (executor, point, cb) {
 }
 
 Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
+	self.getBlocks(function (err, blocks) {
+		if (err) {
+			return cb(err);
+		}
+
+		blocks = blocks.map(private.row2object, library.scheme.alias);
+
+		blocks = private.readDbRows(blocks);
+
+		console.log(blocks)
+
+		async.eachSeries(blocks, function (block, cb) {
+
+			async.eachSeries(block.transactions, function (transaction, cb) {
+
+			});
+
+		}, function (err) {
+			cb(err, blocks);
+		});
+
+	}, {limit: limit, offset: offset})
+}
+
+Blocks.prototype.simpleDeleteAfterBlock = function (blockId, cb) {
 	setImmediate(cb);
 }
 
@@ -115,23 +183,28 @@ Blocks.prototype.getBlock = function (cb, query) {
 			id: query.id
 		},
 		fields: ["id", "pointId", "pointHeight", "delegate", "signature", "count"],
+		map: ["id", "pointId", "pointHeight", "delegate", "signature", "count"]
 	}, cb);
 }
 
 Blocks.prototype.getBlocks = function (cb, query) {
 	modules.api.sql.select({
 		table: "blocks",
+		alias: "b",
 		join: [{
 			type: 'left outer',
 			table: 'transactions',
-			on: {"blocks.id": "transactions.blockId"}
+			alias: "t",
+			on: {"b.id": "t.blockId"}
 		}, {
 			type: 'left outer',
 			table: 'asset_dapptransfer',
-			on: {"transactions.id": "asset_dapptransfer.transactionId"}
+			alias: "t_dt",
+			on: {"t.id": "t_dt.transactionId"}
 		}],
 		limit: query.limit,
-		offset: query.offset
+		offset: query.offset,
+		fields: library.scheme.fields
 	}, cb);
 }
 

@@ -19,5 +19,7 @@
 	"blockchain/transactions": "./modules/blockchain/transactions.js",
 	"blockchain/loader": "./modules/blockchain/loader.js",
 	"system/background": "./modules/system/background.js",
-	"system/api": "./modules/system/api.js"
+	"system/api": "./modules/system/api.js",
+	"assets/insidetransfer": "./modules/assets/insidetransfer.js",
+	"assets/outsidetransfer": "./modules/assets/outsidetransfer.js"
 }

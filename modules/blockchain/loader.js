@@ -17,38 +17,34 @@ private.loadBlockChain = function () {
 			return library.logger('blocks.count', err)
 		}
 
-		private.total = count;
 		library.logger('blocks ' + count);
 		async.until(
 			function () {
 				return count < offset
 			}, function (cb) {
 				library.logger('current ' + offset);
-				setImmediate(function () {
-					modules.blockchain.blocks.loadBlocksOffset(limit, offset, function (err, lastBlockOffset) {
-						if (err) {
-							return cb(err);
-						}
+				modules.blockchain.blocks.loadBlocksOffset(limit, offset, function (err, lastBlockOffset) {
+					if (err) {
+						return setImmediate(cb, err);
+					}
 
-						offset = offset + limit;
-						private.loadingLastBlock = lastBlockOffset;
+					offset = offset + limit;
 
-						cb();
-					});
-				})
+					setImmediate(cb);
+				});
 			}, function (err) {
 				if (err) {
 					library.logger('loadBlocksOffset', err);
 					if (err.block) {
 						library.logger('blockchain failed at ', err.block.height)
-						modules.blocks.simpleDeleteAfterBlock(err.block.id, function (err, res) {
+						modules.blockchain.blocks.simpleDeleteAfterBlock(err.block.id, function (err) {
 							library.logger('blockchain clipped');
-							library.bus.message('blockchainReady');
+							library.bus.message('blockchainLoaded');
 						})
 					}
 				} else {
-					library.logger('blockchain ready');
-					library.bus.message('blockchainReady');
+					library.logger('blockchain loaded');
+					library.bus.message('blockchainLoaded');
 				}
 			}
 		)

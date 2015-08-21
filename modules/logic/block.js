@@ -85,6 +85,17 @@ Block.prototype.save = function (block, cb) {
 	});
 }
 
+Block.prototype.dbRead = function (row) {
+	return {
+		id: row.b_id,
+		pointId: row.b_pointId,
+		pointHeight: row.b_pointHeight,
+		delegate: row.b_delegate,
+		signature: row.b_signature,
+		count: row.b_count
+	};
+}
+
 Block.prototype.onBind = function (_modules) {
 	modules = _modules;
 }

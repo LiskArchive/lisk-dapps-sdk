@@ -22,6 +22,22 @@ d.run(function () {
 			cb(null, console.log);
 		},
 
+		scheme: function (cb) {
+			var db = require('./config.json').db;
+
+			var fields = [];
+			var alias = [];
+
+			for (var i = 0; i < db.length; i++) {
+				for (var n = 0; n < db[i].tableFields.length; n++) {
+					fields.push(db[i].alias + "." + db[i].tableFields[n].name);
+					alias.push(db[i].alias + "_" + db[i].tableFields[n].name);
+				}
+			}
+
+			cb(null, {scheme: db, fields: fields, alias: alias});
+		},
+
 		bus: function (cb) {
 			var changeCase = require('change-case');
 			var bus = function () {
