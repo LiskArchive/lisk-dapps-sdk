@@ -26,12 +26,26 @@ d.run(function () {
 			var db = require('./config.json').db;
 
 			var fields = [];
-			var alias = [];
+			var alias = {};
+
+			function getType(type) {
+				var nativeType;
+
+				switch (type) {
+					case "BigInt":
+						nativeType = Number;
+						break;
+					default:
+						nativeType = String;
+				}
+
+				return nativeType;
+			}
 
 			for (var i = 0; i < db.length; i++) {
 				for (var n = 0; n < db[i].tableFields.length; n++) {
 					fields.push(db[i].alias + "." + db[i].tableFields[n].name);
-					alias.push(db[i].alias + "_" + db[i].tableFields[n].name);
+					alias[db[i].alias + "_" + db[i].tableFields[n].name] = getType(db[i].tableFields[n].type);
 				}
 			}
 

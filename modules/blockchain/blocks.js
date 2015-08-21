@@ -31,6 +31,46 @@ private.row2object = function (row) {
 	return out;
 }
 
+private.row2parsed = function (row) {
+	for (var
+			 out = {},
+			 fields = this.f,
+			 parsers = this.p,
+			 length = fields.length,
+			 i = 0; i < length; i++
+	) {
+		if (parsers[i] === Buffer) {
+			out[fields[i]] = parsers[i](row[i], 'hex');
+		} else if (parsers[i] === Array) {
+			out[fields[i]] = row[i] ? row[i].split(",") : []
+		} else {
+			out[fields[i]] = parsers[i](row[i]);
+		}
+	}
+	return out;
+}
+
+private.parseFields = function ($fields) {
+	for (var
+			 current,
+			 fields = Object.keys($fields),
+			 parsers = [],
+			 length = fields.length,
+			 i = 0; i < length; i++
+	) {
+		current = $fields[fields[i]];
+		parsers[i] = current === Boolean ?
+			$Boolean : (
+			current === Date ?
+				$Date :
+			current || String
+		)
+		;
+	}
+
+	return {f: fields, p: parsers};
+}
+
 private.readDbRows = function (rows) {
 	var blocks = {};
 	var order = [];
@@ -137,15 +177,15 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 			return cb(err);
 		}
 
-		blocks = blocks.map(private.row2object, library.scheme.alias);
+		blocks = util.isArray(library.scheme.alias) ?
+			blocks.map(private.row2object, library.scheme.alias) :
+			blocks.map(private.row2parsed, private.parseFields(library.scheme.alias))
 
 		blocks = private.readDbRows(blocks);
 
-		console.log(blocks)
-
 		async.eachSeries(blocks, function (block, cb) {
 			try {
-				var valid = library.logic.block.verifySignature(block);
+				var valid = modules.logic.block.verifySignature(block);
 			} catch (e) {
 				return setImmediate(cb, {
 					message: e.toString(),
@@ -168,7 +208,7 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 							block: block
 						});
 					}
-					library.logic.transaction.verify(transaction, sender, function (err) {
+					modules.logic.transaction.verify(transaction, sender, function (err) {
 						if (err) {
 							return setImmediate(cb, {
 								message: err,
