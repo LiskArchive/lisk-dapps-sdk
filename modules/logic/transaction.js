@@ -28,6 +28,7 @@ Transaction.prototype.create = function (data) {
 	var trs = {
 		type: data.type,
 		amount: 0,
+		senderId: data.sender.address,
 		senderPublicKey: data.sender.publicKey,
 		asset: {}
 	};
@@ -177,34 +178,6 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 		return setImmediate(cb, "Can't verify signature");
 	}
 
-	//verify second signature
-	if (sender.secondSignature) {
-		try {
-			var valid = self.verifySecondSignature(trs, sender.secondPublicKey, trs.signSignature);
-		} catch (e) {
-			return setImmediate(cb, e.toString());
-		}
-		if (!valid) {
-			return setImmediate(cb, "Can't verify second signature: " + trs.id);
-		}
-	}
-
-	for (var s = 0; s < sender.multisignatures.length; s++) {
-		var verify = false;
-
-		if (trs.signatures) {
-			for (var d = 0; d < trs.signatures.length && !verify; d++) {
-				if (self.verifySecondSignature(trs, sender.multisignatures[s], trs.signatures[d])) {
-					verify = true;
-				}
-			}
-		}
-
-		if (!verify) {
-			return setImmediate(cb, "Failed multisignature: " + trs.id);
-		}
-	}
-
 	//check sender
 	if (trs.senderId != sender.address) {
 		return setImmediate(cb, "Invalid sender id: " + trs.id);
@@ -335,6 +308,7 @@ Transaction.prototype.save = function (trs, cb) {
 			id: trs.id,
 			type: trs.type,
 			senderId: trs.senderId,
+			senderPublicKey: trs.senderPublicKey,
 			recipientId: trs.recipientId,
 			amount: trs.amount,
 			fee: trs.fee,
@@ -358,6 +332,7 @@ Transaction.prototype.dbRead = function (row) {
 		id: row.t_id,
 		type: row.t_type,
 		senderId: row.t_senderId,
+		senderPublicKey: row.t_senderPublicKey,
 		recipientId: row.t_recipientId,
 		amount: row.t_amount,
 		fee: row.t_fee,

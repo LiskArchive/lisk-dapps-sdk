@@ -72,10 +72,8 @@ OutsideTransfer.prototype.save = function (cb) {
 	modules.api.sql.insert({
 		table: "asset_dapptransfer",
 		values: {
-			recipientId: trs.recipientId,
-			amount: trs.amount,
 			src_id: trs.src_id,
-			transactionId: trs.transactionId
+			transactionId: trs.id
 		}
 	}, cb);
 }

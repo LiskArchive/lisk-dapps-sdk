@@ -144,15 +144,46 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 		console.log(blocks)
 
 		async.eachSeries(blocks, function (block, cb) {
-
+			try {
+				var valid = library.logic.block.verifySignature(block);
+			} catch (e) {
+				return setImmediate(cb, {
+					message: e.toString(),
+					block: block
+				});
+			}
+			console.log("valid", valid)
+			if (!valid) {
+				return setImmediate(cb, {
+					message: "Can't verify signature",
+					block: block
+				});
+			}
 			async.eachSeries(block.transactions, function (transaction, cb) {
+				modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, sender) {
+					if (err) {
+						return cb({
+							message: err,
+							transaction: transaction,
+							block: block
+						});
+					}
+					library.logic.transaction.verify(transaction, sender, function (err) {
+						if (err) {
+							return setImmediate(cb, {
+								message: err,
+								transaction: transaction,
+								block: block
+							});
+						}
 
-			});
-
+						private.applyTransaction(block, transaction, cb);
+					});
+				});
+			}, cb);
 		}, function (err) {
 			cb(err, blocks);
 		});
-
 	}, {limit: limit, offset: offset})
 }
 

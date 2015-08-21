@@ -146,10 +146,12 @@ Transactions.prototype.onMessage = function (query) {
 	if (query.topic == "transaction" || query.topic == "balance") {
 		var transaction = null;
 		if (query.topic == "balance") {
+			var address = modules.accounts.generateAddressByPublicKey(query.message.publicKey);
 			var trs = {
 				type: 1,
-				senderId: query.message.recipientId,
-				recipientId: query.message.recipientId,
+				senderId: address,
+				senderPublicKey: query.message.publicKey,
+				recipientId: address,
 				amount: query.message.amount,
 				src_id: query.message.transactionId
 			};

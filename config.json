@@ -61,6 +61,11 @@
 					"length": 21
 				},
 				{
+					"name": "senderPublicKey",
+					"type": "Binary",
+					"length": 32
+				},
+				{
 					"name": "recipientId",
 					"type": "String",
 					"length": 21
