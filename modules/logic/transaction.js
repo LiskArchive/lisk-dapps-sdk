@@ -158,6 +158,23 @@ Transaction.prototype.process = function (trs, sender, cb) {
 	});
 }
 
+Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
+	if (!private.types[trs.type]) {
+		throw Error('Unknown transaction type ' + trs.type);
+	}
+
+	if (!signature) return false;
+
+	try {
+		var bytes = self.getBytes(trs, true);
+		var res = modules.api.crypto.verify(publicKey, signature, bytes);
+	} catch (e) {
+		throw Error(e.toString());
+	}
+
+	return res;
+}
+
 Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);

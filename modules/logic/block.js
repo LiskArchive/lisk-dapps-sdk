@@ -50,18 +50,16 @@ Block.prototype.getBytes = function (block, withSignature) {
 	return b;
 }
 
-Block.prototype.verifySignature = function (block, cb) {
+Block.prototype.verifySignature = function (block) {
 	var blockBytes = self.getBytes(block);
-
 	if (block.id != modules.api.crypto.getId(blockBytes)) {
-		return cb("wrong id");
+		return false;
 	}
-
 	if (!modules.api.crypto.verify(block.delegate, block.signature, blockBytes)) {
-		return cb("wrong sign verify");
+		return false;
 	}
 
-	cb();
+	return true;
 }
 
 Block.prototype.save = function (block, cb) {

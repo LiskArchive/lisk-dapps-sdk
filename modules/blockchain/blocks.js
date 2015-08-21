@@ -112,7 +112,15 @@ private.saveBlock = function (block, cb) {
 
 private.verify = function (block, cb) {
 	if (private.lastBlock.pointId == private.genesisBlock.pointId) {
-		return modules.logic.block.verifySignature(block, cb);
+		try {
+			var valid = modules.logic.block.verifySignature(block);
+		} catch (e) {
+			return cb(e.toString());
+		}
+		if (!valid) {
+			return cb("wrong block");
+		}
+		return cb();
 	}
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
 		if (err) {
@@ -129,7 +137,15 @@ private.verify = function (block, cb) {
 				if (err || found.length) {
 					return cb("wrong block");
 				}
-				modules.logic.block.verifySignature(block, cb);
+				try {
+					var valid = modules.logic.block.verifySignature(block);
+				} catch (e) {
+					return cb(e.toString());
+				}
+				if (!valid) {
+					return cb("wrong block");
+				}
+				return cb();
 			});
 		} else {
 			cb("skip block");
