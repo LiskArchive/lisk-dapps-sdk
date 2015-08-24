@@ -68,7 +68,7 @@ OutsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	setImmediate(cb);
 }
 
-OutsideTransfer.prototype.save = function (cb) {
+OutsideTransfer.prototype.save = function (trs, cb) {
 	modules.api.sql.insert({
 		table: "asset_dapptransfer",
 		values: {

@@ -143,25 +143,35 @@ private.addDoubleSpending = function (transaction, cb) {
 }
 
 Transactions.prototype.onMessage = function (query) {
-	if (query.topic == "transaction" || query.topic == "balance") {
-		var transaction = null;
-		if (query.topic == "balance") {
-			var address = modules.accounts.generateAddressByPublicKey(query.message.publicKey);
-			var trs = {
-				type: 1,
-				senderId: address,
-				senderPublicKey: query.message.publicKey,
-				recipientId: address,
-				amount: query.message.amount,
-				src_id: query.message.transactionId
-			};
-			transaction = modules.logic.transaction.create(transaction);
-		} else {
-			transaction = query.message;
-		}
-		private.processUnconfirmedTransaction(transaction, function (err) {
-			console.log("processUnconfirmedTransaction", err)
-		});
+	switch (query.topic) {
+		case "transaction":
+			var transaction = query.message;
+			private.processUnconfirmedTransaction(transaction, function (err) {
+				console.log("processUnconfirmedTransaction", err)
+			});
+			break;
+		case "balance":
+			var executor = modules.blockchain.accounts.getExecutor();
+			if (executor.keypair.publicKey == query.message.publicKey) {
+				modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
+					if (data.transaction.senderPublicKey == query.message.publicKey) {
+						modules.blockchain.accounts.setAccountAndGet({address: executor.address}, function (err, account) {
+							var transaction = modules.logic.transaction.create({
+								type: 1,
+								sender: account,
+								keypair: executor.keypair,
+								amount: data.transaction.amount,
+								src_id: data.transaction.id
+							});
+
+							private.processUnconfirmedTransaction(transaction, function (err) {
+								console.log("processUnconfirmedTransaction", err)
+							});
+						});
+					}
+				});
+			}
+			break;
 	}
 }
 

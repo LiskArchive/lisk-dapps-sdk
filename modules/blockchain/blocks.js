@@ -209,7 +209,6 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 					block: block
 				});
 			}
-			console.log("valid", valid)
 			if (!valid) {
 				return setImmediate(cb, {
 					message: "Can't verify signature",
