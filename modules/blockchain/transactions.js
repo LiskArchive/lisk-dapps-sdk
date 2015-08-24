@@ -77,9 +77,10 @@ private.processUnconfirmedTransaction = function (transaction, cb) {
 		if (err) {
 			return done(err);
 		}
+
 		async.series([
 			function (cb) {
-				modules.logic.transaction.process(transaction, cb);
+				modules.logic.transaction.process(transaction, sender, cb);
 			},
 			function (cb) {
 				modules.logic.transaction.verify(transaction, sender, cb);
@@ -173,25 +174,23 @@ Transactions.prototype.onMessage = function (query) {
 			break;
 		case "balance":
 			var executor = modules.blockchain.accounts.getExecutor();
-			if (executor.keypair.publicKey == query.message.publicKey) {
-				modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
-					if (data.transaction.senderPublicKey == query.message.publicKey) {
-						modules.blockchain.accounts.setAccountAndGet({address: executor.address}, function (err, account) {
-							var transaction = modules.logic.transaction.create({
-								type: 1,
-								sender: account,
-								keypair: executor.keypair,
-								amount: data.transaction.amount,
-								src_id: data.transaction.id
-							});
 
-							private.processUnconfirmedTransaction(transaction, function (err) {
-								console.log("processUnconfirmedTransaction", err)
-							});
+			modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
+				if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey) {
+					modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, account) {
+						var transaction = modules.logic.transaction.create({
+							type: 1,
+							sender: account,
+							keypair: executor.keypair,
+							amount: data.transaction.amount,
+							src_id: data.transaction.id
 						});
-					}
-				});
-			}
+						private.processUnconfirmedTransaction(transaction, function (err) {
+							console.log("processUnconfirmedTransaction", err)
+						});
+					});
+				}
+			});
 			break;
 	}
 }

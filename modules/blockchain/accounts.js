@@ -168,9 +168,9 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 	Object.keys(data).forEach(function (key) {
 		var trueValue = data[key];
 		if (typeof trueValue == "number") {
-			account[value] = account[value] + trueValue;
+			account[key] = account[key] + trueValue;
 		} else if (util.isArray(trueValue)) {
-			account[value] = applyDiff(account[value], trueValue);
+			account[key] = applyDiff(account[key], trueValue);
 		}
 	})
 
@@ -195,18 +195,14 @@ Accounts.prototype.undoMerging = function (data, cb) {
 	Object.keys(data).forEach(function (key) {
 		var trueValue = data[key];
 		if (typeof trueValue == "number") {
-			account[value] = account[value] - trueValue;
+			account[key] = account[key] - trueValue;
 		} else if (util.isArray(trueValue)) {
 			trueValue = reverseDiff(trueValue);
-			account[value] = applyDiff(account[value], trueValue);
+			account[key] = applyDiff(account[key], trueValue);
 		}
 	})
 
 	cb(null, account);
-}
-
-Accounts.prototype.onMessage = function (query) {
-
 }
 
 Accounts.prototype.onBind = function (_modules) {

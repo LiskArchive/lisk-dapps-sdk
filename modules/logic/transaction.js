@@ -1,4 +1,5 @@
 var extend = require("extend");
+var ByteBuffer = require('bytebuffer');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -38,6 +39,7 @@ Transaction.prototype.create = function (data) {
 	var trsBytes = self.getBytes(trs);
 	trs.signature = modules.api.crypto.sign(data.keypair, trsBytes);
 
+	var trsBytes = self.getBytes(trs);
 	trs.id = modules.api.crypto.getId(trsBytes);
 
 	trs.fee = private.types[trs.type].calculateFee.call(self, trs) || false;
@@ -116,7 +118,8 @@ Transaction.prototype.process = function (trs, sender, cb) {
 	}
 
 	try {
-		var txId = self.getId(trs);
+		var trsBytes = self.getBytes(trs);
+		var txId = modules.api.crypto.getId(trsBytes);
 	} catch (e) {
 		return setImmediate(cb, "Invalid transaction id");
 	}
@@ -127,11 +130,7 @@ Transaction.prototype.process = function (trs, sender, cb) {
 	}
 
 	modules.api.transactions.getTransaction(trs.id, function (err, data) {
-		if (err) {
-			return cb("Internal sql error");
-		}
-
-		if (data.transaction) {
+		if (err != "Transaction not found") {
 			return cb("Can't process transaction, transaction already confirmed");
 		}
 
@@ -187,7 +186,7 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 		return setImmediate(cb, "Invalid transaction type/fee: " + trs.id);
 	}
 	//check amount
-	if (trs.amount < 0 || trs.amount > 100000000 * constants.fixedPoint || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
+	if (trs.amount < 0 || trs.amount > 100000000 * Math.pow(10, 8) || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
 		return setImmediate(cb, "Invalid transaction amount: " + trs.id);
 	}
 
@@ -206,7 +205,7 @@ Transaction.prototype.apply = function (trs, sender, cb) {
 		return setImmediate(cb, "Balance has no XCR: " + trs.id);
 	}
 
-	modules.blockchain.accounts.mergeAccountAndGet(sender.address, {balance: -amount}, function (err, sender) {
+	modules.blockchain.accounts.mergeAccountAndGet({address: sender.address, balance: -amount}, function (err, sender) {
 		if (err) {
 			return cb(err);
 		}
@@ -228,7 +227,7 @@ Transaction.prototype.undo = function (trs, sender, cb) {
 
 	var amount = trs.amount + trs.fee;
 
-	modules.blockchain.accounts.mergeAccountAndGet(sender.address, {balance: amount}, function (err, sender) {
+	modules.blockchain.accounts.mergeAccountAndGet({address: sender.address, balance: amount}, function (err, sender) {
 		if (err) {
 			return cb(err);
 		}
@@ -254,7 +253,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
 		return setImmediate(cb, 'Account has no balance: ' + trs.id);
 	}
 
-	modules.blockchain.accounts.mergeAccountAndGet(sender.address, {u_balance: -amount}, function (err, sender) {
+	modules.blockchain.accounts.mergeAccountAndGet({address: sender.address, u_balance: -amount}, function (err, sender) {
 		if (err) {
 			return cb(err);
 		}

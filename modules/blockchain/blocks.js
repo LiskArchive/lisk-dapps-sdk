@@ -306,7 +306,7 @@ Blocks.prototype.onMessage = function (query) {
 	}
 }
 
-Blocks.prototype.onBlockchainReady = function () {
+Blocks.prototype.onBlockchainLoaded = function () {
 	private.loaded = true;
 }
 

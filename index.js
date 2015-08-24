@@ -1,11 +1,14 @@
+console.log("dapp loading process pid " + process.pid)
+
 require('longjohn');
 var async = require('async');
 var path = require('path');
 var modules = {};
+var ready = false;
 
 process.on('uncaughtException', function (err) {
 	// handle the error safely
-	console.log('system error', {message: err.message, stack: err.stack});
+	console.log('dapp system error', {message: err.message, stack: err.stack});
 });
 
 var d = require('domain').create();
@@ -56,17 +59,19 @@ d.run(function () {
 			var changeCase = require('change-case');
 			var bus = function () {
 				this.message = function () {
-					var args = [];
-					Array.prototype.push.apply(args, arguments);
-					var topic = args.shift();
-					Object.keys(modules).forEach(function (namespace) {
-						Object.keys(modules[namespace]).forEach(function (moduleName) {
-							var eventName = 'on' + changeCase.pascalCase(topic);
-							if (typeof(modules[namespace][moduleName][eventName]) == 'function') {
-								modules[namespace][moduleName][eventName].apply(modules[namespace][moduleName][eventName], args);
-							}
+					if (ready) {
+						var args = [];
+						Array.prototype.push.apply(args, arguments);
+						var topic = args.shift();
+						Object.keys(modules).forEach(function (namespace) {
+							Object.keys(modules[namespace]).forEach(function (moduleName) {
+								var eventName = 'on' + changeCase.pascalCase(topic);
+								if (typeof(modules[namespace][moduleName][eventName]) == 'function') {
+									modules[namespace][moduleName][eventName].apply(modules[namespace][moduleName][eventName], args);
+								}
+							});
 						});
-					});
+					}
 				}
 			}
 			cb(null, new bus)
@@ -129,7 +134,11 @@ d.run(function () {
 		}],
 
 		ready: ['modules', 'bus', function (cb, scope) {
+			ready = true;
+
 			scope.bus.message("bind", scope.modules);
+
+			console.log("dapp loaded process pid " + process.pid)
 			cb();
 		}]
 	});

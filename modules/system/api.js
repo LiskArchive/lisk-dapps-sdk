@@ -1,5 +1,3 @@
-var router = require('../../routes.json');
-
 var private = {}, self = null,
 	library = null, modules = null;
 private.apies = {};
@@ -25,6 +23,10 @@ private.ns = function (src, path) {
 
 Api.prototype.onBind = function (_modules) {
 	modules = _modules;
+}
+
+Api.prototype.onBlockchainLoaded = function () {
+	var router = require('../../routes.json');
 
 	router.forEach(function (route) {
 		private.apies[route.method + " " + route.path] = private.ns(modules, route.handler);
