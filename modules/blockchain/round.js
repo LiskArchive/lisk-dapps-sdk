@@ -26,7 +26,7 @@ private.loop = function (point, cb) {
 		if (currentDelegate) {
 			modules.blockchain.blocks.createBlock(executor, point, cb);
 		} else {
-			cb();
+			cb("skip slot: another delegate");
 		}
 
 	}, function (err) {

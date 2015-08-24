@@ -1,5 +1,3 @@
-var fs = require('fs');
-
 var private = {}, self = null,
 	library = null, modules = null;
 

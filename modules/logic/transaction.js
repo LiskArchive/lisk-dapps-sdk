@@ -293,12 +293,6 @@ Transaction.prototype.save = function (trs, cb) {
 		return cb('Unknown transaction type ' + trs.type);
 	}
 
-	try {
-		var signature = new Buffer(trs.signature, 'hex');
-	} catch (e) {
-		return cb(e.toString())
-	}
-
 	modules.api.sql.insert({
 		table: "transactions",
 		values: {
@@ -309,7 +303,7 @@ Transaction.prototype.save = function (trs, cb) {
 			recipientId: trs.recipientId,
 			amount: trs.amount,
 			fee: trs.fee,
-			signature: signature,
+			signature: trs.signature,
 			blockId: trs.blockId
 		}
 	}, function (err) {
