@@ -50,8 +50,7 @@ Transaction.prototype.attachAssetType = function (typeId, instance) {
 		typeof instance.calculateFee == 'function' && typeof instance.verify == 'function' &&
 		typeof instance.apply == 'function' && typeof instance.undo == 'function' &&
 		typeof instance.applyUnconfirmed == 'function' && typeof instance.undoUnconfirmed == 'function' &&
-		typeof instance.process == 'function' && typeof instance.save == 'function' &&
-		typeof instance.dbRead == 'function'
+		typeof instance.save == 'function' && typeof instance.dbRead == 'function'
 	) {
 		private.types[typeId] = instance;
 	} else {
@@ -127,34 +126,16 @@ Transaction.prototype.process = function (trs, sender, cb) {
 		trs.id = txId;
 	}
 
-	if (!sender) {
-		return setImmediate(cb, "Can't process transaction, sender not found");
-	}
-
-	trs.senderId = sender.address;
-
-	if (!self.verifySignature(trs, trs.senderPublicKey, trs.signature)) {
-		return setImmediate(cb, "Can't verify signature");
-	}
-
-	private.types[trs.type].process.call(self, trs, sender, function (err, trs) {
+	modules.api.transactions.getTransaction(trs.id, function (err, data) {
 		if (err) {
-			return setImmediate(cb, err);
+			return cb("Internal sql error");
 		}
 
-		self.scope.dbLite.query("SELECT count(id) FROM trs WHERE id=$id", {id: trs.id}, {"count": Number}, function (err, rows) {
-			if (err) {
-				return cb("Internal sql error");
-			}
+		if (data.transaction) {
+			return cb("Can't process transaction, transaction already confirmed");
+		}
 
-			var res = rows.length && rows[0];
-
-			if (res.count) {
-				return cb("Can't process transaction, transaction already confirmed");
-			}
-
-			cb(null, trs);
-		});
+		cb(null, trs);
 	});
 }
 

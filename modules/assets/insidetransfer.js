@@ -32,10 +32,6 @@ InsideTransfer.prototype.verify = function (trs, sender, cb) {
 	cb(null, trs);
 }
 
-InsideTransfer.prototype.process = function (trs, sender, cb) {
-	setImmediate(cb, null, trs);
-}
-
 InsideTransfer.prototype.getBytes = function (trs) {
 	return null;
 }

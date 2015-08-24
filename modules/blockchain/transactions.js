@@ -13,7 +13,7 @@ function Transactions(cb, _library) {
 }
 
 private.addUnconfirmedTransaction = function (transaction, cb) {
-	private.applyUnconfirmed(transaction, function (err) {
+	private.applyUnconfirmedTransaction(transaction, function (err) {
 		if (err) {
 			private.addDoubleSpending(transaction, function () {
 				setImmediate(cb, err);
@@ -28,33 +28,23 @@ private.addUnconfirmedTransaction = function (transaction, cb) {
 	});
 }
 
-Transactions.prototype.getUnconfirmedTransactionList = function (reverse, cb) {
-	var a = [];
-	for (var i = 0; i < private.unconfirmedTransactions.length; i++) {
-		if (private.unconfirmedTransactions[i] !== false) {
-			a.push(private.unconfirmedTransactions[i]);
-		}
-	}
-
-	setImmediate(cb, null, reverse ? a.reverse() : a);
-}
-
 private.applyUnconfirmedTransactionList = function (ids, cb) {
 	async.eachSeries(ids, function (id, cb) {
-		var transaction = private.getUnconfirmedTransaction(id);
-		private.applyUnconfirmed(transaction, function (err) {
-			if (err) {
-				async.series([
-					function (cb) {
-						private.removeUnconfirmedTransaction(id, cb);
-					},
-					function (cb) {
-						private.addDoubleSpending(transaction, cb);
-					}
-				], cb);
-			} else {
-				setImmediate(cb);
-			}
+		private.getUnconfirmedTransaction(id, function (err, transaction) {
+			private.applyUnconfirmed(transaction, function (err) {
+				if (err) {
+					async.series([
+						function (cb) {
+							private.removeUnconfirmedTransaction(id, cb);
+						},
+						function (cb) {
+							private.addDoubleSpending(transaction, cb);
+						}
+					], cb);
+				} else {
+					setImmediate(cb);
+				}
+			});
 		});
 	}, cb);
 }
@@ -65,20 +55,37 @@ private.getUnconfirmedTransaction = function (id, cb) {
 }
 
 private.processUnconfirmedTransaction = function (transaction, cb) {
-	if (private.unconfirmedTransactionsIdIndex[transaction.id] !== undefined || private.doubleSpendingTransactions[transaction.id]) {
-		return cb("This transaction already exists");
+	function done(err) {
+		if (err) {
+			return cb(err);
+		}
+
+		private.addUnconfirmedTransaction(transaction, function (err) {
+			if (err) {
+				return cb(err);
+			}
+
+			modules.api.transport.message("transaction", transaction, cb);
+		});
 	}
 
-	async.series([
-		function (cb) {
-			private.applyUnconfirmedTransaction(transaction, cb);
-		},
-		function (cb) {
-			modules.api.transport.message("transaction", transaction, cb);
-		}
-	], cb);
+	if (private.unconfirmedTransactionsIdIndex[transaction.id] !== undefined || private.doubleSpendingTransactions[transaction.id]) {
+		return done("This transaction already exists");
+	}
 
-	// processUnconfirmedTransaction
+	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (err) {
+			return done(err);
+		}
+		async.series([
+			function (cb) {
+				modules.logic.transaction.process(transaction, cb);
+			},
+			function (cb) {
+				modules.logic.transaction.verify(transaction, sender, cb);
+			}
+		], done);
+	});
 }
 
 private.applyUnconfirmedTransaction = function (transaction, cb) {
@@ -130,6 +137,9 @@ private.undoTransaction = function (transaction, cb) {
 private.applyTransactionList = function (transactions, cb) {
 	async.eachSeries(transactions, function (transaction, cb) {
 		private.applyTransaction(transaction, function (err) {
+			if (err) {
+				return setImmediate(cb, err);
+			}
 			private.removeUnconfirmedTransaction(transaction.id, function () {
 				setImmediate(cb, err);
 			});
@@ -140,6 +150,17 @@ private.applyTransactionList = function (transactions, cb) {
 private.addDoubleSpending = function (transaction, cb) {
 	private.doubleSpendingTransactions[transaction.id] = transaction;
 	setImmediate(cb);
+}
+
+Transactions.prototype.getUnconfirmedTransactionList = function (reverse, cb) {
+	var a = [];
+	for (var i = 0; i < private.unconfirmedTransactions.length; i++) {
+		if (private.unconfirmedTransactions[i] !== false) {
+			a.push(private.unconfirmedTransactions[i]);
+		}
+	}
+
+	setImmediate(cb, null, reverse ? a.reverse() : a);
 }
 
 Transactions.prototype.onMessage = function (query) {

@@ -36,10 +36,6 @@ OutsideTransfer.prototype.verify = function (trs, sender, cb) {
 	cb(null, trs);
 }
 
-OutsideTransfer.prototype.process = function (trs, sender, cb) {
-	setImmediate(cb, null, trs);
-}
-
 OutsideTransfer.prototype.getBytes = function (trs) {
 	return null;
 }
