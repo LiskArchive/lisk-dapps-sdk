@@ -172,7 +172,7 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 		return setImmediate(cb, e.toString());
 	}
 	if (!valid) {
-		return setImmediate(cb, "Can't verify signature");
+		return setImmediate(cb, "Can't verify transaction signature");
 	}
 
 	//check sender

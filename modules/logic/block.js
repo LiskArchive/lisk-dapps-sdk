@@ -23,9 +23,15 @@ Block.prototype.getBytes = function (block, withSignature) {
 
 	var bb = new ByteBuffer(size, true);
 
-	var pb = bignum(block.prevBlockId).toBuffer({size: '8'});
-	for (var i = 0; i < 8; i++) {
-		bb.writeByte(pb[i]);
+	if (block.prevBlockId) {
+		var pb = bignum(block.prevBlockId).toBuffer({size: '8'});
+		for (var i = 0; i < 8; i++) {
+			bb.writeByte(pb[i]);
+		}
+	} else {
+		for (var i = 0; i < 8; i++) {
+			bb.writeByte(0);
+		}
 	}
 
 	var pb = new Buffer(block.delegate, 'hex');
@@ -93,6 +99,7 @@ Block.prototype.save = function (block, cb) {
 Block.prototype.dbRead = function (row) {
 	return {
 		id: row.b_id,
+		prevBlockId: row.b_prevBlockId,
 		pointId: row.b_pointId,
 		pointHeight: row.b_pointHeight,
 		delegate: row.b_delegate,

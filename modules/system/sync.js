@@ -24,17 +24,17 @@ Sync.prototype.onBind = function (_modules) {
 }
 
 Sync.prototype.onBlockchainLoaded = function () {
-	process.nextTick(function nextLoadBalances() {
-		library.sequence.add(function (cb) {
-			modules.blockchain.getHeight(function (err, lastBlockHeight) {
-				private.loadBalances(lastBlockHeight, cb);
-			});
-		}, function (err) {
-			err && library.logger('loadBalances timer', err);
-
-			setTimeout(nextLoadBalances, 10 * 1000)
-		})
-	});
+	//setImmediate(function nextLoadBalances() {
+	//	library.sequence.add(function (cb) {
+	//		modules.blockchain.getHeight(function (err, lastBlockHeight) {
+	//			private.loadBalances(lastBlockHeight, cb);
+	//		});
+	//	}, function (err) {
+	//		err && library.logger('loadBalances timer', err);
+	//
+	//		setTimeout(nextLoadBalances, 10 * 1000)
+	//	})
+	//});
 }
 
 module.exports = Sync;

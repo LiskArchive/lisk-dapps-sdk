@@ -15,7 +15,7 @@ function Blocks(cb, _library) {
 
 	try {
 		private.genesisBlock = require(path.join(__dirname, "../../genesis.json"));
-	}catch(e){
+	} catch (e) {
 		library.logger("failed genesis file");
 	}
 
@@ -115,7 +115,7 @@ private.saveBlock = function (block, cb) {
 }
 
 private.verify = function (block, cb) {
-	if (private.lastBlock.pointId == private.genesisBlock.pointId) {
+	if (private.lastBlock.id == private.genesisBlock.id) {
 		try {
 			var valid = modules.logic.block.verifySignature(block);
 		} catch (e) {
@@ -125,8 +125,8 @@ private.verify = function (block, cb) {
 			return cb("wrong block");
 		}
 		return cb();
-	}else{
-		if (private.lastBlock.id != block.prevBlockId){
+	} else {
+		if (private.lastBlock.id != block.prevBlockId) {
 			return cb("wrong prev block");
 		}
 	}
@@ -167,9 +167,10 @@ Blocks.prototype.processBlock = function (block, cb) {
 		if (err) {
 			return cb(err);
 		}
+
 		modules.blockchain.transactions.undoUnconfirmedTransactionList(function (err, unconfirmedTransactions) {
 			if (err) {
-				return process.exit(0);
+				return cb(err);
 			}
 
 			function done(err) {
@@ -225,7 +226,6 @@ Blocks.prototype.processBlock = function (block, cb) {
 						modules.blockchain.transactions.applyTransaction(transaction, function (err) {
 							if (err) {
 								library.logger("Can't apply transactions: " + transaction.id);
-								process.exit(0);
 							}
 							modules.blockchain.transactions.removeUnconfirmedTransaction(transaction.id);
 							setImmediate(cb);
@@ -298,7 +298,7 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 			}
 			if (!valid) {
 				return setImmediate(cb, {
-					message: "Can't verify signature",
+					message: "Can't verify block signature",
 					block: block
 				});
 			}
@@ -417,12 +417,13 @@ Blocks.prototype.onBind = function (_modules) {
 	}, function (err, found) {
 		if (err) {
 			library.logger("genesis error", err)
-			process.exit(0);
 		}
 		if (!found.length) {
 			self.processBlock(private.genesisBlock, function (err) {
 				if (!err) {
 					library.bus.message("blockchainReady");
+				} else {
+					library.logger("genesis error", err)
 				}
 			})
 		} else {
