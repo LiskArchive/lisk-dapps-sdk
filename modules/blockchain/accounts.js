@@ -162,13 +162,17 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 	var account = private.getAccount(address);
 
 	if (!account) {
-		account = private.addAccount({address: address});
+		var raw = {address: address};
+		if (data.publicKey){
+			raw.publicKey = data.publicKey;
+		}
+		account = private.addAccount(raw);
 	}
 
 	Object.keys(data).forEach(function (key) {
 		var trueValue = data[key];
 		if (typeof trueValue == "number") {
-			account[key] = account[key] + trueValue;
+			account[key] = (account[key] || 0) + trueValue;
 		} else if (util.isArray(trueValue)) {
 			account[key] = applyDiff(account[key], trueValue);
 		}
@@ -189,13 +193,17 @@ Accounts.prototype.undoMerging = function (data, cb) {
 	var account = private.getAccount(address);
 
 	if (!account) {
-		account = private.addAccount({address: address});
+		var raw = {address: address};
+		if (data.publicKey){
+			raw.publicKey = data.publicKey;
+		}
+		account = private.addAccount(raw);
 	}
 
 	Object.keys(data).forEach(function (key) {
 		var trueValue = data[key];
 		if (typeof trueValue == "number") {
-			account[key] = account[key] - trueValue;
+			account[key] = (account[key] || 0) - trueValue;
 		} else if (util.isArray(trueValue)) {
 			trueValue = reverseDiff(trueValue);
 			account[key] = applyDiff(account[key], trueValue);

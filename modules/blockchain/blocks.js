@@ -127,30 +127,26 @@ private.verify = function (block, cb) {
 			cb(err);
 		}
 		var cryptiBlock = data.block;
-		if (cryptiBlock.previousBlock == private.lastBlock.pointId && cryptiBlock.height == private.lastBlock.pointHeight + 1) { // new correct block
-			modules.api.sql.select({
-				table: "blocks",
-				condition: {
-					id: block.id
-				},
-				fields: ["id"]
-			}, function (err, found) {
-				if (err || found.length) {
-					return cb("wrong block");
-				}
-				try {
-					var valid = modules.logic.block.verifySignature(block);
-				} catch (e) {
-					return cb(e.toString());
-				}
-				if (!valid) {
-					return cb("wrong block");
-				}
-				return cb();
-			});
-		} else {
-			cb("skip block");
-		}
+		modules.api.sql.select({
+			table: "blocks",
+			condition: {
+				id: block.id
+			},
+			fields: ["id"]
+		}, function (err, found) {
+			if (err || found.length) {
+				return cb("wrong block");
+			}
+			try {
+				var valid = modules.logic.block.verifySignature(block);
+			} catch (e) {
+				return cb(e.toString());
+			}
+			if (!valid) {
+				return cb("wrong block");
+			}
+			return cb();
+		});
 	})
 }
 

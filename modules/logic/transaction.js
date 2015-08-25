@@ -42,7 +42,7 @@ Transaction.prototype.create = function (data) {
 	var trsBytes = self.getBytes(trs);
 	trs.id = modules.api.crypto.getId(trsBytes);
 
-	trs.fee = private.types[trs.type].calculateFee.call(self, trs) || false;
+	trs.fee = private.types[trs.type].calculateFee.call(self, trs);
 
 	return trs;
 }
@@ -181,8 +181,8 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	}
 
 	//calc fee
-	var fee = private.types[trs.type].calculateFee.call(self, trs) || false;
-	if (!fee || trs.fee != fee) {
+	var fee = private.types[trs.type].calculateFee.call(self, trs);
+	if (fee === false || fee === undefined || trs.fee != fee) {
 		return setImmediate(cb, "Invalid transaction type/fee: " + trs.id);
 	}
 	//check amount
@@ -199,25 +199,7 @@ Transaction.prototype.apply = function (trs, sender, cb) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	var amount = trs.amount + trs.fee;
-
-	if (sender.balance < amount) {
-		return setImmediate(cb, "Balance has no XCR: " + trs.id);
-	}
-
-	modules.blockchain.accounts.mergeAccountAndGet({address: sender.address, balance: -amount}, function (err, sender) {
-		if (err) {
-			return cb(err);
-		}
-
-		private.types[trs.type].apply.call(self, trs, sender, function (err) {
-			if (err) {
-				modules.blockchain.accounts.undoMerging(sender.address, {balance: _amount}, cb);
-			} else {
-				setImmediate(cb);
-			}
-		});
-	});
+	private.types[trs.type].apply.call(self, trs, sender, cb);
 }
 
 Transaction.prototype.undo = function (trs, sender, cb) {
@@ -247,27 +229,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	var amount = trs.amount + trs.fee;
-
-	if (sender.u_balance < amount) {
-		return setImmediate(cb, 'Account has no balance: ' + trs.id);
-	}
-
-	modules.blockchain.accounts.mergeAccountAndGet({address: sender.address, u_balance: -amount}, function (err, sender) {
-		if (err) {
-			return cb(err);
-		}
-
-		private.types[trs.type].applyUnconfirmed.call(self, trs, sender, function (err) {
-			if (err) {
-				modules.blockchain.accounts.undoMerging(sender.address, {u_balance: -amount}, function (err2) {
-					cb(err);
-				});
-			} else {
-				setImmediate(cb, err);
-			}
-		});
-	});
+	private.types[trs.type].applyUnconfirmed.call(self, trs, sender, cb);
 }
 
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
@@ -277,7 +239,10 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
 	var amount = trs.amount + trs.fee;
 
-	modules.blockchain.accounts.mergeAccountAndGet({address: sender.address, u_balance: amount}, function (err, sender) {
+	modules.blockchain.accounts.mergeAccountAndGet({
+		address: sender.address,
+		u_balance: amount
+	}, function (err, sender) {
 		private.types[trs.type].undoUnconfirmed.call(self, trs, sender, function (err) {
 			if (err) {
 				modules.blockchain.accounts.undoMerging({address: sender.address, u_balance: amount}, cb);

@@ -1,3 +1,5 @@
+var async = require('async');
+
 var private = {}, self = null,
 	library = null, modules = null;
 
@@ -37,27 +39,71 @@ InsideTransfer.prototype.getBytes = function (trs) {
 }
 
 InsideTransfer.prototype.apply = function (trs, sender, cb) {
-	modules.blockchain.accounts.mergeAccountAndGet({
-		address: trs.recipientId,
-		balance: trs.amount,
-		u_balance: trs.amount
-	}, cb);
+	var amount = trs.amount + trs.fee;
+
+	if (sender.balance < amount) {
+		return setImmediate(cb, "Balance has no XCR: " + trs.id);
+	}
+
+	async.series([
+		function (cb) {
+			modules.blockchain.accounts.mergeAccountAndGet({
+				address: sender.address,
+				balance: -amount,
+				u_balance: -amount
+			}, cb);
+		},
+		function (cb) {
+			modules.blockchain.accounts.mergeAccountAndGet({
+				address: trs.recipientId,
+				balance: trs.amount,
+				u_balance: trs.amount
+			}, cb);
+		}
+	], cb);
 }
 
 InsideTransfer.prototype.undo = function (trs, sender, cb) {
-	modules.blockchain.accounts.undoMerging({
-		address: trs.recipientId,
-		balance: trs.amount,
-		u_balance: trs.amount
-	}, cb);
+	var amount = trs.amount + trs.fee;
+
+	async.series([
+		function (cb) {
+			modules.blockchain.accounts.undoMerging({
+				address: sender.address,
+				balance: -amount,
+				u_balance: -amount
+			}, cb);
+		},
+		function (cb) {
+			modules.blockchain.accounts.undoMerging({
+				address: trs.recipientId,
+				balance: trs.amount,
+				u_balance: trs.amount
+			}, cb);
+		}
+	], cb);
 }
 
 InsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
-	setImmediate(cb);
+	var amount = trs.amount + trs.fee;
+
+	if (sender.u_balance < amount) {
+		return setImmediate(cb, 'Account has no balance: ' + trs.id);
+	}
+
+	modules.blockchain.accounts.mergeAccountAndGet({
+		address: sender.address,
+		u_balance: -amount
+	}, cb);
 }
 
 InsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
-	setImmediate(cb);
+	var amount = trs.amount + trs.fee;
+
+	modules.blockchain.accounts.undoMerging({
+		address: sender.address,
+		u_balance: -amount
+	}, cb);
 }
 
 InsideTransfer.prototype.save = function (cb) {

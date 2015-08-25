@@ -93,7 +93,7 @@ private.applyTransactionList = function (transactions, cb) {
 			if (err) {
 				return setImmediate(cb, err);
 			}
-			private.removeUnconfirmedTransaction(transaction.id, function () {
+			self.removeUnconfirmedTransaction(transaction.id, function () {
 				setImmediate(cb, err);
 			});
 		});
@@ -165,7 +165,7 @@ Transactions.prototype.applyUnconfirmedTransactionList = function (ids, cb) {
 				if (err) {
 					async.series([
 						function (cb) {
-							private.removeUnconfirmedTransaction(id, cb);
+							self.removeUnconfirmedTransaction(id, cb);
 						},
 						function (cb) {
 							private.addDoubleSpending(transaction, cb);
