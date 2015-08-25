@@ -15,6 +15,11 @@
 		"handler": "blockchain.accounts.open"
 	},
 	{
+		"path": "/transaction",
+		"method": "put",
+		"handler": "blockchain.transactions.addTransaction"
+	},
+	{
 		"path": "/blocks/get",
 		"method": "get",
 		"handler": "blockchain.blocks.getBlock"

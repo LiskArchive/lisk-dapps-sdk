@@ -77,7 +77,6 @@ private.undoUnconfirmedTransaction = function (transaction, cb) {
 	});
 }
 
-
 private.undoTransaction = function (transaction, cb) {
 	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 		if (err) {
@@ -179,6 +178,45 @@ Transactions.prototype.applyUnconfirmedTransactionList = function (ids, cb) {
 	}, cb);
 }
 
+Transactions.prototype.addTransaction = function (cb, query) {
+	var keypair = modules.api.crypto.keypair(query.secret);
+
+	library.sequence.add(function (cb) {
+		modules.blockchain.accounts.getAccount({address: query.recipientId}, function (err, recipient) {
+			if (err) {
+				return cb(err.toString());
+			}
+			modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
+				if (err) {
+					return cb(err.toString());
+				}
+				if (!account || !account.publicKey) {
+					return cb(errorCode("COMMON.OPEN_ACCOUNT"));
+				}
+
+				try {
+					var transaction = modules.logic.transaction.create({
+						type: 0,
+						amount: query.amount,
+						sender: account,
+						recipientId: query.recipientId,
+						keypair: keypair
+					});
+				} catch (e) {
+					return cb(e.toString());
+				}
+
+				private.processUnconfirmedTransaction(transaction, cb)
+			});
+		});
+	}, function (err, transaction) {
+		if (err) {
+			return cb(err.toString());
+		}
+
+		cb(null, {transaction: transaction});
+	});
+}
 
 Transactions.prototype.onMessage = function (query) {
 	switch (query.topic) {

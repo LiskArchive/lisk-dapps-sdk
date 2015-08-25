@@ -49,15 +49,13 @@ InsideTransfer.prototype.apply = function (trs, sender, cb) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				balance: -amount,
-				u_balance: -amount
+				balance: -amount
 			}, cb);
 		},
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: trs.recipientId,
-				balance: trs.amount,
-				u_balance: trs.amount
+				balance: trs.amount
 			}, cb);
 		}
 	], cb);
@@ -70,15 +68,13 @@ InsideTransfer.prototype.undo = function (trs, sender, cb) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				balance: -amount,
-				u_balance: -amount
+				balance: -amount
 			}, cb);
 		},
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: trs.recipientId,
-				balance: trs.amount,
-				u_balance: trs.amount
+				balance: trs.amount
 			}, cb);
 		}
 	], cb);
@@ -91,22 +87,42 @@ InsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
 		return setImmediate(cb, 'Account has no balance: ' + trs.id);
 	}
 
-	modules.blockchain.accounts.mergeAccountAndGet({
-		address: sender.address,
-		u_balance: -amount
-	}, cb);
+	async.series([
+		function (cb) {
+			modules.blockchain.accounts.mergeAccountAndGet({
+				address: sender.address,
+				u_balance: -amount
+			}, cb);
+		},
+		function (cb) {
+			modules.blockchain.accounts.mergeAccountAndGet({
+				address: trs.recipientId,
+				u_balance: trs.amount
+			}, cb);
+		}
+	], cb);
 }
 
 InsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	var amount = trs.amount + trs.fee;
 
-	modules.blockchain.accounts.undoMerging({
-		address: sender.address,
-		u_balance: -amount
-	}, cb);
+	async.series([
+		function (cb) {
+			modules.blockchain.accounts.undoMerging({
+				address: sender.address,
+				u_balance: -amount
+			}, cb);
+		},
+		function (cb) {
+			modules.blockchain.accounts.undoMerging({
+				address: trs.recipientId,
+				u_balance: trs.amount
+			}, cb);
+		}
+	], cb);
 }
 
-InsideTransfer.prototype.save = function (cb) {
+InsideTransfer.prototype.save = function (trs, cb) {
 	setImmediate(cb);
 }
 
