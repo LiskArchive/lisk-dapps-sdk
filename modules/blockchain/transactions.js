@@ -186,7 +186,7 @@ Transactions.prototype.onMessage = function (query) {
 			var transaction = query.message;
 			private.processUnconfirmedTransaction(transaction, function (err) {
 				if (err) {
-					console.log("processUnconfirmedTransaction error", err)
+					library.logger("processUnconfirmedTransaction error", err)
 				}
 			});
 			break;
@@ -205,7 +205,7 @@ Transactions.prototype.onMessage = function (query) {
 						});
 						private.processUnconfirmedTransaction(transaction, function (err) {
 							if (err) {
-								console.log("processUnconfirmedTransaction error", err)
+								library.logger("processUnconfirmedTransaction error", err)
 							}
 						});
 					});

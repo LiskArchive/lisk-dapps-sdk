@@ -163,7 +163,7 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 
 	if (!account) {
 		var raw = {address: address};
-		if (data.publicKey){
+		if (data.publicKey) {
 			raw.publicKey = data.publicKey;
 		}
 		account = private.addAccount(raw);
@@ -194,7 +194,7 @@ Accounts.prototype.undoMerging = function (data, cb) {
 
 	if (!account) {
 		var raw = {address: address};
-		if (data.publicKey){
+		if (data.publicKey) {
 			raw.publicKey = data.publicKey;
 		}
 		account = private.addAccount(raw);
@@ -220,7 +220,6 @@ Accounts.prototype.onBind = function (_modules) {
 Accounts.prototype.open = function (cb, query) {
 	var keypair = modules.api.crypto.keypair(query.secret);
 	var address = self.generateAddressByPublicKey(keypair.publicKey);
-
 	cb(null, {account: private.getAccount(address)});
 }
 

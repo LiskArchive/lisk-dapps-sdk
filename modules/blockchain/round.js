@@ -96,7 +96,7 @@ Round.prototype.onMessage = function (query) {
 		var blockId = query.message;
 		private.loop(blockId, function (err) {
 			if (err) {
-				console.log("loop error", err)
+				library.logger("loop error", err)
 			}
 		});
 	}

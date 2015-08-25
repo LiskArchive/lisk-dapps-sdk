@@ -12,7 +12,7 @@ Generator.prototype.onBind = function (_modules) {
 
 	modules.api.dapps.getGenesis(function (err, res) {
 		if (err) {
-			return console.log("genesis error", err)
+			return library.logger("genesis error", err)
 		}
 
 		var executor = modules.blockchain.accounts.getExecutor();
@@ -36,7 +36,7 @@ Generator.prototype.onBind = function (_modules) {
 		genesisBlock.id = modules.api.crypto.getId(blockBytes);
 		genesisBlock.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
 
-		console.log(JSON.stringify(genesisBlock, null, 2))
+		library.logger(JSON.stringify(genesisBlock, null, 2))
 	});
 }
 

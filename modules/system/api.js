@@ -26,7 +26,11 @@ Api.prototype.onBind = function (_modules) {
 }
 
 Api.prototype.onBlockchainLoaded = function () {
-	var router = require('../../routes.json');
+	try {
+		var router = require('../../routes.json');
+	}catch(e){
+		library.logger("failed router file");
+	}
 
 	router.forEach(function (route) {
 		private.apies[route.method + " " + route.path] = private.ns(modules, route.handler);

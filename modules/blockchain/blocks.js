@@ -13,7 +13,11 @@ function Blocks(cb, _library) {
 	self = this;
 	library = _library;
 
-	private.genesisBlock = require(path.join(__dirname, "../../genesis.json"));
+	try {
+		private.genesisBlock = require(path.join(__dirname, "../../genesis.json"));
+	}catch(e){
+		library.logger("failed genesis file");
+	}
 
 	private.lastBlock = private.genesisBlock;
 
@@ -121,6 +125,10 @@ private.verify = function (block, cb) {
 			return cb("wrong block");
 		}
 		return cb();
+	}else{
+		if (private.lastBlock.id != block.prevBlockId){
+			return cb("wrong prev block");
+		}
 	}
 	modules.api.blocks.getBlock(block.pointId, function (err, data) {
 		if (err) {
@@ -250,6 +258,7 @@ Blocks.prototype.createBlock = function (executor, point, cb) {
 		}, function () {
 			var blockObj = {
 				delegate: executor.keypair.publicKey,
+				prevBlockId: private.lastBlock.id,
 				pointId: point.id,
 				pointHeight: point.height,
 				count: ready.length,
@@ -386,7 +395,7 @@ Blocks.prototype.onMessage = function (query) {
 		var block = query.message;
 		self.processBlock(block, function (err) {
 			if (err) {
-				console.log("processBlock err", err);
+				library.logger("processBlock err", err);
 			}
 		});
 	}
@@ -407,7 +416,7 @@ Blocks.prototype.onBind = function (_modules) {
 		fields: ["id"]
 	}, function (err, found) {
 		if (err) {
-			console.log("genesis error", err)
+			library.logger("genesis error", err)
 			process.exit(0);
 		}
 		if (!found.length) {

@@ -7,7 +7,6 @@ var modules = {};
 var ready = false;
 
 process.on('uncaughtException', function (err) {
-	// handle the error safely
 	console.log('dapp system error', {message: err.message, stack: err.stack});
 });
 
@@ -15,6 +14,7 @@ var d = require('domain').create();
 d.on('error', function (err) {
 	console.log('domain master', {message: err.message, stack: err.stack});
 });
+
 d.run(function () {
 	async.auto({
 		sandbox: function (cb) {
@@ -25,8 +25,13 @@ d.run(function () {
 			cb(null, console.log);
 		},
 
-		scheme: function (cb) {
-			var db = require('./config.json').db;
+		scheme: ['logger', function (cb, scope) {
+
+			try {
+				var db = require('./blockchain.json');
+			} catch (e) {
+				scope.logger("failed blockchain file");
+			}
 
 			var fields = [];
 			var alias = {};
@@ -53,7 +58,7 @@ d.run(function () {
 			}
 
 			cb(null, {scheme: db, fields: fields, alias: alias});
-		},
+		}],
 
 		bus: function (cb) {
 			var changeCase = require('change-case');
@@ -118,7 +123,7 @@ d.run(function () {
 				tasks.push(function (cb) {
 					var d = require('domain').create();
 					d.on('error', function (err) {
-						console.log('domain ' + moduleName, {message: err.message, stack: err.stack});
+						scope.logger('domain ' + moduleName, {message: err.message, stack: err.stack});
 					});
 					d.run(function () {
 						var library = require(lib[path]);
@@ -133,12 +138,12 @@ d.run(function () {
 			});
 		}],
 
-		ready: ['modules', 'bus', function (cb, scope) {
+		ready: ['modules', 'bus', 'logger', function (cb, scope) {
 			ready = true;
 
 			scope.bus.message("bind", scope.modules);
 
-			console.log("dapp loaded process pid " + process.pid)
+			scope.logger("dapp loaded process pid " + process.pid)
 			cb();
 		}]
 	});
