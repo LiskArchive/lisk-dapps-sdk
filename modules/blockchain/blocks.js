@@ -163,28 +163,110 @@ Blocks.prototype.processBlock = function (block, cb) {
 		if (err) {
 			return cb(err);
 		}
-		private.lastBlock = block;
-		private.saveBlock(block, cb);
+		modules.blockchain.transactions.undoUnconfirmedTransactionList(function (err, unconfirmedTransactions) {
+			if (err) {
+				return process.exit(0);
+			}
+
+			function done(err) {
+				modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
+					setImmediate(cb, err);
+				});
+			}
+
+			var payloadHash = crypto.createHash('sha256'), appliedTransactions = {};
+
+			async.eachSeries(block.transactions, function (transaction, cb) {
+				transaction.blockId = block.id;
+
+				if (appliedTransactions[transaction.id]) {
+					return setImmediate(cb, "Dublicated transaction in block: " + transaction.id);
+				}
+
+				modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, function (err) {
+					if (err) {
+						return setImmediate(cb, "Can't apply transaction: " + transaction.id);
+					}
+
+					try {
+						var bytes = modules.logic.transaction.getBytes(transaction);
+					} catch (e) {
+						return setImmediate(cb, e.toString());
+					}
+
+					appliedTransactions[transaction.id] = transaction;
+
+					var index = unconfirmedTransactions.indexOf(transaction.id);
+					if (index >= 0) {
+						unconfirmedTransactions.splice(index, 1);
+					}
+
+					payloadHash.update(bytes);
+
+					setImmediate(cb);
+				});
+			}, function (err) {
+				if (err) {
+					async.eachSeries(block.transactions, function (transaction, cb) {
+						if (appliedTransactions[transaction.id]) {
+							modules.blockchain.transactions.undoUnconfirmedTransaction(transaction, cb);
+						} else {
+							setImmediate(cb);
+						}
+					}, function () {
+						done(err);
+					});
+				} else {
+					async.eachSeries(block.transactions, function (transaction, cb) {
+						modules.blockchain.transactions.applyTransaction(transaction, function (err) {
+							if (err) {
+								library.logger("Can't apply transactions: " + transaction.id);
+								process.exit(0);
+							}
+							modules.blockchain.transactions.removeUnconfirmedTransaction(transaction.id);
+							setImmediate(cb);
+						});
+					}, function (err) {
+						private.lastBlock = block;
+						private.saveBlock(block, done);
+					});
+				}
+			});
+		});
 	});
 }
 
 Blocks.prototype.createBlock = function (executor, point, cb) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
-		// object
-		var blockObj = {
-			delegate: executor.keypair.publicKey,
-			pointId: point.id,
-			pointHeight: point.height,
-			count: unconfirmedList.length,
-			transactions: unconfirmedList
-		};
+		var ready = [];
 
-		var blockBytes = modules.logic.block.getBytes(blockObj);
+		async.eachSeries(unconfirmedList, function (transaction, cb) {
+			modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+				if (err) {
+					return cb("sender doesn´t found");
+				}
 
-		blockObj.id = modules.api.crypto.getId(blockBytes);
-		blockObj.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
+				modules.logic.transaction.verify(transaction, sender, function (err) {
+					ready.push(transaction);
+					cb();
+				});
+			});
+		}, function () {
+			var blockObj = {
+				delegate: executor.keypair.publicKey,
+				pointId: point.id,
+				pointHeight: point.height,
+				count: ready.length,
+				transactions: ready
+			};
 
-		self.processBlock(blockObj, cb);
+			var blockBytes = modules.logic.block.getBytes(blockObj);
+
+			blockObj.id = modules.api.crypto.getId(blockBytes);
+			blockObj.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
+
+			self.processBlock(blockObj, cb);
+		});
 	});
 }
 
@@ -196,7 +278,7 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 
 		blocks = util.isArray(library.scheme.alias) ?
 			blocks.map(private.row2object, library.scheme.alias) :
-			blocks.map(private.row2parsed, private.parseFields(library.scheme.alias))
+			blocks.map(private.row2parsed, private.parseFields(library.scheme.alias));
 
 		blocks = private.readDbRows(blocks);
 

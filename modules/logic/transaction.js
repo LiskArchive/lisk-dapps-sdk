@@ -277,10 +277,10 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 
 	var amount = trs.amount + trs.fee;
 
-	modules.blockchain.account.mergeAccountAndGet({address: sender.address, u_balance: amount}, function (err, sender) {
+	modules.blockchain.accounts.mergeAccountAndGet({address: sender.address, u_balance: amount}, function (err, sender) {
 		private.types[trs.type].undoUnconfirmed.call(self, trs, sender, function (err) {
 			if (err) {
-				modules.blockchain.account.undoMerging({address: sender.address, u_balance: amount}, cb);
+				modules.blockchain.accounts.undoMerging({address: sender.address, u_balance: amount}, cb);
 			} else {
 				setImmediate(cb);
 			}
