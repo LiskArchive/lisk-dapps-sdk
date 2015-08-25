@@ -297,8 +297,9 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 					block: block
 				});
 			}
+			private.lastBlock = block;
 			async.eachSeries(block.transactions, function (transaction, cb) {
-				modules.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, sender) {
+				modules.blockchain.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, sender) {
 					if (err) {
 						return cb({
 							message: err,
@@ -315,7 +316,14 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 							});
 						}
 
-						private.applyTransaction(block, transaction, cb);
+						async.series([
+							function (cb) {
+								modules.blockchain.transactions.applyUnconfirmedTransaction(block, transaction, cb);
+							},
+							function (cb) {
+								modules.blockchain.transactions.applyTransaction(block, transaction, cb);
+							}
+						], cb)
 					});
 				});
 			}, cb);
