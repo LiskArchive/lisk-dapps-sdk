@@ -185,7 +185,9 @@ Transactions.prototype.onMessage = function (query) {
 		case "transaction":
 			var transaction = query.message;
 			private.processUnconfirmedTransaction(transaction, function (err) {
-				console.log("processUnconfirmedTransaction", err)
+				if (err) {
+					console.log("processUnconfirmedTransaction error", err)
+				}
 			});
 			break;
 		case "balance":
@@ -202,7 +204,9 @@ Transactions.prototype.onMessage = function (query) {
 							src_id: data.transaction.id
 						});
 						private.processUnconfirmedTransaction(transaction, function (err) {
-							console.log("processUnconfirmedTransaction", err)
+							if (err) {
+								console.log("processUnconfirmedTransaction error", err)
+							}
 						});
 					});
 				}

@@ -207,21 +207,7 @@ Transaction.prototype.undo = function (trs, sender, cb) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	var amount = trs.amount + trs.fee;
-
-	modules.blockchain.accounts.mergeAccountAndGet({address: sender.address, balance: amount}, function (err, sender) {
-		if (err) {
-			return cb(err);
-		}
-
-		private.types[trs.type].undo.call(self, trs, sender, function (err) {
-			if (err) {
-				modules.blockchain.accounts.undoMerging(sender.address, {balance: amount}, cb);
-			} else {
-				setImmediate(cb);
-			}
-		});
-	});
+	private.types[trs.type].undo.call(self, trs, sender, cb);
 }
 
 Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
@@ -237,20 +223,7 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	var amount = trs.amount + trs.fee;
-
-	modules.blockchain.accounts.mergeAccountAndGet({
-		address: sender.address,
-		u_balance: amount
-	}, function (err, sender) {
-		private.types[trs.type].undoUnconfirmed.call(self, trs, sender, function (err) {
-			if (err) {
-				modules.blockchain.accounts.undoMerging({address: sender.address, u_balance: amount}, cb);
-			} else {
-				setImmediate(cb);
-			}
-		});
-	});
+	private.types[trs.type].undoUnconfirmed.call(self, trs, sender, cb);
 }
 
 Transaction.prototype.save = function (trs, cb) {

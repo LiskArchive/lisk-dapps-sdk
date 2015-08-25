@@ -386,7 +386,7 @@ Blocks.prototype.onMessage = function (query) {
 		var block = query.message;
 		self.processBlock(block, function (err) {
 			if (err) {
-				console.log("processBlock", err);
+				console.log("processBlock err", err);
 			}
 		});
 	}
@@ -407,7 +407,7 @@ Blocks.prototype.onBind = function (_modules) {
 		fields: ["id"]
 	}, function (err, found) {
 		if (err) {
-			console.log(err)
+			console.log("genesis error", err)
 			process.exit(0);
 		}
 		if (!found.length) {

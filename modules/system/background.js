@@ -16,8 +16,6 @@ Background.prototype.onBind = function (_modules) {
 }
 
 Background.prototype.onMessage = function (msg) {
-	console.log("recieved", msg)
-
 	//modules.api.transport.message("test", {test: "resend"}, function (err, data) {
 	//
 	//})

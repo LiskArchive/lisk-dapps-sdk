@@ -47,30 +47,28 @@ OutsideTransfer.prototype.getBytes = function (trs) {
 OutsideTransfer.prototype.apply = function (trs, sender, cb) {
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: sender.address,
-		balance: trs.amount,
-		u_balance: trs.amount
+		balance: trs.amount
 	}, cb);
 }
 
 OutsideTransfer.prototype.undo = function (trs, sender, cb) {
 	modules.blockchain.accounts.undoMerging({
 		address: sender.address,
-		balance: trs.amount,
-		u_balance: trs.amount
+		balance: trs.amount
 	}, cb);
 }
 
 OutsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb) {
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: sender.address,
-		u_balance: -trs.amount
+		u_balance: trs.amount
 	}, cb);
 }
 
 OutsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb) {
 	modules.blockchain.accounts.undoMerging({
 		address: sender.address,
-		u_balance: -trs.amount
+		u_balance: trs.amount
 	}, cb);
 }
 

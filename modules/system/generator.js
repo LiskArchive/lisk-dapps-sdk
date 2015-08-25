@@ -12,7 +12,7 @@ Generator.prototype.onBind = function (_modules) {
 
 	modules.api.dapps.getGenesis(function (err, res) {
 		if (err) {
-			return console.log(err)
+			return console.log("genesis error", err)
 		}
 
 		var executor = modules.blockchain.accounts.getExecutor();
