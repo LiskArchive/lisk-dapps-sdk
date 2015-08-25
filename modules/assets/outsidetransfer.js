@@ -84,7 +84,9 @@ OutsideTransfer.prototype.dbRead = function (row) {
 		return null;
 	}
 	return {
-		src_id: row.t_dt_src_id
+		outsidetransfer: {
+			src_id: row.t_dt_src_id
+		}
 	};
 }
 

@@ -318,10 +318,10 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 
 						async.series([
 							function (cb) {
-								modules.blockchain.transactions.applyUnconfirmedTransaction(block, transaction, cb);
+								modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, cb);
 							},
 							function (cb) {
-								modules.blockchain.transactions.applyTransaction(block, transaction, cb);
+								modules.blockchain.transactions.applyTransaction(transaction, cb);
 							}
 						], cb)
 					});
