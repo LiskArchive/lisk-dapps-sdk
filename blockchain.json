@@ -37,6 +37,24 @@
 				"name": "count",
 				"type": "BigInt"
 			}
+		],
+		"join": [
+			{
+				"type": "left outer",
+				"table": "transactions",
+				"alias": "t",
+				"on": {
+					"b.id": "t.blockId"
+				}
+			},
+			{
+				"type": "left outer",
+				"table": "asset_dapptransfer",
+				"alias": "t_dt",
+				"on": {
+					"t.id": "t_dt.transactionId"
+				}
+			}
 		]
 	},
 	{

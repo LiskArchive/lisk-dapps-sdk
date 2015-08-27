@@ -220,7 +220,16 @@ Accounts.prototype.onBind = function (_modules) {
 Accounts.prototype.open = function (cb, query) {
 	var keypair = modules.api.crypto.keypair(query.secret);
 	var address = self.generateAddressByPublicKey(keypair.publicKey);
-	cb(null, {account: private.getAccount(address)});
+	var account = private.getAccount(address);
+
+	if (!account) {
+		account = private.addAccount({
+			address: address,
+			publicKey: keypair.publicKey.toString('hex')
+		});
+	}
+
+	cb(null, {account: account});
 }
 
 module.exports = Accounts;

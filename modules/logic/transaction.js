@@ -122,7 +122,7 @@ Transaction.prototype.process = function (trs, sender, cb) {
 		var trsBytes = self.getBytes(trs);
 		var txId = modules.api.crypto.getId(trsBytes);
 	} catch (e) {
-		return setImmediate(cb, "Invalid transaction id");
+		return setImmediate(cb, "Can't get transaction id");
 	}
 	if (trs.id && trs.id != txId) {
 		return setImmediate(cb, "Invalid transaction id");

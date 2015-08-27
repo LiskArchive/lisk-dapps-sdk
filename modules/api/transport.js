@@ -19,6 +19,18 @@ Transport.prototype.message = function (topic, message, cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
+Transport.prototype.request = function (topic, message, cb) {
+	var message = {
+		call: "transport#request",
+		args: {
+			message: message,
+			topic: topic
+		}
+	};
+
+	library.sandbox.sendMessage(message, cb);
+}
+
 Transport.prototype.onBind = function (_modules) {
 	modules = _modules;
 }

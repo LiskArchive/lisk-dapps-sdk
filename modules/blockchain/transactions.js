@@ -182,7 +182,7 @@ Transactions.prototype.addTransaction = function (cb, query) {
 	var keypair = modules.api.crypto.keypair(query.secret);
 
 	library.sequence.add(function (cb) {
-		modules.blockchain.accounts.getAccount({address: query.recipientId}, function (err, recipient) {
+		modules.blockchain.accounts.setAccountAndGet({address: query.recipientId}, function (err, recipient) {
 			if (err) {
 				return cb(err.toString());
 			}
@@ -191,7 +191,7 @@ Transactions.prototype.addTransaction = function (cb, query) {
 					return cb(err.toString());
 				}
 				if (!account || !account.publicKey) {
-					return cb(errorCode("COMMON.OPEN_ACCOUNT"));
+					return cb("COMMON.OPEN_ACCOUNT");
 				}
 
 				try {
@@ -218,7 +218,7 @@ Transactions.prototype.addTransaction = function (cb, query) {
 	});
 }
 
-Transactions.prototype.onMessage = function (query) {
+Transactions.prototype.onMessage = function (query, cb) {
 	switch (query.topic) {
 		case "transaction":
 			var transaction = query.message;
@@ -226,6 +226,8 @@ Transactions.prototype.onMessage = function (query) {
 				if (err) {
 					library.logger("processUnconfirmedTransaction error", err)
 				}
+
+				cb && cb(err);
 			});
 			break;
 		case "balance":
@@ -245,6 +247,8 @@ Transactions.prototype.onMessage = function (query) {
 							if (err) {
 								library.logger("processUnconfirmedTransaction error", err)
 							}
+
+							cb && cb(err);
 						});
 					});
 				}

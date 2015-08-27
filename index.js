@@ -3,6 +3,8 @@ console.log("dapp loading process pid " + process.pid)
 require('longjohn');
 var async = require('async');
 var path = require('path');
+var ZSchema = require("z-schema");
+var extend = require('extend');
 var modules = {};
 var ready = false;
 
@@ -35,6 +37,7 @@ d.run(function () {
 
 			var fields = [];
 			var alias = {};
+			var selector = {};
 
 			function getType(type) {
 				var nativeType;
@@ -55,10 +58,16 @@ d.run(function () {
 					fields.push(db[i].alias + "." + db[i].tableFields[n].name);
 					alias[db[i].alias + "_" + db[i].tableFields[n].name] = getType(db[i].tableFields[n].type);
 				}
+				selector[db[i].table] = extend(db[i], {tableFields: undefined});
 			}
 
-			cb(null, {scheme: db, fields: fields, alias: alias});
+			cb(null, {scheme: db, fields: fields, alias: alias, selector: selector});
 		}],
+
+		validator: function (cb) {
+			var validator = new ZSchema();
+			cb(null, validator);
+		},
 
 		bus: function (cb) {
 			var changeCase = require('change-case');

@@ -24,11 +24,11 @@ OutsideTransfer.prototype.calculateFee = function (trs) {
 
 OutsideTransfer.prototype.verify = function (trs, sender, cb) {
 	if (trs.recipientId) {
-		return cb(errorCode("TRANSACTIONS.INVALID_RECIPIENT", trs));
+		return cb("TRANSACTIONS.INVALID_RECIPIENT");
 	}
 
 	if (trs.amount <= 0) {
-		return cb(errorCode("TRANSACTIONS.INVALID_AMOUNT", trs));
+		return cb("TRANSACTIONS.INVALID_AMOUNT");
 	}
 
 	cb(null, trs);

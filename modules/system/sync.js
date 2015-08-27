@@ -7,16 +7,20 @@ function Sync(cb, _library) {
 	cb(null, self);
 }
 
-private.loadBalances = function (lastBlockHeight, cb) {
-	modules.api.dapps.getCommonBlock(lastBlockHeight, function (err, rawBalances) {
-		if (err) {
-			cb(err);
-		}
-		//b.height, t.id, t.senderId, t.amount
-		for (var i = 0; i < rawBalances.length; i++) {
-
-		}
-	})
+private.blockSync = function (lastBlock, cb) {
+	console.log("private.blockSync", lastBlock.pointHeight)
+	modules.api.transport.request("height", {}, function (err, height) {
+		console.log(err, height)
+	});
+	//modules.api.dapps.getCommonBlock(lastBlockHeight, function (err, rawBalances) {
+	//	if (err) {
+	//		cb(err);
+	//	}
+	//	//b.height, t.id, t.senderId, t.amount
+	//	for (var i = 0; i < rawBalances.length; i++) {
+	//
+	//	}
+	//})
 }
 
 Sync.prototype.onBind = function (_modules) {
@@ -24,17 +28,17 @@ Sync.prototype.onBind = function (_modules) {
 }
 
 Sync.prototype.onBlockchainLoaded = function () {
-	//setImmediate(function nextLoadBalances() {
-	//	library.sequence.add(function (cb) {
-	//		modules.blockchain.getHeight(function (err, lastBlockHeight) {
-	//			private.loadBalances(lastBlockHeight, cb);
-	//		});
-	//	}, function (err) {
-	//		err && library.logger('loadBalances timer', err);
-	//
-	//		setTimeout(nextLoadBalances, 10 * 1000)
-	//	})
-	//});
+	setImmediate(function nextBlockSync() {
+		library.sequence.add(function (cb) {
+			modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
+				private.blockSync(lastBlock, cb);
+			});
+		}, function (err) {
+			err && library.logger('blockSync timer', err);
+
+			setTimeout(nextBlockSync, 10 * 1000)
+		})
+	});
 }
 
 module.exports = Sync;

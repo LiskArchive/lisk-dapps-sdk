@@ -2,6 +2,7 @@ var crypto = require('crypto-browserify');
 var path = require('path');
 var async = require('async');
 var util = require('util');
+var extend = require('extend');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -354,8 +355,8 @@ Blocks.prototype.count = function (cb) {
 	});
 }
 
-Blocks.prototype.getHeight = function (cb) {
-	cb(null, private.lastBlock.pointHeight);
+Blocks.prototype.getLastBlock = function (cb) {
+	cb(null, private.lastBlock);
 }
 
 Blocks.prototype.getBlock = function (cb, query) {
@@ -370,24 +371,11 @@ Blocks.prototype.getBlock = function (cb, query) {
 }
 
 Blocks.prototype.getBlocks = function (cb, query) {
-	modules.api.sql.select({
-		table: "blocks",
-		alias: "b",
-		join: [{
-			type: 'left outer',
-			table: 'transactions',
-			alias: "t",
-			on: {"b.id": "t.blockId"}
-		}, {
-			type: 'left outer',
-			table: 'asset_dapptransfer',
-			alias: "t_dt",
-			on: {"t.id": "t_dt.transactionId"}
-		}],
+	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
 		limit: query.limit,
 		offset: query.offset,
 		fields: library.scheme.fields
-	}, cb);
+	}), cb);
 }
 
 Blocks.prototype.onMessage = function (query) {
