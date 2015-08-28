@@ -83,7 +83,6 @@ Round.prototype.onBind = function (_modules) {
 }
 
 Round.prototype.onBlockchainLoaded = function () {
-	console.log("Round.prototype.onBlockchainLoaded")
 	var genesisBlock = modules.blockchain.blocks.genesisBlock();
 	//private.delegates = genesisBlock.associate;
 	private.delegates.push(modules.blockchain.accounts.generateAddressByPublicKey(genesisBlock.delegate));
@@ -93,7 +92,6 @@ Round.prototype.onBlockchainLoaded = function () {
 }
 
 Round.prototype.onMessage = function (query) {
-	console.log("Round.prototype.onMessage")
 	if (query.topic == "point" && private.loaded) {
 		var blockId = query.message;
 		private.loop(blockId, function (err) {

@@ -10,6 +10,10 @@
 				"length": 21
 			},
 			{
+				"name": "height",
+				"type": "BigInt"
+			},
+			{
 				"name": "prevBlockId",
 				"type": "String",
 				"length": 21

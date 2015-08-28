@@ -25,6 +25,7 @@ Generator.prototype.onBind = function (_modules) {
 
 		var genesisBlock = {
 			delegate: executor.keypair.publicKey,
+			height: 1,
 			pointId: res.pointId,
 			pointHeight: res.pointHeight,
 			count: 0,

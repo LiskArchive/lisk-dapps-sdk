@@ -177,7 +177,9 @@ Blocks.prototype.processBlock = function (block, cb) {
 			function done(err) {
 				if (!err) {
 					private.lastBlock = block;
-					modules.api.transport.message("block", block, cb);
+					modules.api.transport.message("block", block, function () {
+						
+					});
 				}
 				modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
 					setImmediate(cb, err);
@@ -262,6 +264,7 @@ Blocks.prototype.createBlock = function (executor, point, cb) {
 		}, function () {
 			var blockObj = {
 				delegate: executor.keypair.publicKey,
+				height: private.lastBlock.height + 1,
 				prevBlockId: private.lastBlock.id,
 				pointId: point.id,
 				pointHeight: point.height,
@@ -386,10 +389,9 @@ Blocks.prototype.getBlocks = function (cb, query) {
 }
 
 Blocks.prototype.onMessage = function (query) {
-	console.log("Blocks.prototype.onMessage")
 	if (query.topic == "block" && private.loaded) {
 		var block = query.message;
-		if (block.lastBlockId == private.lastBlock.id) {
+		if (block.lastBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 			self.processBlock(block, function (err) {
 				if (err) {
 					library.logger("processBlock err", err);

@@ -219,7 +219,6 @@ Transactions.prototype.addTransaction = function (cb, query) {
 }
 
 Transactions.prototype.onMessage = function (query) {
-	console.log("Transactions.prototype.onMessage")
 	switch (query.topic) {
 		case "transaction":
 			var transaction = query.message;
