@@ -26,6 +26,7 @@ Api.prototype.onBind = function (_modules) {
 }
 
 Api.prototype.onBlockchainLoaded = function () {
+	console.log("Api.prototype.onBlockchainLoaded")
 	try {
 		var router = require('../../routes.json');
 	}catch(e){

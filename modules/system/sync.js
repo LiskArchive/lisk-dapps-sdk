@@ -8,8 +8,11 @@ function Sync(cb, _library) {
 }
 
 private.blockSync = function (lastBlock, cb) {
-	modules.api.transport.request("get", "/blocks/height", null, function (err, height) {
-		console.log("private.blockSync.request", err, height)
+	modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
+		console.log("private.blockSync.getRandomPeer", res.peer, res.body)
+		modules.api.transport.getPeer(res.peer, "get", "/blocks/height", null, function (err, res) {
+			console.log("private.blockSync.getPeer", res.peer, res.body)
+		});
 	});
 }
 
@@ -18,6 +21,7 @@ Sync.prototype.onBind = function (_modules) {
 }
 
 Sync.prototype.onBlockchainLoaded = function () {
+	console.log("Sync.prototype.onBlockchainLoaded")
 	setImmediate(function nextBlockSync() {
 		library.sequence.add(function (cb) {
 			modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {

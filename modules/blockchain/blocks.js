@@ -386,6 +386,7 @@ Blocks.prototype.getBlocks = function (cb, query) {
 }
 
 Blocks.prototype.onMessage = function (query) {
+	console.log("Blocks.prototype.onMessage")
 	if (query.topic == "block" && private.loaded) {
 		var block = query.message;
 		if (block.lastBlockId == private.lastBlock.id) {

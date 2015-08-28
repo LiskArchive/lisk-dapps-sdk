@@ -19,10 +19,27 @@ Transport.prototype.message = function (topic, message, cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
-Transport.prototype.request = function (method, path, query, cb) {
+Transport.prototype.getRandomPeer = function (method, path, query, cb) {
 	var message = {
 		call: "transport#request",
 		args: {
+			method: method,
+			path: path,
+			query: query
+		}
+	};
+
+	library.sandbox.sendMessage(message, cb);
+}
+
+Transport.prototype.getPeer = function (peer, method, path, query, cb) {
+	var message = {
+		call: "transport#request",
+		args: {
+			peer: {
+				ip: peer.ip,
+				port: peer.port
+			},
 			method: method,
 			path: path,
 			query: query
