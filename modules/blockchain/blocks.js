@@ -358,6 +358,10 @@ Blocks.prototype.count = function (cb) {
 	});
 }
 
+Blocks.prototype.getHeight = function (cb) {
+	cb(null, {height: private.lastBlock.pointHeight});
+}
+
 Blocks.prototype.getLastBlock = function (cb) {
 	cb(null, private.lastBlock);
 }

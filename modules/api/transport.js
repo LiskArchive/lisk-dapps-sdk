@@ -1,5 +1,5 @@
 var private = {}, self = null,
-library = null, modules = null;
+	library = null, modules = null;
 
 function Transport(cb, _library) {
 	self = this;
@@ -19,12 +19,13 @@ Transport.prototype.message = function (topic, message, cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
-Transport.prototype.request = function (topic, message, cb) {
+Transport.prototype.request = function (method, path, query, cb) {
 	var message = {
 		call: "transport#request",
 		args: {
-			message: message,
-			topic: topic
+			method: method,
+			path: path,
+			query: query
 		}
 	};
 

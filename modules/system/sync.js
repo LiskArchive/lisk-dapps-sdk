@@ -8,19 +8,9 @@ function Sync(cb, _library) {
 }
 
 private.blockSync = function (lastBlock, cb) {
-	console.log("private.blockSync", lastBlock.pointHeight)
-	modules.api.transport.request("height", {}, function (err, height) {
-		console.log(err, height)
+	modules.api.transport.request("get", "/blocks/height", null, function (err, height) {
+		console.log("private.blockSync.request", err, height)
 	});
-	//modules.api.dapps.getCommonBlock(lastBlockHeight, function (err, rawBalances) {
-	//	if (err) {
-	//		cb(err);
-	//	}
-	//	//b.height, t.id, t.senderId, t.amount
-	//	for (var i = 0; i < rawBalances.length; i++) {
-	//
-	//	}
-	//})
 }
 
 Sync.prototype.onBind = function (_modules) {
