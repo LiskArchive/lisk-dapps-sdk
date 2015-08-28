@@ -175,6 +175,10 @@ Blocks.prototype.processBlock = function (block, cb) {
 			}
 
 			function done(err) {
+				if (!err) {
+					private.lastBlock = block;
+					modules.api.transport.message("block", block, cb);
+				}
 				modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
 					setImmediate(cb, err);
 				});
@@ -232,7 +236,6 @@ Blocks.prototype.processBlock = function (block, cb) {
 							setImmediate(cb);
 						});
 					}, function (err) {
-						private.lastBlock = block;
 						private.saveBlock(block, done);
 					});
 				}
@@ -381,11 +384,13 @@ Blocks.prototype.getBlocks = function (cb, query) {
 Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		var block = query.message;
-		self.processBlock(block, function (err) {
-			if (err) {
-				library.logger("processBlock err", err);
-			}
-		});
+		if (block.lastBlockId == private.lastBlock.id) {
+			self.processBlock(block, function (err) {
+				if (err) {
+					library.logger("processBlock err", err);
+				}
+			});
+		}
 	}
 }
 

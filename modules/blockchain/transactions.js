@@ -218,7 +218,7 @@ Transactions.prototype.addTransaction = function (cb, query) {
 	});
 }
 
-Transactions.prototype.onMessage = function (query, cb) {
+Transactions.prototype.onMessage = function (query) {
 	switch (query.topic) {
 		case "transaction":
 			var transaction = query.message;
@@ -226,8 +226,6 @@ Transactions.prototype.onMessage = function (query, cb) {
 				if (err) {
 					library.logger("processUnconfirmedTransaction error", err)
 				}
-
-				cb && cb(err);
 			});
 			break;
 		case "balance":
@@ -247,8 +245,6 @@ Transactions.prototype.onMessage = function (query, cb) {
 							if (err) {
 								library.logger("processUnconfirmedTransaction error", err)
 							}
-
-							cb && cb(err);
 						});
 					});
 				}

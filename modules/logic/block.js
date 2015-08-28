@@ -50,7 +50,6 @@ Block.prototype.getBytes = function (block, withSignature) {
 
 	if (withSignature && block.signature) {
 		var pb = new Buffer(block.signature, 'hex');
-		console.log("size", pb.length)
 		for (var i = 0; i < pb.length; i++) {
 			bb.writeByte(pb[i]);
 		}
@@ -86,14 +85,7 @@ Block.prototype.save = function (block, cb) {
 			signature: block.signature,
 			count: block.count
 		}
-	}, function (err) {
-		if (!err) {
-			private.lastBlock = block;
-			modules.api.transport.message("block", block, cb);
-		} else {
-			setImmediate(cb);
-		}
-	});
+	}, cb);
 }
 
 Block.prototype.dbRead = function (row) {
