@@ -192,39 +192,39 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	}
 
 	//spec
-	private.types[trs.type].verify.call(self, trs, sender, cb);
+	private.types[trs.type].verify(trs, sender, cb);
 }
 
-Transaction.prototype.apply = function (trs, sender, cb) {
+Transaction.prototype.apply = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	private.types[trs.type].apply.call(self, trs, sender, cb);
+	private.types[trs.type].apply(trs, sender, cb);
 }
 
-Transaction.prototype.undo = function (trs, sender, cb) {
+Transaction.prototype.undo = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	private.types[trs.type].undo.call(self, trs, sender, cb);
+	private.types[trs.type].undo(trs, sender, cb);
 }
 
-Transaction.prototype.applyUnconfirmed = function (trs, sender, cb) {
+Transaction.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	private.types[trs.type].applyUnconfirmed.call(self, trs, sender, cb);
+	private.types[trs.type].applyUnconfirmed(trs, sender, cb);
 }
 
-Transaction.prototype.undoUnconfirmed = function (trs, sender, cb) {
+Transaction.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	private.types[trs.type].undoUnconfirmed.call(self, trs, sender, cb);
+	private.types[trs.type].undoUnconfirmed(trs, sender, cb);
 }
 
 Transaction.prototype.save = function (trs, cb) {
@@ -249,7 +249,7 @@ Transaction.prototype.save = function (trs, cb) {
 		if (err) {
 			return cb(err);
 		}
-		private.types[trs.type].save.call(this, trs, cb);
+		private.types[trs.type].save(trs, cb);
 	});
 }
 

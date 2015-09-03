@@ -63,26 +63,33 @@ function applyDiff(source, diff) {
 	return res;
 }
 
-private.addAccount = function (account) {
+private.clone = function (cb) {
+	cb(null, {
+		data: extend(true, private.accounts),
+		index: extend(true, private.accountsIndexById)
+	})
+}
+
+private.addAccount = function (account, scope) {
 	if (!account.address) {
 		account.address = self.generateAddressByPublicKey(account.publicKey);
 	}
-	private.accounts.push(account);
-	var index = private.accounts.length - 1;
-	private.accountsIndexById[account.address] = index;
+	(scope || private).accounts.push(account);
+	var index = (scope || private).accounts.length - 1;
+	(scope || private).accountsIndexById[account.address] = index;
 
 	return account;
 }
 
-private.removeAccount = function (address) {
-	var index = private.accountsIndexById[address];
-	delete private.accountsIndexById[address];
-	private.accounts[index] = undefined;
+private.removeAccount = function (address, scope) {
+	var index = (scope || private).accountsIndexById[address];
+	delete (scope || private).accountsIndexById[address];
+	(scope || private).accounts[index] = undefined;
 }
 
-private.getAccount = function (address) {
-	var index = private.accountsIndexById[address];
-	return private.accounts[index];
+private.getAccount = function (address, scope) {
+	var index = (scope || private).accountsIndexById[address];
+	return (scope || private).accounts[index];
 }
 
 Accounts.prototype.getExecutor = function () {
@@ -96,7 +103,7 @@ Accounts.prototype.getExecutor = function () {
 		secret: process.argv[2]
 	}
 
-	return private.executor
+	return private.executor;
 }
 
 Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
@@ -110,7 +117,7 @@ Accounts.prototype.generateAddressByPublicKey = function (publicKey) {
 	return address;
 }
 
-Accounts.prototype.getAccount = function (filter, cb) {
+Accounts.prototype.getAccount = function (filter, cb, scope) {
 	var address = filter.address;
 	if (filter.publicKey) {
 		address = self.generateAddressByPublicKey(filter.publicKey);
@@ -119,18 +126,18 @@ Accounts.prototype.getAccount = function (filter, cb) {
 		return cb("must provide address or publicKey");
 	}
 
-	cb(null, private.getAccount(address));
+	cb(null, private.getAccount(address, scope));
 }
 
-Accounts.prototype.getAccounts = function (cb) {
-	var result = private.accounts.filter(function (el) {
+Accounts.prototype.getAccounts = function (cb, scope) {
+	var result = (scope || private).accounts.filter(function (el) {
 		if (!el) return false;
 		return true;
 	})
 	cb(null, result);
 }
 
-Accounts.prototype.setAccountAndGet = function (data, cb) {
+Accounts.prototype.setAccountAndGet = function (data, cb, scope) {
 	var address = data.address || null;
 	if (address === null) {
 		if (data.publicKey) {
@@ -139,10 +146,10 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 			return cb("must provide address or publicKey");
 		}
 	}
-	var account = private.getAccount(address);
+	var account = private.getAccount(address, scope);
 
 	if (!account) {
-		account = private.addAccount(data);
+		account = private.addAccount(data, scope);
 	} else {
 		extend(account, data);
 	}
@@ -150,7 +157,7 @@ Accounts.prototype.setAccountAndGet = function (data, cb) {
 	cb(null, account);
 }
 
-Accounts.prototype.mergeAccountAndGet = function (data, cb) {
+Accounts.prototype.mergeAccountAndGet = function (data, cb, scope) {
 	var address = data.address || null;
 	if (address === null) {
 		if (data.publicKey) {
@@ -159,14 +166,14 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 			return cb("must provide address or publicKey");
 		}
 	}
-	var account = private.getAccount(address);
+	var account = private.getAccount(address, scope);
 
 	if (!account) {
 		var raw = {address: address};
 		if (data.publicKey) {
 			raw.publicKey = data.publicKey;
 		}
-		account = private.addAccount(raw);
+		account = private.addAccount(raw, scope);
 	}
 
 	Object.keys(data).forEach(function (key) {
@@ -181,7 +188,7 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb) {
 	cb(null, account);
 }
 
-Accounts.prototype.undoMerging = function (data, cb) {
+Accounts.prototype.undoMerging = function (data, cb, scope) {
 	var address = data.address || null;
 	if (address === null) {
 		if (data.publicKey) {
@@ -190,14 +197,14 @@ Accounts.prototype.undoMerging = function (data, cb) {
 			return cb("must provide address or publicKey");
 		}
 	}
-	var account = private.getAccount(address);
+	var account = private.getAccount(address, scope);
 
 	if (!account) {
 		var raw = {address: address};
 		if (data.publicKey) {
 			raw.publicKey = data.publicKey;
 		}
-		account = private.addAccount(raw);
+		account = private.addAccount(raw, scope);
 	}
 
 	Object.keys(data).forEach(function (key) {

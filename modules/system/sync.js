@@ -9,31 +9,46 @@ function Sync(cb, _library) {
 	cb(null, self);
 }
 
-private.findUpdate = function (lastBlock, peer, cb) {
-	modules.api.transport.getRandomPeer(peer, "get", "/blocks/common", {lastId: lastBlock.height}, function (err, res) {
-		if (err || res.body.success) {
-			return cb(err);
+private.createSandbox = function (cb) {
+	modules.blockchain.accounts.clone(function (err, accountDB) {
+		var sb = {
+			lastBlock: null,
+			accounts: accountDB.data,
+			accountsIndexById: accountDB.index,
+			unconfirmedTransactions: [],
+			unconfirmedTransactionsIdIndex: {},
+			doubleSpendingTransactions: {}
 		}
 
-		if (lastBlock.height - res.body.response.commonBlock.height > 1440) {
-			return cb();
-		}
-
-		modules.api.transport.getRandomPeer(peer, "get", "/blocks", {commonId: res.body.response.commonBlock.height}, function (err, res) {
-			async.eachSeries(res.body.response.blocks, function (block, cb) {
-
-			});
-		});
-
+		cb(null, sb);
 	});
 }
 
+private.findUpdate = function (lastBlock, peer, cb) {
+	modules.blockchain.blocks.getCommonBlock(lastBlock.height, peer, function (err, commonBlock) {
+		console.log("getCommonBlock", err, commonBlock)
+		if (err || !commonBlock) {
+			return cb(err);
+		}
+
+		if (lastBlock.height - commonBlock.height > 1440) {
+			return cb();
+		}
+
+		private.createSandbox(function (err, sandbox) {
+			console.log("sandbox", err, sandbox)
+			modules.blockchain.blocks.loadBlocksPeer(cb, sandbox);
+		});
+	}, cb);
+}
+
 private.blockSync = function (lastBlock, cb) {
+	console.log("private.blockSync")
 	modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
 		if (res.body.success) {
 			modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
 				if (bignum(lastBlock.height).lt(res.body.response.height)) {
-					private.findUpdate(lastBlock, data.peer, cb);
+					private.findUpdate(lastBlock, res.peer, cb);
 				} else {
 					setImmediate(cb);
 				}

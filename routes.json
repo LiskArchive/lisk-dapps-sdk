@@ -30,9 +30,19 @@
 		"handler": "blockchain.blocks.getBlocks"
 	},
 	{
+		"path": "/blocks/after",
+		"method": "get",
+		"handler": "blockchain.blocks.getBlocksAfter"
+	},
+	{
 		"path": "/blocks/height",
 		"method": "get",
 		"handler": "blockchain.blocks.getHeight"
+	},
+	{
+		"path": "/blocks/common",
+		"method": "get",
+		"handler": "blockchain.blocks.findCommon"
 	},
 	{
 		"path": "/blocks/count",
