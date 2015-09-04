@@ -1,5 +1,6 @@
 var bignum = require('browserify-bignum');
 var async = require('async');
+var ip = require('ip')
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -59,6 +60,7 @@ private.findUpdate = function (lastBlock, peer, cb) {
 						if (!err) {
 							return cb();
 						}
+						library.logger("sync", err);
 						//TODO:rollback after last error block
 						modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
 					});
@@ -76,8 +78,8 @@ private.blockSync = function (cb) {
 		modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
 			if (!err && res.body.success) {
 				modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
-					console.log("lastBlock", {id: lastBlock.id, height: lastBlock.height});
 					if (!err && bignum(lastBlock.height).lt(res.body.response)) {
+						console.log("found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
 						private.findUpdate(lastBlock, res.peer, cb);
 					} else {
 						setImmediate(cb);
