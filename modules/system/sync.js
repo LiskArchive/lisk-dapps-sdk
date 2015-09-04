@@ -36,7 +36,16 @@ private.findUpdate = function (lastBlock, peer, cb) {
 		}
 
 		private.createSandbox(commonBlock, function (err, sandbox) {
-			modules.blockchain.blocks.loadBlocksPeer(peer, cb, sandbox);
+			modules.blockchain.blocks.loadBlocksPeer(peer, function (err, blocks) {
+				async.series([
+					function (cb) {
+						modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb)
+					},
+					function (cb) {
+						modules.blockchain.blocks.applyBlocks(blocks, cb);
+					},
+				], cb)
+			}, sandbox);
 		});
 	}, cb);
 }
