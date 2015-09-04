@@ -9,10 +9,10 @@ function Sync(cb, _library) {
 	cb(null, self);
 }
 
-private.createSandbox = function (cb) {
+private.createSandbox = function (commonBlock, cb) {
 	modules.blockchain.accounts.clone(function (err, accountDB) {
 		var sb = {
-			lastBlock: null,
+			lastBlock: commonBlock,
 			accounts: accountDB.data,
 			accountsIndexById: accountDB.index,
 			unconfirmedTransactions: [],
@@ -35,9 +35,9 @@ private.findUpdate = function (lastBlock, peer, cb) {
 			return cb();
 		}
 
-		private.createSandbox(function (err, sandbox) {
+		private.createSandbox(commonBlock, function (err, sandbox) {
 			console.log("sandbox", err, sandbox)
-			modules.blockchain.blocks.loadBlocksPeer(cb, sandbox);
+			modules.blockchain.blocks.loadBlocksPeer(peer, cb, sandbox);
 		});
 	}, cb);
 }
@@ -47,6 +47,7 @@ private.blockSync = function (lastBlock, cb) {
 	modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
 		if (res.body.success) {
 			modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
+				console.log(lastBlock.height, res.body.response.height)
 				if (bignum(lastBlock.height).lt(res.body.response.height)) {
 					private.findUpdate(lastBlock, res.peer, cb);
 				} else {

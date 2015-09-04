@@ -25,57 +25,6 @@ function Blocks(cb, _library) {
 	cb(null, self);
 }
 
-private.row2object = function (row) {
-	for (var
-			 out = {},
-			 length = this.length,
-			 i = 0; i < length; i++
-	) {
-		out[this[i]] = row[i];
-	}
-	return out;
-}
-
-private.row2parsed = function (row) {
-	for (var
-			 out = {},
-			 fields = this.f,
-			 parsers = this.p,
-			 length = fields.length,
-			 i = 0; i < length; i++
-	) {
-		if (parsers[i] === Buffer) {
-			out[fields[i]] = parsers[i](row[i], 'hex');
-		} else if (parsers[i] === Array) {
-			out[fields[i]] = row[i] ? row[i].split(",") : []
-		} else {
-			out[fields[i]] = parsers[i](row[i]);
-		}
-	}
-	return out;
-}
-
-private.parseFields = function ($fields) {
-	for (var
-			 current,
-			 fields = Object.keys($fields),
-			 parsers = [],
-			 length = fields.length,
-			 i = 0; i < length; i++
-	) {
-		current = $fields[fields[i]];
-		parsers[i] = current === Boolean ?
-			$Boolean : (
-			current === Date ?
-				$Date :
-			current || String
-		)
-		;
-	}
-
-	return {f: fields, p: parsers};
-}
-
 private.readDbRows = function (rows) {
 	var blocks = {};
 	var order = [];
@@ -164,7 +113,7 @@ private.getIdSequence = function (height, cb) {
 				table: 'blocks',
 				fields: [{id: "id"}, {expression: "max(height)", alias: "height"}],
 				group: {
-					expression: "(cast(height / 10 as integer) + (case when height % 10 > 0 then 1 else 0 end))",
+					expression: "(cast(height / 101 as integer) + (case when height % 101 > 0 then 1 else 0 end))",
 					having: {
 						height: {$lte: height}
 					}
@@ -178,11 +127,17 @@ private.getIdSequence = function (height, cb) {
 				sort: {
 					height: -1
 				}
-			}]
+			}],
+			limit: 1000
 		},
 		alias: "s",
 		fields: [{height: "height"}, {expression: "group_concat(s.id)", alias: "ids"}]
-	}, cb);
+	}, {height: Number, ids: Array}, function (err, rows) {
+		if (err || !rows.length) {
+			return (err || "wrong ids request")
+		}
+		cb(null, rows[0]);
+	});
 }
 
 Blocks.prototype.genesisBlock = function () {
@@ -308,18 +263,14 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 	}, scope);
 }
 
-Blocks.prototype.loadBlocksPeer = function (cb, scope) {
-	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: res.body.response.commonBlock.height}, function (err, res) {
+Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
+	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
 		console.log("/blocks/after", err, res);
 		if (err || !res.body.success) {
 			return cb(err);
 		}
 
-		var blocks = util.isArray(library.scheme.alias) ?
-			res.body.blocks.map(private.row2object, library.scheme.alias) :
-			res.body.blocks.map(private.row2parsed, private.parseFields(library.scheme.alias));
-
-		blocks = private.readDbRows(blocks);
+		var blocks = private.readDbRows(res.body.blocks);
 
 		console.log("blocks", blocks);
 
@@ -379,10 +330,6 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 		if (err) {
 			return cb(err);
 		}
-
-		blocks = util.isArray(library.scheme.alias) ?
-			blocks.map(private.row2object, library.scheme.alias) :
-			blocks.map(private.row2parsed, private.parseFields(library.scheme.alias));
 
 		blocks = private.readDbRows(blocks);
 
@@ -450,10 +397,10 @@ Blocks.prototype.findCommon = function (cb, query) {
 			},
 			height: {$between: [query.min, query.max]}
 		},
-		fields: [{expression: "max(height)", alias: "height"}, "id", "previousBlock"]
-	}, function (err, rows) {
+		fields: [{expression: "max(height)", alias: "height"}, "id", "prevBlockId"]
+	}, {"height": Number, "id": String, "prevBlockId": String}, function (err, rows) {
 		if (err) {
-			return res.json({success: false, error: "COMMON.DB_ERR"});
+			return cb(err);
 		}
 
 		var commonBlock = rows.length ? rows[0] : null;
@@ -473,13 +420,16 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 		function (next) {
 			count++;
 			private.getIdSequence(lastBlockHeight, function (err, data) {
-				console.log("getIdSequence", err, data)
-				if (err){
+				if (err) {
 					return next(err);
 				}
 				var max = lastBlockHeight;
 				lastBlockHeight = data.height;
-				modules.api.transport.getPeer(peer, "get", "/blocks/common", {ids: data.ids, max: max, min: lastBlockHeight}, function (err, data) {
+				modules.api.transport.getPeer(peer, "get", "/blocks/common", {
+					ids: data.ids,
+					max: max,
+					min: lastBlockHeight
+				}, function (err, data) {
 					console.log("/blocks/common", err, data)
 					if (err || !data.body.success) {
 						return next(err);
@@ -493,10 +443,11 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 						table: "blocks",
 						condition: {
 							id: data.body.response.common.id,
-							height: data.body.response.common.height
+							height: data.body.response.common.height,
+							previousBlock: data.body.response.common.previousBlock
 						},
-						fields: {"cnt": Number}
-					}, function (err, rows) {
+						fields: [{expression: "count(id)", alias: "cnt"}]
+					}, {"cnt": Number}, function (err, rows) {
 						if (err || !rows.length) {
 							return next(err || "Can't compare blocks");
 						}
@@ -541,9 +492,8 @@ Blocks.prototype.getBlock = function (cb, query) {
 		condition: {
 			id: query.id
 		},
-		fields: ["id", "pointId", "pointHeight", "delegate", "signature", "count"],
-		map: ["id", "pointId", "pointHeight", "delegate", "signature", "count"]
-	}, cb);
+		fields: ["id", "pointId", "pointHeight", "delegate", "signature", "count"]
+	}, {"id": String, "pointId": String, "pointHeight": Number, "delegate": String, "signature": String, "count": Number}, cb);
 }
 
 Blocks.prototype.getBlocks = function (cb, query) {
@@ -551,7 +501,7 @@ Blocks.prototype.getBlocks = function (cb, query) {
 		limit: !query.limit || query.limit > 100 ? 100 : query.limit,
 		offset: !query.offset || query.offset < 0 ? 0 : query.offset,
 		fields: library.scheme.fields
-	}), cb);
+	}), library.scheme.alias, cb);
 }
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
@@ -561,7 +511,7 @@ Blocks.prototype.getBlocksAfter = function (cb, query) {
 			"b.id": {$gt: query.lastBlockHeight}
 		},
 		fields: library.scheme.fields
-	}), cb);
+	}), library.scheme.alias, cb);
 }
 
 Blocks.prototype.onMessage = function (query) {
