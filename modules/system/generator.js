@@ -16,6 +16,11 @@ Generator.prototype.onBind = function (_modules) {
 		}
 
 		var executor = modules.blockchain.accounts.getExecutor();
+
+		if (!executor) {
+			return library.logger("secret is null")
+		}
+
 		if (res.authorId == executor.address) {
 
 		}

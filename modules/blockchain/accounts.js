@@ -93,6 +93,7 @@ private.getAccount = function (address, scope) {
 }
 
 Accounts.prototype.getExecutor = function () {
+	if (!process.argv[2]) return null;
 	if (private.executor) {
 		return private.executor
 	}

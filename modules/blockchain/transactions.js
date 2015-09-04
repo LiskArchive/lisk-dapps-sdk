@@ -231,24 +231,26 @@ Transactions.prototype.onMessage = function (query) {
 		case "balance":
 			var executor = modules.blockchain.accounts.getExecutor();
 
-			modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
-				if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey) {
-					modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, account) {
-						var transaction = modules.logic.transaction.create({
-							type: 1,
-							sender: account,
-							keypair: executor.keypair,
-							amount: data.transaction.amount,
-							src_id: data.transaction.id
+			if (executor) {
+				modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
+					if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey) {
+						modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, account) {
+							var transaction = modules.logic.transaction.create({
+								type: 1,
+								sender: account,
+								keypair: executor.keypair,
+								amount: data.transaction.amount,
+								src_id: data.transaction.id
+							});
+							private.processUnconfirmedTransaction(transaction, function (err) {
+								if (err) {
+									library.logger("processUnconfirmedTransaction error", err)
+								}
+							});
 						});
-						private.processUnconfirmedTransaction(transaction, function (err) {
-							if (err) {
-								library.logger("processUnconfirmedTransaction error", err)
-							}
-						});
-					});
-				}
-			});
+					}
+				});
+			}
 			break;
 	}
 }

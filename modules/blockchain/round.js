@@ -15,7 +15,7 @@ function Round(cb, _library) {
 
 private.loop = function (point, cb) {
 	var executor = modules.blockchain.accounts.getExecutor();
-	if (!executor.address) {
+	if (!executor || !executor.address) {
 		library.logger('loop', 'exit: secret doesn´t found');
 		return cb();
 	}
