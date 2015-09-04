@@ -270,7 +270,7 @@ Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 			return cb(err);
 		}
 
-		var blocks = private.readDbRows(res.body.blocks);
+		var blocks = private.readDbRows(res.body.response);
 
 		console.log("blocks", blocks);
 
@@ -404,7 +404,7 @@ Blocks.prototype.findCommon = function (cb, query) {
 		}
 
 		var commonBlock = rows.length ? rows[0] : null;
-		cb(null, {common: commonBlock});
+		cb(null, commonBlock);
 	});
 }
 
@@ -435,16 +435,16 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 						return next(err);
 					}
 
-					if (!data.body.response.common) {
+					if (!data.body.response) {
 						return next();
 					}
 
 					modules.api.sql.select({
 						table: "blocks",
 						condition: {
-							id: data.body.response.common.id,
-							height: data.body.response.common.height,
-							previousBlock: data.body.response.common.previousBlock
+							id: data.body.response.id,
+							height: data.body.response.height,
+							previousBlock: data.body.response.previousBlock
 						},
 						fields: [{expression: "count(id)", alias: "cnt"}]
 					}, {"cnt": Number}, function (err, rows) {
@@ -453,7 +453,7 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 						}
 
 						if (rows[0].cnt) {
-							commonBlock = data.body.response.common;
+							commonBlock = data.body.response;
 						}
 						next();
 					});
@@ -479,7 +479,7 @@ Blocks.prototype.count = function (cb) {
 }
 
 Blocks.prototype.getHeight = function (cb) {
-	cb(null, {height: private.lastBlock.pointHeight});
+	cb(null, private.lastBlock.pointHeight);
 }
 
 Blocks.prototype.getLastBlock = function (cb) {

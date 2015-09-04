@@ -47,8 +47,7 @@ private.blockSync = function (lastBlock, cb) {
 	modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
 		if (res.body.success) {
 			modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
-				console.log(lastBlock.height, res.body.response.height)
-				if (bignum(lastBlock.height).lt(res.body.response.height)) {
+				if (bignum(lastBlock.height).lt(res.body.response)) {
 					private.findUpdate(lastBlock, res.peer, cb);
 				} else {
 					setImmediate(cb);
