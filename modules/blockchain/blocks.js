@@ -73,7 +73,7 @@ private.deleteBlock = function (blockId, cb) {
 		condition: {
 			id: blockId
 		}
-	}, cb)
+	}, cb);
 }
 
 private.popLastBlock = function (oldLastBlock, cb) {
@@ -193,6 +193,12 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 			setImmediate(cb, err);
 		}
 	);
+}
+
+Blocks.prototype.saveBlocks = function (blocks, cb) {
+	async.eachSeries(blocks, function(block, cb){
+		private.saveBlock(block, cb);
+	}, cb);
 }
 
 Blocks.prototype.genesisBlock = function () {
@@ -318,7 +324,7 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 	}, scope);
 }
 
-Blocks.prototype.applyBlocks = function (block, cb, scope) {
+Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 	async.eachSeries(blocks, function (block, cb) {
 		try {
 			var valid = modules.logic.block.verifySignature(block);
@@ -380,7 +386,7 @@ Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 
 		console.log(blocks.map(function (el) {
 			return el.height
-		}))
+		}));
 
 		self.applyBlocks(blocks, cb, scope);
 	});
@@ -500,6 +506,7 @@ Blocks.prototype.getBlock = function (cb, query) {
 		condition: query,
 		fields: library.scheme.fields
 	}), library.scheme.alias, function (err, rows) {
+		console.log(err, rows)
 		if (err) {
 			return cb(err);
 		}
