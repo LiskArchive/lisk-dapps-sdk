@@ -265,14 +265,16 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
-		console.log("/blocks/after", err, res);
+		console.log("loading after", scope.lastBlock.height)
 		if (err || !res.body.success) {
 			return cb(err);
 		}
 
 		var blocks = private.readDbRows(res.body.response);
 
-		console.log("blocks", blocks);
+		console.log(blocks.map(function (el) {
+			return el.height
+		}))
 
 		async.eachSeries(blocks, function (block, cb) {
 			try {
@@ -430,7 +432,6 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 					max: max,
 					min: lastBlockHeight
 				}, function (err, data) {
-					console.log("/blocks/common", err, data)
 					if (err || !data.body.success) {
 						return next(err);
 					}
@@ -508,7 +509,7 @@ Blocks.prototype.getBlocksAfter = function (cb, query) {
 	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
 		limit: 100,
 		condition: {
-			"b.id": {$gt: query.lastBlockHeight}
+			"b.height": {$gt: query.lastBlockHeight}
 		},
 		fields: library.scheme.fields
 	}), library.scheme.alias, cb);

@@ -26,7 +26,7 @@ private.createSandbox = function (commonBlock, cb) {
 
 private.findUpdate = function (lastBlock, peer, cb) {
 	modules.blockchain.blocks.getCommonBlock(lastBlock.height, peer, function (err, commonBlock) {
-		console.log("getCommonBlock", err, commonBlock)
+		console.log("commonBlock", {id: commonBlock.id, height: commonBlock.height})
 		if (err || !commonBlock) {
 			return cb(err);
 		}
@@ -36,17 +36,16 @@ private.findUpdate = function (lastBlock, peer, cb) {
 		}
 
 		private.createSandbox(commonBlock, function (err, sandbox) {
-			console.log("sandbox", err, sandbox)
 			modules.blockchain.blocks.loadBlocksPeer(peer, cb, sandbox);
 		});
 	}, cb);
 }
 
 private.blockSync = function (lastBlock, cb) {
-	console.log("private.blockSync")
 	modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
 		if (res.body.success) {
 			modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
+				console.log("lastBlock", {id: lastBlock.id, height: lastBlock.height});
 				if (bignum(lastBlock.height).lt(res.body.response)) {
 					private.findUpdate(lastBlock, res.peer, cb);
 				} else {

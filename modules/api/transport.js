@@ -20,7 +20,7 @@ Transport.prototype.message = function (topic, message, cb) {
 }
 
 Transport.prototype.getRandomPeer = function (method, path, query, cb) {
-	console.log(method + " " + path, query);
+	//console.log(method + " " + path, query);
 	var message = {
 		call: "transport#request",
 		args: {
@@ -34,7 +34,7 @@ Transport.prototype.getRandomPeer = function (method, path, query, cb) {
 }
 
 Transport.prototype.getPeer = function (peer, method, path, query, cb) {
-	console.log(method + " " + path, query);
+	//console.log(method + " " + path, query);
 	var message = {
 		call: "transport#request",
 		args: {
