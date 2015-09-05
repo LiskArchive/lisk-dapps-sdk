@@ -3,6 +3,7 @@
 	"api/blocks": "./modules/api/blocks.js",
 	"api/contacts": "./modules/api/contacts.js",
 	"api/crypto": "./modules/api/crypto.js",
+	"api/dapps": "./modules/api/dapps.js",
 	"api/delegates": "./modules/api/delegates.js",
 	"api/loader": "./modules/api/loader.js",
 	"api/multisignatures": "./modules/api/multisignatures.js",
