@@ -25,57 +25,6 @@ function Blocks(cb, _library) {
 	cb(null, self);
 }
 
-private.row2object = function (row) {
-	for (var
-			 out = {},
-			 length = this.length,
-			 i = 0; i < length; i++
-	) {
-		out[this[i]] = row[i];
-	}
-	return out;
-}
-
-private.row2parsed = function (row) {
-	for (var
-			 out = {},
-			 fields = this.f,
-			 parsers = this.p,
-			 length = fields.length,
-			 i = 0; i < length; i++
-	) {
-		if (parsers[i] === Buffer) {
-			out[fields[i]] = parsers[i](row[i], 'hex');
-		} else if (parsers[i] === Array) {
-			out[fields[i]] = row[i] ? row[i].split(",") : []
-		} else {
-			out[fields[i]] = parsers[i](row[i]);
-		}
-	}
-	return out;
-}
-
-private.parseFields = function ($fields) {
-	for (var
-			 current,
-			 fields = Object.keys($fields),
-			 parsers = [],
-			 length = fields.length,
-			 i = 0; i < length; i++
-	) {
-		current = $fields[fields[i]];
-		parsers[i] = current === Boolean ?
-			$Boolean : (
-			current === Date ?
-				$Date :
-			current || String
-		)
-		;
-	}
-
-	return {f: fields, p: parsers};
-}
-
 private.readDbRows = function (rows) {
 	var blocks = {};
 	var order = [];
@@ -115,6 +64,44 @@ private.saveBlock = function (block, cb, scope) {
 		async.eachSeries(block.transactions, function (trs, cb) {
 			modules.logic.transaction.save(trs, cb);
 		}, cb);
+	});
+}
+
+private.deleteBlock = function (blockId, cb) {
+	modules.api.sql.remove({
+		table: 'blocks',
+		condition: {
+			id: blockId
+		}
+	}, cb);
+}
+
+private.popLastBlock = function (oldLastBlock, cb) {
+	self.getBlock({id: oldLastBlock.previousBlock}, function (err, previousBlock) {
+		if (err || !previousBlock) {
+			return cb(err || 'previousBlock is null');
+		}
+
+		async.eachSeries(oldLastBlock.transactions.reverse(), function (transaction, cb) {
+			async.series([
+				function (cb) {
+					modules.transactions.undo(transaction, cb);
+				}, function (cb) {
+					modules.transactions.undoUnconfirmed(transaction, cb);
+				}, function (cb) {
+					modules.transactions.pushHiddenTransaction(transaction);
+					setImmediate(cb);
+				}
+			], cb);
+		}, function (err) {
+			private.deleteBlock(oldLastBlock.id, function (err) {
+				if (err) {
+					return cb(err);
+				}
+
+				cb(null, previousBlock);
+			});
+		});
 	});
 }
 
@@ -164,7 +151,7 @@ private.getIdSequence = function (height, cb) {
 				table: 'blocks',
 				fields: [{id: "id"}, {expression: "max(height)", alias: "height"}],
 				group: {
-					expression: "(cast(height / 10 as integer) + (case when height % 10 > 0 then 1 else 0 end))",
+					expression: "(cast(height / 101 as integer) + (case when height % 101 > 0 then 1 else 0 end))",
 					having: {
 						height: {$lte: height}
 					}
@@ -178,10 +165,39 @@ private.getIdSequence = function (height, cb) {
 				sort: {
 					height: -1
 				}
-			}]
+			}],
+			limit: 1000
 		},
 		alias: "s",
 		fields: [{height: "height"}, {expression: "group_concat(s.id)", alias: "ids"}]
+	}, {height: Number, ids: Array}, function (err, rows) {
+		if (err || !rows.length) {
+			return (err || "wrong ids request")
+		}
+		cb(null, rows[0]);
+	});
+}
+
+Blocks.prototype.deleteBlocksBefore = function (block, cb) {
+	async.whilst(
+		function () {
+			return !(block.height >= private.lastBlock.height)
+		},
+		function (next) {
+			private.popLastBlock(private.lastBlock, function (err, newLastBlock) {
+				private.lastBlock = newLastBlock;
+				next(err);
+			});
+		},
+		function (err) {
+			setImmediate(cb, err);
+		}
+	);
+}
+
+Blocks.prototype.saveBlocks = function (blocks, cb) {
+	async.eachSeries(blocks, function(block, cb){
+		private.saveBlock(block, cb);
 	}, cb);
 }
 
@@ -309,69 +325,71 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 	}, scope);
 }
 
-Blocks.prototype.loadBlocksPeer = function (cb, scope) {
-	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: res.body.response.commonBlock.height}, function (err, res) {
-		console.log("/blocks/after", err, res);
-		if (err || !res.body.success) {
-			return cb(err);
+Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
+	async.eachSeries(blocks, function (block, cb) {
+		try {
+			var valid = modules.logic.block.verifySignature(block);
+		} catch (e) {
+			return setImmediate(cb, {
+				message: e.toString(),
+				block: block
+			});
 		}
-
-		var blocks = util.isArray(library.scheme.alias) ?
-			res.body.blocks.map(private.row2object, library.scheme.alias) :
-			res.body.blocks.map(private.row2parsed, private.parseFields(library.scheme.alias));
-
-		blocks = private.readDbRows(blocks);
-
-		console.log("blocks", blocks);
-
-		async.eachSeries(blocks, function (block, cb) {
-			try {
-				var valid = modules.logic.block.verifySignature(block);
-			} catch (e) {
-				return setImmediate(cb, {
-					message: e.toString(),
-					block: block
-				});
-			}
-			if (!valid) {
-				return setImmediate(cb, {
-					message: "Can't verify block signature",
-					block: block
-				});
-			}
-			(scope || private).lastBlock = block;
-			async.eachSeries(block.transactions, function (transaction, cb) {
-				modules.blockchain.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (!valid) {
+			return setImmediate(cb, {
+				message: "Can't verify block signature",
+				block: block
+			});
+		}
+		(scope || private).lastBlock = block;
+		async.eachSeries(block.transactions, function (transaction, cb) {
+			modules.blockchain.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, sender) {
+				if (err) {
+					return cb({
+						message: err,
+						transaction: transaction,
+						block: block
+					});
+				}
+				modules.logic.transaction.verify(transaction, sender, function (err) {
 					if (err) {
-						return cb({
+						return setImmediate(cb, {
 							message: err,
 							transaction: transaction,
 							block: block
 						});
 					}
-					modules.logic.transaction.verify(transaction, sender, function (err) {
-						if (err) {
-							return setImmediate(cb, {
-								message: err,
-								transaction: transaction,
-								block: block
-							});
-						}
 
-						async.series([
-							function (cb) {
-								modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, cb, scope);
-							},
-							function (cb) {
-								modules.blockchain.transactions.applyTransaction(transaction, cb, scope);
-							}
-						], cb)
-					});
-				}, scope);
-			}, cb);
-		}, function (err) {
-			cb(err, blocks);
-		});
+					async.series([
+						function (cb) {
+							modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, cb, scope);
+						},
+						function (cb) {
+							modules.blockchain.transactions.applyTransaction(transaction, cb, scope);
+						}
+					], cb)
+				});
+			}, scope);
+		}, cb);
+	}, function (err) {
+		cb(err, blocks);
+	});
+}
+
+Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
+	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
+		console.log("loading after", scope.lastBlock.height)
+		if (err || !res.body.success) {
+			return cb(err);
+		}
+
+		var blocks = private.readDbRows(res.body.response);
+
+		console.log(blocks.map(function (el) {
+			return el.height
+		}));
+
+		self.applyBlocks(blocks, cb, scope);
 	});
 }
 
@@ -381,65 +399,10 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 			return cb(err);
 		}
 
-		blocks = util.isArray(library.scheme.alias) ?
-			blocks.map(private.row2object, library.scheme.alias) :
-			blocks.map(private.row2parsed, private.parseFields(library.scheme.alias));
-
 		blocks = private.readDbRows(blocks);
 
-		async.eachSeries(blocks, function (block, cb) {
-			try {
-				var valid = modules.logic.block.verifySignature(block);
-			} catch (e) {
-				return setImmediate(cb, {
-					message: e.toString(),
-					block: block
-				});
-			}
-			if (!valid) {
-				return setImmediate(cb, {
-					message: "Can't verify block signature",
-					block: block
-				});
-			}
-			private.lastBlock = block;
-			async.eachSeries(block.transactions, function (transaction, cb) {
-				modules.blockchain.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, sender) {
-					if (err) {
-						return cb({
-							message: err,
-							transaction: transaction,
-							block: block
-						});
-					}
-					modules.logic.transaction.verify(transaction, sender, function (err) {
-						if (err) {
-							return setImmediate(cb, {
-								message: err,
-								transaction: transaction,
-								block: block
-							});
-						}
-
-						async.series([
-							function (cb) {
-								modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, cb);
-							},
-							function (cb) {
-								modules.blockchain.transactions.applyTransaction(transaction, cb);
-							}
-						], cb)
-					});
-				});
-			}, cb);
-		}, function (err) {
-			cb(err, blocks);
-		});
+		self.applyBlocks(blocks, cb);
 	}, {limit: limit, offset: offset})
-}
-
-Blocks.prototype.simpleDeleteAfterBlock = function (blockId, cb) {
-	setImmediate(cb);
 }
 
 Blocks.prototype.findCommon = function (cb, query) {
@@ -451,14 +414,14 @@ Blocks.prototype.findCommon = function (cb, query) {
 			},
 			height: {$between: [query.min, query.max]}
 		},
-		fields: [{expression: "max(height)", alias: "height"}, "id", "previousBlock"]
-	}, function (err, rows) {
+		fields: [{expression: "max(height)", alias: "height"}, "id", "prevBlockId"]
+	}, {"height": Number, "id": String, "prevBlockId": String}, function (err, rows) {
 		if (err) {
-			return res.json({success: false, error: "COMMON.DB_ERR"});
+			return cb(err);
 		}
 
 		var commonBlock = rows.length ? rows[0] : null;
-		cb(null, {common: commonBlock});
+		cb(null, commonBlock);
 	});
 }
 
@@ -474,36 +437,39 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 		function (next) {
 			count++;
 			private.getIdSequence(lastBlockHeight, function (err, data) {
-				console.log("getIdSequence", err, data)
-				if (err){
+				if (err) {
 					return next(err);
 				}
 				var max = lastBlockHeight;
 				lastBlockHeight = data.height;
-				modules.api.transport.getPeer(peer, "get", "/blocks/common", {ids: data.ids, max: max, min: lastBlockHeight}, function (err, data) {
-					console.log("/blocks/common", err, data)
+				modules.api.transport.getPeer(peer, "get", "/blocks/common", {
+					ids: data.ids,
+					max: max,
+					min: lastBlockHeight
+				}, function (err, data) {
 					if (err || !data.body.success) {
 						return next(err);
 					}
 
-					if (!data.body.response.common) {
+					if (!data.body.response) {
 						return next();
 					}
 
 					modules.api.sql.select({
 						table: "blocks",
 						condition: {
-							id: data.body.response.common.id,
-							height: data.body.response.common.height
+							id: data.body.response.id,
+							height: data.body.response.height,
+							previousBlock: data.body.response.previousBlock
 						},
-						fields: {"cnt": Number}
-					}, function (err, rows) {
+						fields: [{expression: "count(id)", alias: "cnt"}]
+					}, {"cnt": Number}, function (err, rows) {
 						if (err || !rows.length) {
 							return next(err || "Can't compare blocks");
 						}
 
 						if (rows[0].cnt) {
-							commonBlock = data.body.response.common;
+							commonBlock = data.body.response;
 						}
 						next();
 					});
@@ -529,7 +495,7 @@ Blocks.prototype.count = function (cb) {
 }
 
 Blocks.prototype.getHeight = function (cb) {
-	cb(null, {height: private.lastBlock.pointHeight});
+	cb(null, private.lastBlock.height);
 }
 
 Blocks.prototype.getLastBlock = function (cb) {
@@ -537,14 +503,16 @@ Blocks.prototype.getLastBlock = function (cb) {
 }
 
 Blocks.prototype.getBlock = function (cb, query) {
-	modules.api.sql.select({
-		table: "blocks",
-		condition: {
-			id: query.id
-		},
-		fields: ["id", "pointId", "pointHeight", "delegate", "signature", "count"],
-		map: ["id", "pointId", "pointHeight", "delegate", "signature", "count"]
-	}, cb);
+	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
+		condition: query,
+		fields: library.scheme.fields
+	}), library.scheme.alias, function (err, rows) {
+		console.log(err, rows)
+		if (err) {
+			return cb(err);
+		}
+		cb(null, rows[0]);
+	});
 }
 
 Blocks.prototype.getBlocks = function (cb, query) {
@@ -552,17 +520,17 @@ Blocks.prototype.getBlocks = function (cb, query) {
 		limit: !query.limit || query.limit > 100 ? 100 : query.limit,
 		offset: !query.offset || query.offset < 0 ? 0 : query.offset,
 		fields: library.scheme.fields
-	}), cb);
+	}), library.scheme.alias, cb);
 }
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
 	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
 		limit: 100,
 		condition: {
-			"b.id": {$gt: query.lastBlockHeight}
+			"b.height": {$gt: query.lastBlockHeight}
 		},
 		fields: library.scheme.fields
-	}), cb);
+	}), library.scheme.alias, cb);
 }
 
 Blocks.prototype.onMessage = function (query) {

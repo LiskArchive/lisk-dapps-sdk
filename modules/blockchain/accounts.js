@@ -63,13 +63,6 @@ function applyDiff(source, diff) {
 	return res;
 }
 
-private.clone = function (cb) {
-	cb(null, {
-		data: extend(true, private.accounts),
-		index: extend(true, private.accountsIndexById)
-	})
-}
-
 private.addAccount = function (account, scope) {
 	if (!account.address) {
 		account.address = self.generateAddressByPublicKey(account.publicKey);
@@ -90,6 +83,13 @@ private.removeAccount = function (address, scope) {
 private.getAccount = function (address, scope) {
 	var index = (scope || private).accountsIndexById[address];
 	return (scope || private).accounts[index];
+}
+
+Accounts.prototype.clone = function (cb) {
+	cb(null, {
+		data: extend(true, private.accounts),
+		index: extend(true, private.accountsIndexById)
+	})
 }
 
 Accounts.prototype.getExecutor = function () {

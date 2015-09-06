@@ -25,6 +25,15 @@ Dapps.prototype.getCommonBlock = function (cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
+Dapps.prototype.setReady = function (cb) {
+	var message = {
+		call: "dapps#setReady",
+		args: {}
+	};
+
+	library.sandbox.sendMessage(message, cb);
+}
+
 Dapps.prototype.onBind = function (_modules) {
 	modules = _modules;
 }
