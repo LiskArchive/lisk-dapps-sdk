@@ -192,6 +192,7 @@ Blocks.prototype.genesisBlock = function () {
 Blocks.prototype.processBlock = function (block, cb, scope) {
 	private.verify(block, function (err) {
 		if (err) {
+			console.log('here!');
 			return cb(err);
 		}
 
@@ -592,14 +593,14 @@ Blocks.prototype.onBind = function (_modules) {
 		fields: ["id"]
 	}, function (err, found) {
 		if (err) {
-			library.logger("genesis error", err)
+			library.logger("genesis error 1", err)
 		}
 		if (!found.length) {
 			self.processBlock(private.genesisBlock, function (err) {
 				if (!err) {
 					library.bus.message("blockchainReady");
 				} else {
-					library.logger("genesis error", err)
+					library.logger("genesis error 2", err)
 				}
 			})
 		} else {
