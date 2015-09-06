@@ -71,7 +71,7 @@ Sql.prototype.select = function (request, map, cb) {
 	};
 
 	library.sandbox.sendMessage(message, function (err, rows) {
-		if (map && util.isArray(rows)) {
+		if (map) {
 			rows = util.isArray(map) ?
 				rows.map(private.row2object, map) :
 				rows.map(private.row2parsed, private.parseFields(map));
