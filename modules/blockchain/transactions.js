@@ -33,41 +33,6 @@ private.getUnconfirmedTransaction = function (id, cb, scope) {
 	setImmediate(cb, null, (scope || private).unconfirmedTransactions[index]);
 }
 
-private.processUnconfirmedTransaction = function (transaction, cb, scope) {
-	function done(err) {
-		if (err) {
-			return cb(err);
-		}
-
-		private.addUnconfirmedTransaction(transaction, function (err) {
-			if (err) {
-				return cb(err);
-			}
-
-			!scope && modules.api.transport.message("transaction", transaction, cb);
-		}, scope);
-	}
-
-	if ((scope || private).unconfirmedTransactionsIdIndex[transaction.id] !== undefined || (scope || private).doubleSpendingTransactions[transaction.id]) {
-		return done("This transaction already exists");
-	}
-
-	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
-		if (err) {
-			return done(err);
-		}
-
-		async.series([
-			function (cb) {
-				modules.logic.transaction.process(transaction, sender, cb);
-			},
-			function (cb) {
-				modules.logic.transaction.verify(transaction, sender, cb);
-			}
-		], done);
-	}, scope);
-}
-
 private.undoUnconfirmedTransaction = function (transaction, cb, scope) {
 	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 		if (err) {
@@ -102,6 +67,41 @@ private.applyTransactionList = function (transactions, cb, scope) {
 private.addDoubleSpending = function (transaction, cb, scope) {
 	(scope || private).doubleSpendingTransactions[transaction.id] = transaction;
 	setImmediate(cb);
+}
+
+Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb, scope) {
+	function done(err) {
+		if (err) {
+			return cb(err);
+		}
+
+		private.addUnconfirmedTransaction(transaction, function (err) {
+			if (err) {
+				return cb(err);
+			}
+
+			!scope && modules.api.transport.message("transaction", transaction, cb);
+		}, scope);
+	}
+
+	if ((scope || private).unconfirmedTransactionsIdIndex[transaction.id] !== undefined || (scope || private).doubleSpendingTransactions[transaction.id]) {
+		return done("This transaction already exists");
+	}
+
+	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (err) {
+			return done(err);
+		}
+
+		async.series([
+			function (cb) {
+				modules.logic.transaction.process(transaction, sender, cb);
+			},
+			function (cb) {
+				modules.logic.transaction.verify(transaction, sender, cb);
+			}
+		], done);
+	}, scope);
 }
 
 Transactions.prototype.applyTransaction = function (transaction, cb, scope) {
@@ -206,7 +206,7 @@ Transactions.prototype.addTransaction = function (cb, query) {
 					return cb(e.toString());
 				}
 
-				private.processUnconfirmedTransaction(transaction, cb)
+				self.processUnconfirmedTransaction(transaction, cb)
 			});
 		});
 	}, function (err, transaction) {
@@ -226,7 +226,7 @@ Transactions.prototype.onMessage = function (query) {
 	switch (query.topic) {
 		case "transaction":
 			var transaction = query.message;
-			private.processUnconfirmedTransaction(transaction, function (err) {
+			self.processUnconfirmedTransaction(transaction, function (err) {
 				if (err) {
 					library.logger("processUnconfirmedTransaction error", err)
 				}
@@ -246,7 +246,7 @@ Transactions.prototype.onMessage = function (query) {
 								amount: data.transaction.amount,
 								src_id: data.transaction.id
 							});
-							private.processUnconfirmedTransaction(transaction, function (err) {
+							self.processUnconfirmedTransaction(transaction, function (err) {
 								if (err) {
 									library.logger("processUnconfirmedTransaction error", err)
 								}

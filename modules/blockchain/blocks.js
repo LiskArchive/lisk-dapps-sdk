@@ -506,7 +506,6 @@ Blocks.prototype.getBlock = function (cb, query) {
 		condition: query,
 		fields: library.scheme.fields
 	}), library.scheme.alias, function (err, rows) {
-		console.log(err, rows)
 		if (err) {
 			return cb(err);
 		}

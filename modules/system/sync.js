@@ -76,7 +76,7 @@ private.transactionsSync = function (cb) {
 			return cb(err);
 		}
 		async.eachSeries(res.body.response, function(transaction, cb){
-			private.processUnconfirmedTransaction(transaction, function (err) {
+			modules.blockchain.transactions.processUnconfirmedTransaction(transaction, function (err) {
 				cb();
 			});
 		}, cb);
