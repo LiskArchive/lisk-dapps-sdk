@@ -76,6 +76,7 @@ Sql.prototype.select = function (request, map, cb) {
 				rows.map(private.row2object, map) :
 				rows.map(private.row2parsed, private.parseFields(map));
 		}
+
 		cb(err, rows);
 	});
 }
