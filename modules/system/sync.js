@@ -70,6 +70,19 @@ private.findUpdate = function (lastBlock, peer, cb) {
 	});
 }
 
+private.transactionsSync = function (cb) {
+	modules.api.transport.getRandomPeer("get", "/transactions", null, function (err, res) {
+		if (err || !res.body.success) {
+			return cb(err);
+		}
+		async.eachSeries(res.body.response, function(transaction, cb){
+			private.processUnconfirmedTransaction(transaction, function (err) {
+				cb();
+			});
+		}, cb);
+	});
+}
+
 private.blockSync = function (cb) {
 	modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
 		if (err) {
@@ -103,6 +116,13 @@ Sync.prototype.onBlockchainLoaded = function () {
 			err && library.logger('blockSync timer', err);
 
 			setTimeout(nextBlockSync, 10 * 1000)
+		});
+	});
+	setImmediate(function nextU_TransactionsSync() {
+		private.transactionsSync(function (err) {
+			err && library.logger('transactionsSync timer', err);
+
+			setTimeout(nextU_TransactionsSync, 5 * 1000)
 		});
 	});
 }
