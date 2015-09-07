@@ -142,7 +142,8 @@
 		"tableFields": [
 			{
 				"name": "text",
-				"type": "String"
+				"type": "String",
+				"length": 255
 			},
 			{
 				"name": "transactionId",

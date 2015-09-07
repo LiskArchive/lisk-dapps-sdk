@@ -1,4 +1,5 @@
 var util = require('util');
+var Insidetransfer = require('./insidetransfer.js');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -6,8 +7,6 @@ var private = {}, self = null,
 function MyAsset(cb, _library) {
 	self = this;
 	library = _library;
-
-	util.inherits(self, modules.assets.insidetransfer.inheritance());
 
 	cb(null, self);
 }
@@ -66,5 +65,7 @@ MyAsset.prototype.onBind = function (_modules) {
 
 	modules.logic.transaction.attachAssetType(3, self);
 }
+
+util.inherits(MyAsset, Insidetransfer);
 
 module.exports = MyAsset;
