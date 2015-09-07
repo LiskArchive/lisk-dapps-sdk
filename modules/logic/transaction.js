@@ -53,7 +53,8 @@ Transaction.prototype.attachAssetType = function (typeId, instance) {
 		typeof instance.calculateFee == 'function' && typeof instance.verify == 'function' &&
 		typeof instance.apply == 'function' && typeof instance.undo == 'function' &&
 		typeof instance.applyUnconfirmed == 'function' && typeof instance.undoUnconfirmed == 'function' &&
-		typeof instance.save == 'function' && typeof instance.dbRead == 'function'
+		typeof instance.save == 'function' && typeof instance.dbRead == 'function' &&
+	    typeof instance.ready == 'function'
 	) {
 		private.types[typeId] = instance;
 	} else {
@@ -192,7 +193,15 @@ Transaction.prototype.verify = function (trs, sender, cb) { //inheritance
 	}
 
 	//spec
-	private.types[trs.type].verify(trs, sender, cb);
+	private.types[trs.type].verify(trs, sender, cb, scope);
+}
+
+Transaction.prototype.ready = function (trs, sender, cb, scope) {
+	if (!private.types[trs.type]) {
+		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+	}
+
+	private.types[trs.type].ready(trs, sender, cb, scope);
 }
 
 Transaction.prototype.apply = function (trs, sender, cb, scope) {
@@ -200,7 +209,7 @@ Transaction.prototype.apply = function (trs, sender, cb, scope) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	private.types[trs.type].apply(trs, sender, cb);
+	private.types[trs.type].apply(trs, sender, cb, scope);
 }
 
 Transaction.prototype.undo = function (trs, sender, cb, scope) {
@@ -208,7 +217,7 @@ Transaction.prototype.undo = function (trs, sender, cb, scope) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	private.types[trs.type].undo(trs, sender, cb);
+	private.types[trs.type].undo(trs, sender, cb, scope);
 }
 
 Transaction.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
@@ -216,7 +225,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	private.types[trs.type].applyUnconfirmed(trs, sender, cb);
+	private.types[trs.type].applyUnconfirmed(trs, sender, cb, scope);
 }
 
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
@@ -224,7 +233,7 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
 	}
 
-	private.types[trs.type].undoUnconfirmed(trs, sender, cb);
+	private.types[trs.type].undoUnconfirmed(trs, sender, cb, scope);
 }
 
 Transaction.prototype.save = function (trs, cb) {

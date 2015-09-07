@@ -196,7 +196,7 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 }
 
 Blocks.prototype.saveBlocks = function (blocks, cb) {
-	async.eachSeries(blocks, function(block, cb){
+	async.eachSeries(blocks, function (block, cb) {
 		private.saveBlock(block, cb);
 	}, cb);
 }
@@ -297,11 +297,20 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 				if (err) {
 					return cb("sender doesn´t found");
 				}
-
-				modules.logic.transaction.verify(transaction, sender, function (err) {
-					ready.push(transaction);
+				async.series([
+					function (cb) {
+						modules.logic.transaction.verify(transaction, sender, cb, scope);
+					},
+					function (cb) {
+						modules.logic.transaction.ready(transaction, sender, cb, scope);
+					},
+					function (cb) {
+						ready.push(transaction);
+						cb();
+					},
+				], function (err) {
 					cb();
-				});
+				})
 			}, scope);
 		}, function () {
 			var blockObj = {
@@ -367,7 +376,7 @@ Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 							modules.blockchain.transactions.applyTransaction(transaction, cb, scope);
 						}
 					], cb)
-				});
+				}, scope);
 			}, scope);
 		}, cb);
 	}, function (err) {
