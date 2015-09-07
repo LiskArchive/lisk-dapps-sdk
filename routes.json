@@ -20,6 +20,11 @@
 		"handler": "blockchain.transactions.addTransaction"
 	},
 	{
+		"path": "/transactions",
+		"method": "get",
+		"handler": "blockchain.transactions.getTransactions"
+	},
+	{
 		"path": "/blocks/get",
 		"method": "get",
 		"handler": "blockchain.blocks.getBlock"
