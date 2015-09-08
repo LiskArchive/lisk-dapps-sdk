@@ -559,8 +559,8 @@ Blocks.prototype.getBlocksAfter = function (cb, query) {
 
 Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
-		var block = query.message;
 		library.sequence.add(function (cb) {
+			var block = query.message;
 			if (block.lastBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 				self.processBlock(block, function (err) {
 					if (err) {
@@ -575,8 +575,8 @@ Blocks.prototype.onMessage = function (query) {
 	}
 
 	if (query.topic == "rollback" && private.loaded) {
-		var block = query.message;
 		library.sequence.add(function (cb) {
+			var block = query.message;
 			if (block.pointHeight <= private.lastBlock.pointHeight) {
 				self.rollbackUntilBlock(block, function (err) {
 					if (err) {
