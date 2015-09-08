@@ -134,6 +134,9 @@ d.run(function () {
 							done && setImmediate(done);
 						}
 					});
+				},
+				count: function(){
+					return sequence.length;
 				}
 			});
 		},

@@ -20,6 +20,11 @@ private.loop = function (point, cb) {
 		return cb();
 	}
 
+	if (!private.loaded || library.sequence.count()) {
+		library.logger.log('loop', 'exit: syncing');
+		return;
+	}
+
 	library.sequence.add(function (cb) {
 		var currentDelegate = private.getState(executor, point.height);
 
