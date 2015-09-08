@@ -178,6 +178,23 @@ private.getIdSequence = function (height, cb) {
 	});
 }
 
+Blocks.prototype.rollbackUntilBlock = function (block, cb) {
+	modules.api.sql.select({
+		table: "blocks",
+		condition: {
+			pointId: block.pointId,
+			pointHeight: block.pointHeight
+		},
+		fields: ["id", "height"]
+	}, function (err, found) {
+		if (!err && found.length) {
+			self.deleteBlocksBefore(found, cb);
+		} else {
+			cb();
+		}
+	});
+}
+
 Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	async.whilst(
 		function () {
@@ -543,13 +560,35 @@ Blocks.prototype.getBlocksAfter = function (cb, query) {
 Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		var block = query.message;
-		if (block.lastBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
-			self.processBlock(block, function (err) {
-				if (err) {
-					library.logger("processBlock err", err);
-				}
-			});
-		}
+		library.sequence.add(function (cb) {
+			if (block.lastBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
+				self.processBlock(block, function (err) {
+					if (err) {
+						library.logger("processBlock err", err);
+					}
+					cb(err);
+				})
+			} else {
+				cb();
+			}
+		});
+	}
+
+	if (query.topic == "rollback" && private.loaded) {
+		var block = query.message;
+		library.sequence.add(function (cb) {
+			if (block.pointHeight <= private.lastBlock.pointHeight) {
+				self.rollbackUntilBlock(block, function (err) {
+					if (err) {
+						library.logger("rollbackUntilBlock err", err);
+					}
+					cb(err);
+				});
+			} else {
+				cb();
+			}
+		});
+
 	}
 }
 

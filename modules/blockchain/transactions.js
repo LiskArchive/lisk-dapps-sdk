@@ -225,34 +225,42 @@ Transactions.prototype.getTransactions = function (cb, query) {
 Transactions.prototype.onMessage = function (query) {
 	switch (query.topic) {
 		case "transaction":
-			var transaction = query.message;
-			self.processUnconfirmedTransaction(transaction, function (err) {
-				if (err) {
-					library.logger("processUnconfirmedTransaction error", err)
-				}
+			library.sequence.add(function (cb) {
+				var transaction = query.message;
+				self.processUnconfirmedTransaction(transaction, function (err) {
+					if (err) {
+						library.logger("processUnconfirmedTransaction error", err)
+					}
+					cb(err);
+				});
 			});
 			break;
 		case "balance":
 			var executor = modules.blockchain.accounts.getExecutor();
 
 			if (executor) {
-				modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
-					if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey) {
-						modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, account) {
-							var transaction = modules.logic.transaction.create({
-								type: 1,
-								sender: account,
-								keypair: executor.keypair,
-								amount: data.transaction.amount,
-								src_id: data.transaction.id
+				library.sequence.add(function (cb) {
+					modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
+						if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey) {
+							modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, account) {
+								var transaction = modules.logic.transaction.create({
+									type: 1,
+									sender: account,
+									keypair: executor.keypair,
+									amount: data.transaction.amount,
+									src_id: data.transaction.id
+								});
+								self.processUnconfirmedTransaction(transaction, function (err) {
+									if (err) {
+										library.logger("processUnconfirmedTransaction error", err)
+									}
+									cb(err);
+								});
 							});
-							self.processUnconfirmedTransaction(transaction, function (err) {
-								if (err) {
-									library.logger("processUnconfirmedTransaction error", err)
-								}
-							});
-						});
-					}
+						} else {
+							cb(err);
+						}
+					});
 				});
 			}
 			break;
