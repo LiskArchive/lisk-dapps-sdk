@@ -77,7 +77,7 @@ private.deleteBlock = function (blockId, cb) {
 }
 
 private.popLastBlock = function (oldLastBlock, cb) {
-	self.getBlock({id: oldLastBlock.previousBlock}, function (err, previousBlock) {
+	self.getBlock(function (err, previousBlock) {
 		if (err || !previousBlock) {
 			return cb(err || 'previousBlock is null');
 		}
@@ -102,7 +102,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 				cb(null, previousBlock);
 			});
 		});
-	});
+	}, {id: oldLastBlock.previousBlock});
 }
 
 private.verify = function (block, cb, scope) {
@@ -561,6 +561,7 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		library.sequence.add(function (cb) {
 			var block = query.message;
+			console.log("message block", block)
 			if (block.lastBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 				self.processBlock(block, function (err) {
 					if (err) {
