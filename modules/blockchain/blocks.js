@@ -78,6 +78,7 @@ private.deleteBlock = function (blockId, cb) {
 
 private.popLastBlock = function (oldLastBlock, cb) {
 	self.getBlock(function (err, previousBlock) {
+		previousBlock = private.readDbRows(previousBlock);
 		if (err || !previousBlock) {
 			return cb(err || 'previousBlock is null');
 		}
@@ -526,12 +527,7 @@ Blocks.prototype.getBlock = function (cb, query) {
 	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
 		condition: query,
 		fields: library.scheme.fields
-	}), library.scheme.alias, function (err, rows) {
-		if (err) {
-			return cb(err);
-		}
-		cb(null, rows[0]);
-	});
+	}), library.scheme.alias, cb);
 }
 
 Blocks.prototype.getBlocks = function (cb, query) {
