@@ -1,6 +1,6 @@
 console.log("dapp loading process pid " + process.pid)
 
-require('longjohn');
+//require('longjohn');
 var async = require('async');
 var path = require('path');
 var ZSchema = require("z-schema");
