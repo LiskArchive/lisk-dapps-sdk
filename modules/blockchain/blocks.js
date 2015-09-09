@@ -77,11 +77,16 @@ private.deleteBlock = function (blockId, cb) {
 }
 
 private.popLastBlock = function (oldLastBlock, cb) {
+	if (!oldLastBlock.prevBlockId){
+		return cb("Can´t remove genesis block");
+	}
 	self.getBlock(function (err, previousBlock) {
-		previousBlock = private.readDbRows(previousBlock);
 		if (err || !previousBlock) {
 			return cb(err || 'previousBlock is null');
 		}
+		previousBlock = private.readDbRows(previousBlock);
+
+		console.log("oldLastBlock", oldLastBlock)
 
 		async.eachSeries(oldLastBlock.transactions.reverse(), function (transaction, cb) {
 			async.series([
@@ -103,7 +108,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 				cb(null, previousBlock);
 			});
 		});
-	}, {id: oldLastBlock.previousBlock});
+	}, {id: oldLastBlock.prevBlockId});
 }
 
 private.verify = function (block, cb, scope) {
@@ -203,7 +208,9 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 		},
 		function (next) {
 			private.popLastBlock(private.lastBlock, function (err, newLastBlock) {
-				private.lastBlock = newLastBlock;
+				if (!err) {
+					private.lastBlock = newLastBlock;
+				}
 				next(err);
 			});
 		},
@@ -481,7 +488,7 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 						condition: {
 							id: data.body.response.id,
 							height: data.body.response.height,
-							previousBlock: data.body.response.previousBlock
+							prevBlockId: data.body.response.prevBlockId
 						},
 						fields: [{expression: "count(id)", alias: "cnt"}]
 					}, {"cnt": Number}, function (err, rows) {
