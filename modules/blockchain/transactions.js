@@ -227,7 +227,6 @@ Transactions.prototype.onMessage = function (query) {
 		case "transaction":
 			library.sequence.add(function (cb) {
 				var transaction = query.message;
-				console.log("message transaction", transaction)
 				self.processUnconfirmedTransaction(transaction, function (err) {
 					if (err) {
 						library.logger("processUnconfirmedTransaction error", err)

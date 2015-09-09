@@ -561,8 +561,8 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		library.sequence.add(function (cb) {
 			var block = query.message;
-			console.log("message block", block)
-			if (block.lastBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
+			console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
+			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 				self.processBlock(block, function (err) {
 					if (err) {
 						library.logger("processBlock err", err);
