@@ -32,10 +32,6 @@ private.findUpdate = function (lastBlock, peer, cb) {
 			return cb(err);
 		}
 
-		if (lastBlock.height - commonBlock.height > 1440) {
-			return cb();
-		}
-
 		private.createSandbox(commonBlock, function (err, sandbox) {
 			if (err) {
 				return cb(err);
@@ -47,12 +43,15 @@ private.findUpdate = function (lastBlock, peer, cb) {
 				library.sequence.add(function (cb) {
 					async.series([
 						function (cb) {
+							console.log("deleteBlocksBefore", commonBlock)
 							modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
 						},
 						function (cb) {
+							console.log("applyBlocks", blocks)
 							modules.blockchain.blocks.applyBlocks(blocks, cb);
 						},
 						function (cb) {
+							console.log("saveBlocks", blocks)
 							modules.blockchain.blocks.saveBlocks(blocks, cb);
 						}
 					], function (err) {

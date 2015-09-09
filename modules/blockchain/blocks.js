@@ -77,7 +77,7 @@ private.deleteBlock = function (blockId, cb) {
 }
 
 private.popLastBlock = function (oldLastBlock, cb) {
-	if (!oldLastBlock.prevBlockId){
+	if (!oldLastBlock.prevBlockId) {
 		return cb("Can´t remove genesis block");
 	}
 	self.getBlock(function (err, previousBlock) {
@@ -85,8 +85,6 @@ private.popLastBlock = function (oldLastBlock, cb) {
 			return cb(err || 'previousBlock is null');
 		}
 		previousBlock = private.readDbRows(previousBlock);
-
-		console.log("oldLastBlock", oldLastBlock)
 
 		async.eachSeries(oldLastBlock.transactions.reverse(), function (transaction, cb) {
 			async.series([
@@ -410,7 +408,9 @@ Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 }
 
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
+	console.log("/blocks/after", {lastBlockHeight: scope.lastBlock.height})
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
+		console.log("/blocks/after response", err, res.body.success)
 		if (err || !res.body.success) {
 			return cb(err);
 		}
@@ -483,13 +483,16 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 						return next();
 					}
 
+					var condition = {
+						id: data.body.response.id,
+						height: data.body.response.height
+					};
+					if (data.body.response.prevBlockId){
+						condition.prevBlockId = data.body.response.prevBlockId
+					}
 					modules.api.sql.select({
 						table: "blocks",
-						condition: {
-							id: data.body.response.id,
-							height: data.body.response.height,
-							prevBlockId: data.body.response.prevBlockId
-						},
+						condition: condition,
 						fields: [{expression: "count(id)", alias: "cnt"}]
 					}, {"cnt": Number}, function (err, rows) {
 						if (err || !rows.length) {
@@ -547,7 +550,7 @@ Blocks.prototype.getBlocks = function (cb, query) {
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
 	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
-		limit: 100,
+		limit: 50,
 		condition: {
 			"b.height": {$gt: query.lastBlockHeight}
 		},
@@ -559,6 +562,7 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		library.sequence.add(function (cb) {
 			var block = query.message;
+			console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
 			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 				self.processBlock(block, function (err) {
 					if (err) {
@@ -575,6 +579,7 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "rollback" && private.loaded) {
 		library.sequence.add(function (cb) {
 			var block = query.message;
+			console.log("rollback", block)
 			if (block.pointHeight <= private.lastBlock.pointHeight) {
 				self.rollbackUntilBlock(block, function (err) {
 					if (err) {
