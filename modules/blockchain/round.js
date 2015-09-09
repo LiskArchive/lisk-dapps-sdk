@@ -21,7 +21,7 @@ private.loop = function (point, cb) {
 	}
 
 	if (!private.loaded || library.sequence.count()) {
-		library.logger.log('loop', 'exit: syncing');
+		library.logger('loop', 'exit: syncing');
 		return;
 	}
 
