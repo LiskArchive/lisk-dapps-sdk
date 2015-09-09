@@ -90,7 +90,12 @@ private.verify = function (block, cb, scope) {
 		if ((scope || private).lastBlock.id != block.prevBlockId) {
 			return cb("wrong prev block");
 		}
+
+		if (block.pointHeight < (scope || private).lastBlock.pointHeight) {
+			return cb("wrong point height")
+		}
 	}
+
 	modules.api.sql.select({
 		table: "blocks",
 		condition: {
@@ -413,7 +418,16 @@ Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 
 		var blocks = self.readDbRows(res.body.response);
 
-		self.applyBlocks(blocks, cb, scope);
+		async.series([
+			function (cb) {
+				async.eachSeries(blocks, function (block, cb) {
+					private.verify(block, cb, scope);
+				}, cb);
+			},
+			function (cb) {
+				self.applyBlocks(blocks, cb, scope);
+			}
+		], cb);
 	});
 }
 
