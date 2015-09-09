@@ -48,8 +48,6 @@ private.findUpdate = function (lastBlock, peer, cb) {
 						return cb(err);
 					}
 
-					console.log("loaded blocks", blocks.length)
-
 					library.sequence.add(function (cb) {
 						async.series([
 							function (cb) {

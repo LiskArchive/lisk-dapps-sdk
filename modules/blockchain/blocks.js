@@ -427,7 +427,9 @@ Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 			function (cb) {
 				self.applyBlocks(blocks, cb, scope);
 			}
-		], cb);
+		], function (err) {
+			cb(err, blocks)
+		});
 	});
 }
 
