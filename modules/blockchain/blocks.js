@@ -403,16 +403,11 @@ Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
-		console.log("loading after", scope.lastBlock.height)
 		if (err || !res.body.success) {
 			return cb(err);
 		}
 
 		var blocks = private.readDbRows(res.body.response);
-
-		console.log(blocks.map(function (el) {
-			return el.height
-		}));
 
 		self.applyBlocks(blocks, cb, scope);
 	});
@@ -457,7 +452,7 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 
 	async.whilst(
 		function () {
-			return !commonBlock && count < 30 && lastBlockHeight > 1;
+			return !commonBlock && count < 30;
 		},
 		function (next) {
 			count++;
@@ -561,7 +556,6 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		library.sequence.add(function (cb) {
 			var block = query.message;
-			console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
 			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 				self.processBlock(block, function (err) {
 					if (err) {

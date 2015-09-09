@@ -29,11 +29,8 @@ private.createSandbox = function (commonBlock, cb) {
 private.findUpdate = function (lastBlock, peer, cb) {
 	modules.blockchain.blocks.getCommonBlock(lastBlock.height, peer, function (err, commonBlock) {
 		if (err || !commonBlock) {
-			console.log(err, commonBlock)
 			return cb(err);
 		}
-
-		console.log("commonBlock", {id: commonBlock.id, height: commonBlock.height})
 
 		if (lastBlock.height - commonBlock.height > 1440) {
 			return cb();
