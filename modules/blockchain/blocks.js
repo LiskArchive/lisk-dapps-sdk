@@ -89,12 +89,9 @@ private.popLastBlock = function (oldLastBlock, cb) {
 		async.eachSeries(oldLastBlock.transactions.reverse(), function (transaction, cb) {
 			async.series([
 				function (cb) {
-					modules.transactions.undo(transaction, cb);
+					modules.blockchain.transactions.undo(transaction, cb);
 				}, function (cb) {
-					modules.transactions.undoUnconfirmed(transaction, cb);
-				}, function (cb) {
-					modules.transactions.pushHiddenTransaction(transaction);
-					setImmediate(cb);
+					modules.blockchain.transactions.undoUnconfirmed(transaction, cb);
 				}
 			], cb);
 		}, function (err) {
@@ -103,7 +100,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 					return cb(err);
 				}
 
-				cb(null, previousBlock);
+				cb(null, previousBlock[0]);
 			});
 		});
 	}, {id: oldLastBlock.prevBlockId});
@@ -408,9 +405,7 @@ Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 }
 
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
-	console.log("/blocks/after", {lastBlockHeight: scope.lastBlock.height})
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
-		console.log("/blocks/after response", err, res.body.success)
 		if (err || !res.body.success) {
 			return cb(err);
 		}
@@ -487,7 +482,7 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 						id: data.body.response.id,
 						height: data.body.response.height
 					};
-					if (data.body.response.prevBlockId){
+					if (data.body.response.prevBlockId) {
 						condition.prevBlockId = data.body.response.prevBlockId
 					}
 					modules.api.sql.select({
@@ -535,7 +530,7 @@ Blocks.prototype.getLastBlock = function (cb) {
 
 Blocks.prototype.getBlock = function (cb, query) {
 	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
-		condition: query,
+		condition: {"b.id": query.id},
 		fields: library.scheme.fields
 	}), library.scheme.alias, cb);
 }
