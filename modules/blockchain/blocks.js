@@ -76,7 +76,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 }
 
 private.verify = function (block, cb, scope) {
-	if ((scope || private).lastBlock.id == (scope || private).genesisBlock.id) {
+	if ((scope || private).lastBlock.id == private.genesisBlock.id) {
 		try {
 			var valid = modules.logic.block.verifySignature(block);
 		} catch (e) {
