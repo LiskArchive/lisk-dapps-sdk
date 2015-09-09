@@ -407,7 +407,6 @@ Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 	console.log("/blocks/after", scope.lastBlock.height)
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
-		console.log("/blocks/after response", err, res.body.response)
 		if (err || !res.body.success) {
 			return cb(err);
 		}
@@ -546,7 +545,6 @@ Blocks.prototype.getBlocks = function (cb, query) {
 }
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
-	console.log(library.scheme.selector["blocks"])
 	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
 		limit: 50,
 		condition: {

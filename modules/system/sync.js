@@ -53,15 +53,19 @@ private.findUpdate = function (lastBlock, peer, cb) {
 					library.sequence.add(function (cb) {
 						async.series([
 							function (cb) {
-								console.log("deleteBlocksBefore", commonBlock)
+								console.log("deleteBlocksBefore", commonBlock.height)
 								modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
 							},
 							function (cb) {
-								console.log("applyBlocks", blocks)
+								console.log("applyBlocks", blocks.map(function(block){
+									return block.height
+								}).join(","))
 								modules.blockchain.blocks.applyBlocks(blocks, cb);
 							},
 							function (cb) {
-								console.log("saveBlocks", blocks)
+								console.log("saveBlocks", blocks.map(function(block){
+									return block.height
+								}).join(","))
 								modules.blockchain.blocks.saveBlocks(blocks, cb);
 							}
 						], function (err) {
