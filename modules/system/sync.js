@@ -32,39 +32,50 @@ private.findUpdate = function (lastBlock, peer, cb) {
 			return cb(err);
 		}
 
-		private.createSandbox(commonBlock, function (err, sandbox) {
-			if (err) {
+		modules.blockchain.blocks.getBlock(function (err, block) {
+			if (err){
 				return cb(err);
 			}
-			modules.blockchain.blocks.loadBlocksPeer(peer, function (err, blocks) {
+
+			block = modules.blockchain.blocks.readDbRows(block);
+
+			private.createSandbox(block[0], function (err, sandbox) {
 				if (err) {
 					return cb(err);
 				}
-				library.sequence.add(function (cb) {
-					async.series([
-						function (cb) {
-							console.log("deleteBlocksBefore", commonBlock)
+				modules.blockchain.blocks.loadBlocksPeer(peer, function (err, blocks) {
+					if (err) {
+						return cb(err);
+					}
+
+					console.log("loaded blocks", blocks.length)
+
+					library.sequence.add(function (cb) {
+						async.series([
+							function (cb) {
+								console.log("deleteBlocksBefore", commonBlock)
+								modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
+							},
+							function (cb) {
+								console.log("applyBlocks", blocks)
+								modules.blockchain.blocks.applyBlocks(blocks, cb);
+							},
+							function (cb) {
+								console.log("saveBlocks", blocks)
+								modules.blockchain.blocks.saveBlocks(blocks, cb);
+							}
+						], function (err) {
+							if (!err) {
+								return cb();
+							}
+							library.logger("sync", err);
+							//TODO:rollback after last error block
 							modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
-						},
-						function (cb) {
-							console.log("applyBlocks", blocks)
-							modules.blockchain.blocks.applyBlocks(blocks, cb);
-						},
-						function (cb) {
-							console.log("saveBlocks", blocks)
-							modules.blockchain.blocks.saveBlocks(blocks, cb);
-						}
-					], function (err) {
-						if (!err) {
-							return cb();
-						}
-						library.logger("sync", err);
-						//TODO:rollback after last error block
-						modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
-					});
-				}, cb);
-			}, sandbox);
-		});
+						});
+					}, cb);
+				}, sandbox);
+			});
+		}, {id: commonBlock.id});
 	});
 }
 

@@ -87,8 +87,8 @@ private.getAccount = function (address, scope) {
 
 Accounts.prototype.clone = function (cb) {
 	cb(null, {
-		data: extend(true, private.accounts),
-		index: extend(true, private.accountsIndexById)
+		data: extend(true, {}, private.accounts),
+		index: extend(true, {}, private.accountsIndexById)
 	})
 }
 

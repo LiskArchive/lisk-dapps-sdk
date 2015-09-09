@@ -25,37 +25,6 @@ function Blocks(cb, _library) {
 	cb(null, self);
 }
 
-private.readDbRows = function (rows) {
-	var blocks = {};
-	var order = [];
-	for (var i = 0, length = rows.length; i < length; i++) {
-		var __block = modules.logic.block.dbRead(rows[i]);
-		if (__block) {
-			if (!blocks[__block.id]) {
-				order.push(__block.id);
-				blocks[__block.id] = __block;
-			}
-
-			var __transaction = modules.logic.transaction.dbRead(rows[i]);
-			blocks[__block.id].transactions = blocks[__block.id].transactions || {};
-			if (__transaction) {
-				if (!blocks[__block.id].transactions[__transaction.id]) {
-					blocks[__block.id].transactions[__transaction.id] = __transaction;
-				}
-			}
-		}
-	}
-
-	blocks = order.map(function (v) {
-		blocks[v].transactions = Object.keys(blocks[v].transactions).map(function (t) {
-			return blocks[v].transactions[t];
-		});
-		return blocks[v];
-	});
-
-	return blocks;
-}
-
 private.saveBlock = function (block, cb, scope) {
 	if (scope) {
 		return setImmediate(cb)
@@ -84,7 +53,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 		if (err || !previousBlock) {
 			return cb(err || 'previousBlock is null');
 		}
-		previousBlock = private.readDbRows(previousBlock);
+		previousBlock = self.readDbRows(previousBlock);
 
 		async.eachSeries(oldLastBlock.transactions.reverse(), function (transaction, cb) {
 			async.series([
@@ -177,6 +146,37 @@ private.getIdSequence = function (height, cb) {
 		}
 		cb(null, rows[0]);
 	});
+}
+
+Blocks.prototype.readDbRows = function (rows) {
+	var blocks = {};
+	var order = [];
+	for (var i = 0, length = rows.length; i < length; i++) {
+		var __block = modules.logic.block.dbRead(rows[i]);
+		if (__block) {
+			if (!blocks[__block.id]) {
+				order.push(__block.id);
+				blocks[__block.id] = __block;
+			}
+
+			var __transaction = modules.logic.transaction.dbRead(rows[i]);
+			blocks[__block.id].transactions = blocks[__block.id].transactions || {};
+			if (__transaction) {
+				if (!blocks[__block.id].transactions[__transaction.id]) {
+					blocks[__block.id].transactions[__transaction.id] = __transaction;
+				}
+			}
+		}
+	}
+
+	blocks = order.map(function (v) {
+		blocks[v].transactions = Object.keys(blocks[v].transactions).map(function (t) {
+			return blocks[v].transactions[t];
+		});
+		return blocks[v];
+	});
+
+	return blocks;
 }
 
 Blocks.prototype.rollbackUntilBlock = function (block, cb) {
@@ -405,12 +405,14 @@ Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 }
 
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
+	console.log("/blocks/after", scope.lastBlock.height)
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
+		console.log("/blocks/after response", err, res.body.response)
 		if (err || !res.body.success) {
 			return cb(err);
 		}
 
-		var blocks = private.readDbRows(res.body.response);
+		var blocks = self.readDbRows(res.body.response);
 
 		self.applyBlocks(blocks, cb, scope);
 	});
@@ -422,7 +424,7 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 			return cb(err);
 		}
 
-		blocks = private.readDbRows(blocks);
+		blocks = self.readDbRows(blocks);
 
 		self.applyBlocks(blocks, cb);
 	}, {limit: limit, offset: offset})
@@ -529,14 +531,14 @@ Blocks.prototype.getLastBlock = function (cb) {
 }
 
 Blocks.prototype.getBlock = function (cb, query) {
-	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
+	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
 		condition: {"b.id": query.id},
 		fields: library.scheme.fields
 	}), library.scheme.alias, cb);
 }
 
 Blocks.prototype.getBlocks = function (cb, query) {
-	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
+	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
 		limit: !query.limit || query.limit > 100 ? 100 : query.limit,
 		offset: !query.offset || query.offset < 0 ? 0 : query.offset,
 		fields: library.scheme.fields
@@ -544,7 +546,8 @@ Blocks.prototype.getBlocks = function (cb, query) {
 }
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
-	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
+	console.log(library.scheme.selector["blocks"])
+	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
 		limit: 50,
 		condition: {
 			"b.height": {$gt: query.lastBlockHeight}
