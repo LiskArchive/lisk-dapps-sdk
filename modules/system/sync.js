@@ -28,10 +28,11 @@ private.createSandbox = function (commonBlock, cb) {
 
 private.findUpdate = function (lastBlock, peer, cb) {
 	modules.blockchain.blocks.getCommonBlock(lastBlock.height, peer, function (err, commonBlock) {
-		console.log("commonBlock", {id: commonBlock.id, height: commonBlock.height})
 		if (err || !commonBlock) {
 			return cb(err);
 		}
+
+		console.log("commonBlock", {id: commonBlock.id, height: commonBlock.height})
 
 		if (lastBlock.height - commonBlock.height > 1440) {
 			return cb();
@@ -75,7 +76,7 @@ private.transactionsSync = function (cb) {
 		if (err || !res.body.success) {
 			return cb(err);
 		}
-		async.eachSeries(res.body.response, function(transaction, cb){
+		async.eachSeries(res.body.response, function (transaction, cb) {
 			modules.blockchain.transactions.processUnconfirmedTransaction(transaction, function (err) {
 				cb();
 			});
