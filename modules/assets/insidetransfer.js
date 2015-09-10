@@ -9,6 +9,10 @@ function InsideTransfer(cb, _library) {
 	cb(null, self);
 }
 
+InsideTransfer.prototype.inheritance = function(){
+	return InsideTransfer;
+}
+
 InsideTransfer.prototype.create = function (data, trs) {
 	trs.recipientId = data.recipientId;
 	trs.amount = data.amount;
@@ -21,7 +25,7 @@ InsideTransfer.prototype.calculateFee = function (trs) {
 	return fee || 1;
 }
 
-InsideTransfer.prototype.verify = function (trs, sender, cb) {
+InsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 	var isAddress = /^[0-9]+[C|c]$/g;
 	if (!isAddress.test(trs.recipientId.toLowerCase())) {
 		return cb("TRANSACTIONS.INVALID_RECIPIENT");
@@ -120,6 +124,10 @@ InsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 			}, cb, scope);
 		}
 	], cb);
+}
+
+InsideTransfer.prototype.ready = function (trs, sender, cb, scope) {
+	setImmediate(cb);
 }
 
 InsideTransfer.prototype.save = function (trs, cb) {

@@ -25,37 +25,6 @@ function Blocks(cb, _library) {
 	cb(null, self);
 }
 
-private.readDbRows = function (rows) {
-	var blocks = {};
-	var order = [];
-	for (var i = 0, length = rows.length; i < length; i++) {
-		var __block = modules.logic.block.dbRead(rows[i]);
-		if (__block) {
-			if (!blocks[__block.id]) {
-				order.push(__block.id);
-				blocks[__block.id] = __block;
-			}
-
-			var __transaction = modules.logic.transaction.dbRead(rows[i]);
-			blocks[__block.id].transactions = blocks[__block.id].transactions || {};
-			if (__transaction) {
-				if (!blocks[__block.id].transactions[__transaction.id]) {
-					blocks[__block.id].transactions[__transaction.id] = __transaction;
-				}
-			}
-		}
-	}
-
-	blocks = order.map(function (v) {
-		blocks[v].transactions = Object.keys(blocks[v].transactions).map(function (t) {
-			return blocks[v].transactions[t];
-		});
-		return blocks[v];
-	});
-
-	return blocks;
-}
-
 private.saveBlock = function (block, cb, scope) {
 	if (scope) {
 		return setImmediate(cb)
@@ -77,20 +46,21 @@ private.deleteBlock = function (blockId, cb) {
 }
 
 private.popLastBlock = function (oldLastBlock, cb) {
-	self.getBlock({id: oldLastBlock.previousBlock}, function (err, previousBlock) {
+	if (!oldLastBlock.prevBlockId) {
+		return cb("Can´t remove genesis block");
+	}
+	self.getBlock(function (err, previousBlock) {
 		if (err || !previousBlock) {
 			return cb(err || 'previousBlock is null');
 		}
+		previousBlock = self.readDbRows(previousBlock);
 
 		async.eachSeries(oldLastBlock.transactions.reverse(), function (transaction, cb) {
 			async.series([
 				function (cb) {
-					modules.transactions.undo(transaction, cb);
+					modules.blockchain.transactions.undo(transaction, cb);
 				}, function (cb) {
-					modules.transactions.undoUnconfirmed(transaction, cb);
-				}, function (cb) {
-					modules.transactions.pushHiddenTransaction(transaction);
-					setImmediate(cb);
+					modules.blockchain.transactions.undoUnconfirmed(transaction, cb);
 				}
 			], cb);
 		}, function (err) {
@@ -99,14 +69,14 @@ private.popLastBlock = function (oldLastBlock, cb) {
 					return cb(err);
 				}
 
-				cb(null, previousBlock);
+				cb(null, previousBlock[0]);
 			});
 		});
-	});
+	}, {id: oldLastBlock.prevBlockId});
 }
 
 private.verify = function (block, cb, scope) {
-	if ((scope || private).lastBlock.id == (scope || private).genesisBlock.id) {
+	if ((scope || private).lastBlock.id == private.genesisBlock.id) {
 		try {
 			var valid = modules.logic.block.verifySignature(block);
 		} catch (e) {
@@ -120,7 +90,12 @@ private.verify = function (block, cb, scope) {
 		if ((scope || private).lastBlock.id != block.prevBlockId) {
 			return cb("wrong prev block");
 		}
+
+		if (block.pointHeight < (scope || private).lastBlock.pointHeight) {
+			return cb("wrong point height")
+		}
 	}
+
 	modules.api.sql.select({
 		table: "blocks",
 		condition: {
@@ -178,6 +153,54 @@ private.getIdSequence = function (height, cb) {
 	});
 }
 
+Blocks.prototype.readDbRows = function (rows) {
+	var blocks = {};
+	var order = [];
+	for (var i = 0, length = rows.length; i < length; i++) {
+		var __block = modules.logic.block.dbRead(rows[i]);
+		if (__block) {
+			if (!blocks[__block.id]) {
+				order.push(__block.id);
+				blocks[__block.id] = __block;
+			}
+
+			var __transaction = modules.logic.transaction.dbRead(rows[i]);
+			blocks[__block.id].transactions = blocks[__block.id].transactions || {};
+			if (__transaction) {
+				if (!blocks[__block.id].transactions[__transaction.id]) {
+					blocks[__block.id].transactions[__transaction.id] = __transaction;
+				}
+			}
+		}
+	}
+
+	blocks = order.map(function (v) {
+		blocks[v].transactions = Object.keys(blocks[v].transactions).map(function (t) {
+			return blocks[v].transactions[t];
+		});
+		return blocks[v];
+	});
+
+	return blocks;
+}
+
+Blocks.prototype.rollbackUntilBlock = function (block, cb) {
+	modules.api.sql.select({
+		table: "blocks",
+		condition: {
+			pointId: block.pointId,
+			pointHeight: block.pointHeight
+		},
+		fields: ["id", "height"]
+	}, function (err, found) {
+		if (!err && found.length) {
+			self.deleteBlocksBefore(found, cb);
+		} else {
+			cb();
+		}
+	});
+}
+
 Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	async.whilst(
 		function () {
@@ -185,7 +208,9 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 		},
 		function (next) {
 			private.popLastBlock(private.lastBlock, function (err, newLastBlock) {
-				private.lastBlock = newLastBlock;
+				if (!err) {
+					private.lastBlock = newLastBlock;
+				}
 				next(err);
 			});
 		},
@@ -196,7 +221,7 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 }
 
 Blocks.prototype.saveBlocks = function (blocks, cb) {
-	async.eachSeries(blocks, function(block, cb){
+	async.eachSeries(blocks, function (block, cb) {
 		private.saveBlock(block, cb);
 	}, cb);
 }
@@ -298,11 +323,20 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 				if (err) {
 					return cb("sender doesn´t found");
 				}
-
-				modules.logic.transaction.verify(transaction, sender, function (err) {
-					ready.push(transaction);
+				async.series([
+					function (cb) {
+						modules.logic.transaction.verify(transaction, sender, cb, scope);
+					},
+					function (cb) {
+						modules.logic.transaction.ready(transaction, sender, cb, scope);
+					},
+					function (cb) {
+						ready.push(transaction);
+						cb();
+					},
+				], function (err) {
 					cb();
-				});
+				})
 			}, scope);
 		}, function () {
 			var blockObj = {
@@ -368,7 +402,7 @@ Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 							modules.blockchain.transactions.applyTransaction(transaction, cb, scope);
 						}
 					], cb)
-				});
+				}, scope);
 			}, scope);
 		}, cb);
 	}, function (err) {
@@ -377,19 +411,26 @@ Blocks.prototype.applyBlocks = function (blocks, cb, scope) {
 }
 
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
+	console.log("/blocks/after", scope.lastBlock.height)
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
-		console.log("loading after", scope.lastBlock.height)
 		if (err || !res.body.success) {
 			return cb(err);
 		}
 
-		var blocks = private.readDbRows(res.body.response);
+		var blocks = self.readDbRows(res.body.response);
 
-		console.log(blocks.map(function (el) {
-			return el.height
-		}));
-
-		self.applyBlocks(blocks, cb, scope);
+		async.series([
+			function (cb) {
+				async.eachSeries(blocks, function (block, cb) {
+					private.verify(block, cb, scope);
+				}, cb);
+			},
+			function (cb) {
+				self.applyBlocks(blocks, cb, scope);
+			}
+		], function (err) {
+			cb(err, blocks)
+		});
 	});
 }
 
@@ -399,7 +440,7 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 			return cb(err);
 		}
 
-		blocks = private.readDbRows(blocks);
+		blocks = self.readDbRows(blocks);
 
 		self.applyBlocks(blocks, cb);
 	}, {limit: limit, offset: offset})
@@ -432,7 +473,7 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 
 	async.whilst(
 		function () {
-			return !commonBlock && count < 30 && lastBlockHeight > 1;
+			return !commonBlock && count < 30;
 		},
 		function (next) {
 			count++;
@@ -455,13 +496,16 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 						return next();
 					}
 
+					var condition = {
+						id: data.body.response.id,
+						height: data.body.response.height
+					};
+					if (data.body.response.prevBlockId) {
+						condition.prevBlockId = data.body.response.prevBlockId
+					}
 					modules.api.sql.select({
 						table: "blocks",
-						condition: {
-							id: data.body.response.id,
-							height: data.body.response.height,
-							previousBlock: data.body.response.previousBlock
-						},
+						condition: condition,
 						fields: [{expression: "count(id)", alias: "cnt"}]
 					}, {"cnt": Number}, function (err, rows) {
 						if (err || !rows.length) {
@@ -503,20 +547,14 @@ Blocks.prototype.getLastBlock = function (cb) {
 }
 
 Blocks.prototype.getBlock = function (cb, query) {
-	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
-		condition: query,
+	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
+		condition: {"b.id": query.id},
 		fields: library.scheme.fields
-	}), library.scheme.alias, function (err, rows) {
-		console.log(err, rows)
-		if (err) {
-			return cb(err);
-		}
-		cb(null, rows[0]);
-	});
+	}), library.scheme.alias, cb);
 }
 
 Blocks.prototype.getBlocks = function (cb, query) {
-	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
+	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
 		limit: !query.limit || query.limit > 100 ? 100 : query.limit,
 		offset: !query.offset || query.offset < 0 ? 0 : query.offset,
 		fields: library.scheme.fields
@@ -524,8 +562,8 @@ Blocks.prototype.getBlocks = function (cb, query) {
 }
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
-	modules.api.sql.select(extend(library.scheme.selector["blocks"], {
-		limit: 100,
+	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
+		limit: 50,
 		condition: {
 			"b.height": {$gt: query.lastBlockHeight}
 		},
@@ -535,14 +573,38 @@ Blocks.prototype.getBlocksAfter = function (cb, query) {
 
 Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
-		var block = query.message;
-		if (block.lastBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
-			self.processBlock(block, function (err) {
-				if (err) {
-					library.logger("processBlock err", err);
-				}
-			});
-		}
+		library.sequence.add(function (cb) {
+			var block = query.message;
+			console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
+			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
+				self.processBlock(block, function (err) {
+					if (err) {
+						library.logger("processBlock err", err);
+					}
+					cb(err);
+				})
+			} else {
+				cb();
+			}
+		});
+	}
+
+	if (query.topic == "rollback" && private.loaded) {
+		library.sequence.add(function (cb) {
+			var block = query.message;
+			console.log("rollback", block)
+			if (block.pointHeight <= private.lastBlock.pointHeight) {
+				self.rollbackUntilBlock(block, function (err) {
+					if (err) {
+						library.logger("rollbackUntilBlock err", err);
+					}
+					cb(err);
+				});
+			} else {
+				cb();
+			}
+		});
+
 	}
 }
 

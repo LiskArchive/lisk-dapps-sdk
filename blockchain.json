@@ -58,6 +58,14 @@
 				"on": {
 					"t.id": "t_dt.transactionId"
 				}
+			},
+			{
+				"type": "left outer",
+				"table": "asset_myasset",
+				"alias": "t_ma",
+				"on": {
+					"t.id": "t_ma.transactionId"
+				}
 			}
 		]
 	},
@@ -119,6 +127,23 @@
 				"name": "src_id",
 				"type": "String",
 				"length": 21
+			},
+			{
+				"name": "transactionId",
+				"type": "String",
+				"length": 21
+			}
+		]
+	},
+	{
+		"table": "asset_myasset",
+		"alias": "t_ma",
+		"type": "table",
+		"tableFields": [
+			{
+				"name": "text",
+				"type": "String",
+				"length": 255
 			},
 			{
 				"name": "transactionId",

@@ -28,45 +28,56 @@ private.createSandbox = function (commonBlock, cb) {
 
 private.findUpdate = function (lastBlock, peer, cb) {
 	modules.blockchain.blocks.getCommonBlock(lastBlock.height, peer, function (err, commonBlock) {
-		console.log("commonBlock", {id: commonBlock.id, height: commonBlock.height})
 		if (err || !commonBlock) {
 			return cb(err);
 		}
 
-		if (lastBlock.height - commonBlock.height > 1440) {
-			return cb();
-		}
-
-		private.createSandbox(commonBlock, function (err, sandbox) {
-			if (err) {
+		modules.blockchain.blocks.getBlock(function (err, block) {
+			if (err){
 				return cb(err);
 			}
-			modules.blockchain.blocks.loadBlocksPeer(peer, function (err, blocks) {
+
+			block = modules.blockchain.blocks.readDbRows(block);
+
+			private.createSandbox(block[0], function (err, sandbox) {
 				if (err) {
 					return cb(err);
 				}
-				library.sequence.add(function (cb) {
-					async.series([
-						function (cb) {
+				modules.blockchain.blocks.loadBlocksPeer(peer, function (err, blocks) {
+					if (err) {
+						return cb(err);
+					}
+
+					library.sequence.add(function (cb) {
+						async.series([
+							function (cb) {
+								console.log("deleteBlocksBefore", commonBlock.height)
+								modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
+							},
+							function (cb) {
+								console.log("applyBlocks", blocks.map(function(block){
+									return block.height
+								}).join(","))
+								modules.blockchain.blocks.applyBlocks(blocks, cb);
+							},
+							function (cb) {
+								console.log("saveBlocks", blocks.map(function(block){
+									return block.height
+								}).join(","))
+								modules.blockchain.blocks.saveBlocks(blocks, cb);
+							}
+						], function (err) {
+							if (!err) {
+								return cb();
+							}
+							library.logger("sync", err);
+							//TODO:rollback after last error block
 							modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
-						},
-						function (cb) {
-							modules.blockchain.blocks.applyBlocks(blocks, cb);
-						},
-						function (cb) {
-							modules.blockchain.blocks.saveBlocks(blocks, cb);
-						}
-					], function (err) {
-						if (!err) {
-							return cb();
-						}
-						library.logger("sync", err);
-						//TODO:rollback after last error block
-						modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
-					});
-				}, cb);
-			}, sandbox);
-		});
+						});
+					}, cb);
+				}, sandbox);
+			});
+		}, {id: commonBlock.id});
 	});
 }
 
@@ -75,8 +86,8 @@ private.transactionsSync = function (cb) {
 		if (err || !res.body.success) {
 			return cb(err);
 		}
-		async.eachSeries(res.body.response, function(transaction, cb){
-			private.processUnconfirmedTransaction(transaction, function (err) {
+		async.eachSeries(res.body.response, function (transaction, cb) {
+			modules.blockchain.transactions.processUnconfirmedTransaction(transaction, function (err) {
 				cb();
 			});
 		}, cb);
