@@ -85,25 +85,30 @@ private.verify = function (block, cb, scope) {
 		}
 	}
 
-	modules.api.sql.select({
-		table: "blocks",
-		condition: {
-			id: block.pointId
-		},
-		fields: ["id"]
-	}, function (err, found) {
-		if (err || found.length) {
-			return cb("wrong block");
+	modules.api.blocks.getBlock(block.pointId, function (err, block) {
+		if (err || !block) {
+			return cb(err || "block doesn´t exist in crypti");
 		}
-		try {
-			var valid = modules.logic.block.verifySignature(block);
-		} catch (e) {
-			return cb(e.toString());
-		}
-		if (!valid) {
-			return cb("wrong block");
-		}
-		return cb();
+		modules.api.sql.select({
+			table: "blocks",
+			condition: {
+				id: block.pointId
+			},
+			fields: ["id"]
+		}, function (err, found) {
+			if (err || found.length) {
+				return cb("wrong block");
+			}
+			try {
+				var valid = modules.logic.block.verifySignature(block);
+			} catch (e) {
+				return cb(e.toString());
+			}
+			if (!valid) {
+				return cb("wrong block");
+			}
+			return cb();
+		});
 	});
 }
 
@@ -140,6 +145,41 @@ private.getIdSequence = function (height, cb) {
 		}
 		cb(null, rows[0]);
 	});
+}
+
+private.rollbackUntilBlock = function (block, cb) {
+	modules.api.sql.select({
+		table: "blocks",
+		condition: {
+			pointId: block.pointId,
+			pointHeight: block.pointHeight
+		},
+		fields: ["id", "height"]
+	}, function (err, found) {
+		if (!err && found.length) {
+			self.deleteBlocksBefore(found, cb);
+		} else {
+			cb();
+		}
+	});
+}
+
+private.processBlock = function (block, cb, scope) {
+	private.verify(block, function (err) {
+		if (err) {
+			return cb(err);
+		}
+
+		self.applyBlock(block, function (err) {
+			if (err) {
+				return cb(err);
+			}
+			!scope && modules.api.transport.message("block", block, function () {
+
+			});
+			self.saveBlock(block, cb, scope);
+		}, scope);
+	}, scope);
 }
 
 Blocks.prototype.saveBlock = function (block, cb, scope) {
@@ -184,23 +224,6 @@ Blocks.prototype.readDbRows = function (rows) {
 	return blocks;
 }
 
-Blocks.prototype.rollbackUntilBlock = function (block, cb) {
-	modules.api.sql.select({
-		table: "blocks",
-		condition: {
-			pointId: block.pointId,
-			pointHeight: block.pointHeight
-		},
-		fields: ["id", "height"]
-	}, function (err, found) {
-		if (!err && found.length) {
-			self.deleteBlocksBefore(found, cb);
-		} else {
-			cb();
-		}
-	});
-}
-
 Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	async.whilst(
 		function () {
@@ -222,24 +245,6 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 
 Blocks.prototype.genesisBlock = function () {
 	return private.genesisBlock;
-}
-
-Blocks.prototype.processBlock = function (block, cb, scope) {
-	private.verify(block, function (err) {
-		if (err) {
-			return cb(err);
-		}
-
-		self.applyBlock(block, function (err) {
-			if (err) {
-				return cb(err);
-			}
-			!scope && modules.api.transport.message("block", block, function () {
-
-			});
-			cb();
-		}, scope);
-	}, scope);
 }
 
 Blocks.prototype.createBlock = function (executor, point, cb, scope) {
@@ -282,7 +287,7 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 			blockObj.id = modules.api.crypto.getId(blockBytes);
 			blockObj.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
 
-			self.processBlock(blockObj, cb);
+			private.processBlock(blockObj, cb);
 		});
 	}, scope);
 }
@@ -340,14 +345,14 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 					return cb(err);
 				}
 				(scope || private).lastBlock = block;
-				self.saveBlock(block, cb, scope);
+				cb();
 			});
 		}
 	});
 }
 
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
-	console.log("/blocks/after", scope.lastBlock.height)
+	console.log("load blocks after", scope.lastBlock.height)
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
 		if (err || !res.body.success) {
 			return cb(err);
@@ -355,8 +360,9 @@ Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 
 		var blocks = self.readDbRows(res.body.response);
 
+
 		async.eachSeries(blocks, function (block, cb) {
-			self.processBlock(block, cb, scope);
+			private.processBlock(block, cb, scope);
 		}, function (err) {
 			cb(err, blocks)
 		});
@@ -508,7 +514,7 @@ Blocks.prototype.onMessage = function (query) {
 			var block = query.message;
 			console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
 			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
-				self.processBlock(block, function (err) {
+				private.processBlock(block, function (err) {
 					if (err) {
 						library.logger("processBlock err", err);
 					}
@@ -525,7 +531,7 @@ Blocks.prototype.onMessage = function (query) {
 			var block = query.message;
 			console.log("rollback", block)
 			if (block.pointHeight <= private.lastBlock.pointHeight) {
-				self.rollbackUntilBlock(block, function (err) {
+				private.rollbackUntilBlock(block, function (err) {
 					if (err) {
 						library.logger("rollbackUntilBlock err", err);
 					}
@@ -557,7 +563,7 @@ Blocks.prototype.onBind = function (_modules) {
 			library.logger("genesis error", err)
 		}
 		if (!found.length) {
-			self.processBlock(private.genesisBlock, function (err) {
+			private.processBlock(private.genesisBlock, function (err) {
 				if (!err) {
 					library.bus.message("blockchainReady");
 				} else {

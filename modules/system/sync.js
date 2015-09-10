@@ -62,7 +62,13 @@ private.findUpdate = function (lastBlock, peer, cb) {
 									return block.height
 								}).join(","))
 								async.eachSeries(blocks, function (block, cb) {
-									modules.blockchain.blocks.applyBlock(block, cb);
+									async.series([
+										function (cb) {
+											modules.blockchain.blocks.applyBlock(block, cb);
+										},
+										function (cb) {
+											modules.blockchain.blocks.saveBlock(block, cb);
+										}], cb);
 								}, cb);
 							}
 						], function (err) {
