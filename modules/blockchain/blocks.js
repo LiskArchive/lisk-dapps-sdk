@@ -233,7 +233,6 @@ Blocks.prototype.genesisBlock = function () {
 Blocks.prototype.processBlock = function (block, cb, scope) {
 	private.verify(block, function (err) {
 		if (err) {
-			console.log('here!');
 			return cb(err);
 		}
 
@@ -306,7 +305,47 @@ Blocks.prototype.processBlock = function (block, cb, scope) {
 							setImmediate(cb);
 						}, scope);
 					}, function (err) {
-						private.saveBlock(block, done, scope);
+						private.saveBlock(block, function (err) {
+							if (err) {
+								done(err);
+							} else {
+								var errs = [];
+								async.eachSeries(block.transactions, function (transaction, cb) {
+									if (transaction.type == 1) {
+										var executor = modules.blockchain.accounts.getExecutor();
+
+										if (executor || executor.secret) {
+											var address = modules.blockchain.accounts.generateAddressByPublicKey(transaction.senderPublicKey);
+
+											modules.api.transactions.addTransactions(
+												executor.secret,
+												trs.amount,
+												address,
+												null,
+												null,
+												executor.keypair.publicKey
+											, function (err) {
+													if (err) {
+														errs.push(err);
+													}
+
+													cb();
+												});
+										} else {
+											return setImmediate(cb);
+										}
+									} else {
+										return setImmediate(cb);
+									}
+								}, function () {
+									if (errs.length > 0) {
+										library.logger.error(err[0].toString());
+									}
+
+									done();
+								});
+							}
+						}, scope);
 					});
 				}
 			});

@@ -11,15 +11,12 @@ OutsideTransfer.prototype.create = function (data, trs) {
 	trs.recipientId = null;
 	trs.amount = data.amount;
 
-	trs.asset.outsidetransfer = {
-		src_id: data.src_id
-	}
-
 	return trs;
 }
 
 OutsideTransfer.prototype.calculateFee = function (trs) {
-	return 0;
+	var fee = parseInt(trs.amount / 100 * 0.1);
+	return fee || 1;
 }
 
 OutsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
@@ -35,40 +32,43 @@ OutsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 }
 
 OutsideTransfer.prototype.getBytes = function (trs) {
-	try {
-		var buf = new Buffer(trs.asset.outsidetransfer.src_id, 'utf8');
-	} catch (e) {
-		throw Error(e.toString());
-	}
-
-	return buf;
+	return null;
 }
 
 OutsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
+	var sum = trs.amount + trs.fee;
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: sender.address,
-		balance: trs.amount
+		balance: -sum
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
+	var sum = trs.amount + trs.fee;
+
 	modules.blockchain.accounts.undoMerging({
 		address: sender.address,
-		balance: trs.amount
+		balance: -sum
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
+	if (!sender || !sender.u_balance) {
+		return cb("Sender doesn't have enough amount");
+	}
+
+	var sum = trs.amount + trs.fee;
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: sender.address,
-		u_balance: trs.amount
+		u_balance: -sum
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
+	var sum = trs.amount + trs.fee;
 	modules.blockchain.accounts.undoMerging({
 		address: sender.address,
-		u_balance: trs.amount
+		u_balance: -sum
 	}, cb, scope);
 }
 
@@ -77,24 +77,11 @@ OutsideTransfer.prototype.ready = function (trs, sender, cb, scope) {
 }
 
 OutsideTransfer.prototype.save = function (trs, cb) {
-	modules.api.sql.insert({
-		table: "asset_dapptransfer",
-		values: {
-			src_id: trs.asset.outsidetransfer.src_id,
-			transactionId: trs.id
-		}
-	}, cb);
+	setImmediate(cb);
 }
 
 OutsideTransfer.prototype.dbRead = function (row) {
-	if (!row.t_dt_src_id) {
-		return null;
-	}
-	return {
-		outsidetransfer: {
-			src_id: row.t_dt_src_id
-		}
-	};
+	return null;
 }
 
 OutsideTransfer.prototype.onBind = function (_modules) {

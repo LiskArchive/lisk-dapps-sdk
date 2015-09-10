@@ -72,7 +72,7 @@ Transactions.prototype.getUnconfirmedTransactions = function (filter, cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
-Transactions.prototype.addTransactions = function (secret, amount, recipientId, publicKey, secondSecret) {
+Transactions.prototype.addTransactions = function (secret, amount, recipientId, publicKey, secondSecret, requesterPublicKey) {
 	var message = {
 		call: "transactions#addTransactions",
 		args: {
@@ -80,7 +80,8 @@ Transactions.prototype.addTransactions = function (secret, amount, recipientId, 
 			amount: amount,
 			recipientId: recipientId,
 			publicKey: publicKey,
-			secondSecret: secondSecret
+			secondSecret: secondSecret,
+			requesterPublicKey: requesterPublicKey
 		}
 	};
 
