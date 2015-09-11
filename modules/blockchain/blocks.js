@@ -90,6 +90,7 @@ private.verify = function (block, cb, scope) {
 			return cb(err || "block doesn´t exist in crypti");
 		}
 
+		/// what happening here?
 		modules.api.sql.select({
 			table: "blocks",
 			condition: {
