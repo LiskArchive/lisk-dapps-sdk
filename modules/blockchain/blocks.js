@@ -305,35 +305,35 @@ Blocks.prototype.genesisBlock = function () {
 }
 
 /*
-Blocks.prototype.processBlock = function (block, cb, scope) {
-	private.verify(block, function (err) {
-		if (err) {
-			return cb(err);
-		}
+ Blocks.prototype.processBlock = function (block, cb, scope) {
+ private.verify(block, function (err) {
+ if (err) {
+ return cb(err);
+ }
 
-		modules.blockchain.transactions.undoUnconfirmedTransactionList(function (err, unconfirmedTransactions) {
-			if (err) {
-				return cb(err);
-			}
+ modules.blockchain.transactions.undoUnconfirmedTransactionList(function (err, unconfirmedTransactions) {
+ if (err) {
+ return cb(err);
+ }
 
-			function done(err) {
-				if (!err) {
-					(scope || private).lastBlock = block;
-					!scope && modules.api.transport.message("block", block, function () {
+ function done(err) {
+ if (!err) {
+ (scope || private).lastBlock = block;
+ !scope && modules.api.transport.message("block", block, function () {
 
-					});
-				}
+ });
+ }
 
-				modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
-					setImmediate(cb, err);
-				}, scope);
-			}
+ modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
+ setImmediate(cb, err);
+ }, scope);
+ }
 
 
-		}, scope);
-	});
-}
-*/
+ }, scope);
+ });
+ }
+ */
 
 Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
@@ -467,7 +467,9 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 						publicKey: block.delegate,
 						balance: fee
 					}, function (err) {
-						(scope || private).lastBlock = block;
+						if (!err) {
+							(scope || private).lastBlock = block;
+						}
 						cb(err);
 					}, scope);
 				}
