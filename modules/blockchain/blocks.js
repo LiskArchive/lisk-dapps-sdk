@@ -114,7 +114,7 @@ private.verify = function (block, cb, scope) {
 				return cb("wrong block");
 			}
 
-			/*
+			/*gut
 			why we validate signature again or why we validate on cryptiBlock?
 			try {
 				var valid = modules.logic.block.verifySignature(cryptiBlock);
