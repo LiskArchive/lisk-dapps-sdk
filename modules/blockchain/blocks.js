@@ -98,11 +98,10 @@ private.verify = function (block, cb, scope) {
 	}
 
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
-		if (err || !block) {
+		if (err || !cryptiBlock) {
 			return cb(err || "block doesn´t exist in crypti");
 		}
 
-		/// what happening here?
 		modules.api.sql.select({
 			table: "blocks",
 			condition: {
@@ -111,21 +110,18 @@ private.verify = function (block, cb, scope) {
 			fields: ["id"]
 		}, function (err, found) {
 			if (err || found.length) {
-				return cb("wrong block");
+				return cb("block exists in dapp");
 			}
 
-			/*gut
-			why we validate signature again or why we validate on cryptiBlock?
 			try {
-				var valid = modules.logic.block.verifySignature(cryptiBlock);
+				var valid = modules.logic.block.verifySignature(block);
 			} catch (e) {
 				return cb(e.toString());
 			}
 
-
 			if (!valid) {
-				return cb("wrong block");
-			}*/
+				return cb("can´t verify block signature");
+			}
 
 			return cb();
 		});
@@ -204,7 +200,7 @@ private.processBlock = function (block, cb, scope) {
 				} else {
 					var errs = [];
 					async.eachSeries(block.transactions, function (transaction, cb) {
-						if (transaction.type == 1) {
+						if (transaction.type == 2) {
 							var executor = modules.blockchain.accounts.getExecutor();
 
 							if (executor || executor.secret) {
@@ -232,11 +228,9 @@ private.processBlock = function (block, cb, scope) {
 						}
 					}, function () {
 						if (errs.length > 0) {
-							console.log('here!');
 							library.logger(err[0].toString());
 						}
 
-						(scope || private).lastBlock = block;
 						cb();
 					});
 				}
@@ -472,7 +466,10 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 					modules.blockchain.accounts.mergeAccountAndGet({
 						publicKey: block.generatorPublicKey,
 						balance: fee
-					}, cb, scope);
+					}, function (err) {
+						(scope || private).lastBlock = block;
+						cb(err);
+					}, scope);
 				}
 			});
 		}

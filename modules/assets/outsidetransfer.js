@@ -87,35 +87,7 @@ OutsideTransfer.prototype.dbRead = function (row) {
 OutsideTransfer.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	modules.logic.transaction.attachAssetType(2, self);
-}
-
-OutsideTransfer.prototype.withdrawal = function (cb, query) {
-	library.validator.validate(query, {
-		type: "object",
-		properties: {
-			secret: {
-				type: "string",
-				minLength: 1,
-				maxLength: 100
-			},
-			amount: {
-				type: "integer",
-				minimum: 1
-			},
-			publicKey: {
-				type: "string",
-				format: "publicKey"
-			}
-		},
-		required: ['secret', 'data', 'shared']
-	}, function (err) {
-		if (err) {
-			return cb(err[0].message);
-		}
-
-		//finish api here
-	});
+	modules.logic.transaction.attachAssetType(1, self);
 }
 
 module.exports = OutsideTransfer;

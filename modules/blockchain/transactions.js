@@ -214,7 +214,6 @@ Transactions.prototype.onMessage = function (query) {
 								var transaction = modules.logic.transaction.create({
 									type: 1,
 									sender: account,
-									recipientId: modules.blockchain.accounts.generateAddressByPublicKey(data.transaction.senderPublicKey),
 									keypair: executor.keypair,
 									amount: data.transaction.amount,
 									src_id: data.transaction.id

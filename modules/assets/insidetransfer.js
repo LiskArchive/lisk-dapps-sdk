@@ -141,7 +141,7 @@ InsideTransfer.prototype.dbRead = function (row) {
 InsideTransfer.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	modules.logic.transaction.attachAssetType(1, self);
+	modules.logic.transaction.attachAssetType(0, self);
 }
 
 module.exports = InsideTransfer;
