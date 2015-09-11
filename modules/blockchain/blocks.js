@@ -60,7 +60,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 				process.exit(0);
 			}
 
-			modules.accounts.undoMerging({
+			modules.blockchain.accounts.undoMerging({
 				publicKey: oldLastBlock.delegate,
 				balance: fee
 			}, function (err) {
@@ -627,7 +627,7 @@ Blocks.prototype.getBlocks = function (cb, query) {
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
 	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
-		limit: 50,
+		limit: 1000,
 		condition: {
 			"b.height": {$gt: query.lastBlockHeight}
 		},
