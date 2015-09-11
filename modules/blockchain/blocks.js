@@ -248,6 +248,7 @@ Blocks.prototype.processBlock = function (block, cb, scope) {
 
 					});
 				}
+
 				modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
 					setImmediate(cb, err);
 				}, scope);
@@ -292,60 +293,91 @@ Blocks.prototype.processBlock = function (block, cb, scope) {
 						} else {
 							setImmediate(cb);
 						}
-					}, function () {
+					}, function (undoErr) {
+						if (undoErr) {
+							library.logger(undoErr.toString());
+							process.exit(0);
+						}
 						done(err);
 					});
 				} else {
+					appliedTransactions = {};
+
 					async.eachSeries(block.transactions, function (transaction, cb) {
 						modules.blockchain.transactions.applyTransaction(transaction, function (err) {
 							if (err) {
 								library.logger("Can't apply transactions: " + transaction.id);
 							}
 							modules.blockchain.transactions.removeUnconfirmedTransaction(transaction.id, scope);
+							appliedTransactions[transaction.id] = true;
 							setImmediate(cb);
 						}, scope);
 					}, function (err) {
-						private.saveBlock(block, function (err) {
-							if (err) {
-								done(err);
-							} else {
-								var errs = [];
-								async.eachSeries(block.transactions, function (transaction, cb) {
-									if (transaction.type == 1) {
-										var executor = modules.blockchain.accounts.getExecutor();
+						if (err) {
+							async.eachSeries(block.transactions, function (transaction, cb) {
+								if (appliedTransactions[transaction.id]) {
+									modules.blockchain.transactions.undoTransaction(transaction, function (err) {
+										if (err) {
+											library.logger(err.toString());
+											process.exit(0);
+										} else {
+											modules.blockchain.transactions.undoUnconfirmedTransaction(transaction, cb, scope);
+										}
+									}, scope);
+								} else {
+									modules.blockchain.transactions.undoUnconfirmedTransaction(transaction, cb, scope);
+								}
+							}, function (undoErr) {
+								if (undoErr) {
+									library.logger(undoErr.toString());
+									process.exit(0);
+								} else {
+									done(err);
+								}
+							});
+						} else {
+							private.saveBlock(block, function (err) {
+								if (err) {
+									done(err);
+								} else {
+									var errs = [];
+									async.eachSeries(block.transactions, function (transaction, cb) {
+										if (transaction.type == 1) {
+											var executor = modules.blockchain.accounts.getExecutor();
 
-										if (executor || executor.secret) {
-											var address = modules.blockchain.accounts.generateAddressByPublicKey(transaction.senderPublicKey);
+											if (executor || executor.secret) {
+												var address = modules.blockchain.accounts.generateAddressByPublicKey(transaction.senderPublicKey);
 
-											modules.api.transactions.addTransactions(
-												executor.secret,
-												trs.amount,
-												address,
-												null,
-												null,
-												executor.keypair.publicKey
-											, function (err) {
-													if (err) {
-														errs.push(err);
-													}
+												modules.api.transactions.addTransactions(
+													executor.secret,
+													trs.amount,
+													address,
+													null,
+													null,
+													executor.keypair.publicKey
+													, function (err) {
+														if (err) {
+															errs.push(err);
+														}
 
-													cb();
-												});
+														cb();
+													});
+											} else {
+												return setImmediate(cb);
+											}
 										} else {
 											return setImmediate(cb);
 										}
-									} else {
-										return setImmediate(cb);
-									}
-								}, function () {
-									if (errs.length > 0) {
-										library.logger.error(err[0].toString());
-									}
+									}, function () {
+										if (errs.length > 0) {
+											library.logger(err[0].toString());
+										}
 
-									done();
-								});
-							}
-						}, scope);
+										done();
+									});
+								}
+							}, scope);
+						}
 					});
 				}
 			});

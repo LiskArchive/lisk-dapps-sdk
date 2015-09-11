@@ -117,11 +117,51 @@ private.blockSync = function (cb) {
 	});
 }
 
+
+Sync.prototype.loadMultisignatures = function (cb) {
+	var executor = modules.blockchain.accounts.getExecutor();
+
+	mobules.api.multisignatures.pending(executor.keypair.publicKey, function (err, transactions) {
+		if (err) {
+			return cb(err.toString());
+		} else {
+			var errs = [];
+			async.forEach(transactions, function (item, cb) {
+				if (item.transaction.type != 11) {
+					return setImmediate(cb);
+				}
+
+				modules.api.multisignatures.sign(
+					executor.secret,
+					null,
+					item.transaction.id,
+					function (err) {
+						if (err) {
+							errs.push(err);
+						}
+
+						setImmediate(cb);
+					}
+				)
+			}, function () {
+				if (errs.length > 0) {
+					return cb(errs[0]);
+				}
+
+				cb();
+			});
+		}
+	});
+}
+
+
 Sync.prototype.onBind = function (_modules) {
 	modules = _modules;
 }
 
 Sync.prototype.onBlockchainLoaded = function () {
+	var self = this;
+
 	setImmediate(function nextBlockSync() {
 		private.blockSync(function (err) {
 			err && library.logger('blockSync timer', err);
@@ -129,12 +169,25 @@ Sync.prototype.onBlockchainLoaded = function () {
 			setTimeout(nextBlockSync, 10 * 1000)
 		});
 	});
+
 	setImmediate(function nextU_TransactionsSync() {
 		private.transactionsSync(function (err) {
 			err && library.logger('transactionsSync timer', err);
 
 			setTimeout(nextU_TransactionsSync, 5 * 1000)
 		});
+	});
+
+	setImmediate(function nextMultisigSync() {
+		var executor = modules.blockchain.accounts.getExecutor();
+
+		if (executor && executor.secret) {
+			self.loadMultisignatures(function (err) {
+				err && library.logger('multisig timer', err);
+
+				setTimeout(nextMultisigSync, 10 * 1000);
+			});
+		}
 	});
 }
 

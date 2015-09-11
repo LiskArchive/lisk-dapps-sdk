@@ -9,6 +9,7 @@ function Loader(cb, _library) {
 	cb(null, self);
 }
 
+
 private.loadBlockChain = function () {
 	var offset = 0, limit = 100;
 

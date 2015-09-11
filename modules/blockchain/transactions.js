@@ -69,6 +69,7 @@ private.addDoubleSpending = function (transaction, cb, scope) {
 	setImmediate(cb);
 }
 
+
 Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb, scope) {
 	function done(err) {
 		if (err) {
