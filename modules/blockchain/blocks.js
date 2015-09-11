@@ -220,6 +220,7 @@ private.processBlock = function (block, cb, scope) {
 						}
 					}, function () {
 						if (errs.length > 0) {
+							console.log('here!');
 							library.logger(err[0].toString());
 						}
 
@@ -375,6 +376,7 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 
 Blocks.prototype.applyBlock = function (block, cb, scope) {
 	var payloadHash = crypto.createHash('sha256'), appliedTransactions = {};
+	var fee = 0;
 
 	async.eachSeries(block.transactions, function (transaction, cb) {
 		transaction.blockId = block.id;
@@ -395,6 +397,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 			}
 
 			appliedTransactions[transaction.id] = transaction;
+			fee += transaction.fee;
 
 			payloadHash.update(bytes);
 

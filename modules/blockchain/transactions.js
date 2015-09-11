@@ -72,6 +72,7 @@ Transactions.prototype.undoTransaction = function (transaction, cb, scope) {
 }
 
 Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb, scope) {
+	console.log(transaction);
 	function done(err) {
 		if (err) {
 			return cb(err);
@@ -100,7 +101,7 @@ Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb
 				modules.logic.transaction.process(transaction, sender, cb);
 			},
 			function (cb) {
-				modules.logic.transaction.verify(transaction, sender, cb);
+				modules.logic.transaction.verify(transaction, sender, cb, scope);
 			}
 		], done);
 	}, scope);
@@ -213,6 +214,7 @@ Transactions.prototype.onMessage = function (query) {
 								var transaction = modules.logic.transaction.create({
 									type: 1,
 									sender: account,
+									recipientId: modules.blockchain.accounts.generateAddressByPublicKey(data.transaction.senderPublicKey),
 									keypair: executor.keypair,
 									amount: data.transaction.amount,
 									src_id: data.transaction.id

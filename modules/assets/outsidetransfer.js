@@ -87,7 +87,7 @@ OutsideTransfer.prototype.dbRead = function (row) {
 OutsideTransfer.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	modules.logic.transaction.attachAssetType(1, self);
+	modules.logic.transaction.attachAssetType(2, self);
 }
 
 module.exports = OutsideTransfer;
