@@ -24,7 +24,7 @@ private.loadBlockChain = function () {
 				return count < offset
 			}, function (cb) {
 				library.logger('current ' + offset);
-				modules.blockchain.blocks.loadBlocksOffset(limit, offset, function (err, lastBlockOffset) {
+				modules.blockchain.blocks.loadBlocksOffset(limit, offset, function (err) {
 					if (err) {
 						return setImmediate(cb, err);
 					}

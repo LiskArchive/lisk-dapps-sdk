@@ -33,7 +33,7 @@ private.findUpdate = function (lastBlock, peer, cb) {
 		}
 
 		modules.blockchain.blocks.getBlock(function (err, block) {
-			if (err){
+			if (err) {
 				return cb(err);
 			}
 
@@ -51,20 +51,25 @@ private.findUpdate = function (lastBlock, peer, cb) {
 					library.sequence.add(function (cb) {
 						async.series([
 							function (cb) {
+								if (commonBlock.height == modules.blockchain.blocks.getLastBlock().height) {
+									return cb()
+								}
 								console.log("deleteBlocksBefore", commonBlock.height)
 								modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
 							},
 							function (cb) {
-								console.log("applyBlocks", blocks.map(function(block){
+								console.log("apply and save blocks", blocks.map(function (block) {
 									return block.height
 								}).join(","))
-								modules.blockchain.blocks.applyBlocks(blocks, cb);
-							},
-							function (cb) {
-								console.log("saveBlocks", blocks.map(function(block){
-									return block.height
-								}).join(","))
-								modules.blockchain.blocks.saveBlocks(blocks, cb);
+								async.eachSeries(blocks, function (block, cb) {
+									async.series([
+										function (cb) {
+											modules.blockchain.blocks.applyBlock(block, cb);
+										},
+										function (cb) {
+											modules.blockchain.blocks.saveBlock(block, cb);
+										}], cb);
+								}, cb);
 							}
 						], function (err) {
 							if (!err) {
@@ -95,37 +100,35 @@ private.transactionsSync = function (cb) {
 }
 
 private.blockSync = function (cb) {
-	modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
-		if (err) {
-			return cb(err);
-		}
-		modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
-			if (!err && res.body.success) {
-				modules.blockchain.blocks.getLastBlock(function (err, lastBlock) {
-					if (!err && bignum(lastBlock.height).lt(res.body.response)) {
-						console.log("found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
-						private.findUpdate(lastBlock, res.peer, cb);
-					} else {
-						console.log("doesn't found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
-						setImmediate(cb);
-					}
-				});
+	var lastBlock = modules.blockchain.blocks.getLastBlock();
+
+	modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
+		if (!err && res.body.success) {
+			var lastBlock = modules.blockchain.blocks.getLastBlock();
+			if (bignum(lastBlock.height).lt(res.body.response)) {
+				console.log("found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
+				private.findUpdate(lastBlock, res.peer, cb);
 			} else {
+				console.log("doesn't found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
 				setImmediate(cb);
 			}
-		});
+		} else {
+			setImmediate(cb);
+		}
 	});
 }
 
 
-Sync.prototype.loadMultisignatures = function (cb) {
+private.loadMultisignatures = function (cb) {
 	var executor = modules.blockchain.accounts.getExecutor();
 
-	mobules.api.multisignatures.pending(executor.keypair.publicKey, function (err, transactions) {
+	modules.api.multisignatures.pending(executor.keypair.publicKey, function (err, resp) {
 		if (err) {
 			return cb(err.toString());
 		} else {
 			var errs = [];
+			var transactions = resp.transactions;
+
 			async.forEach(transactions, function (item, cb) {
 				if (item.transaction.type != 11) {
 					return setImmediate(cb);
@@ -160,8 +163,6 @@ Sync.prototype.onBind = function (_modules) {
 }
 
 Sync.prototype.onBlockchainLoaded = function () {
-	var self = this;
-
 	setImmediate(function nextBlockSync() {
 		private.blockSync(function (err) {
 			err && library.logger('blockSync timer', err);
@@ -182,7 +183,7 @@ Sync.prototype.onBlockchainLoaded = function () {
 		var executor = modules.blockchain.accounts.getExecutor();
 
 		if (executor && executor.secret) {
-			self.loadMultisignatures(function (err) {
+			private.loadMultisignatures(function (err) {
 				err && library.logger('multisig timer', err);
 
 				setTimeout(nextMultisigSync, 10 * 1000);

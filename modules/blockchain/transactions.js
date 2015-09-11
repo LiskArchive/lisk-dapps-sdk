@@ -28,29 +28,6 @@ private.addUnconfirmedTransaction = function (transaction, cb, scope) {
 	}, scope);
 }
 
-private.getUnconfirmedTransaction = function (id, cb, scope) {
-	var index = (scope || private).unconfirmedTransactionsIdIndex[id];
-	setImmediate(cb, null, (scope || private).unconfirmedTransactions[index]);
-}
-
-private.undoUnconfirmedTransaction = function (transaction, cb, scope) {
-	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-		modules.logic.transaction.undoUnconfirmed(transaction, sender, cb, scope);
-	}, scope);
-}
-
-private.undoTransaction = function (transaction, cb, scope) {
-	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
-		if (err) {
-			return setImmediate(cb, err);
-		}
-		modules.logic.transaction.undo(transaction, sender, cb, scope);
-	}, scope);
-}
-
 private.applyTransactionList = function (transactions, cb, scope) {
 	async.eachSeries(transactions, function (transaction, cb) {
 		self.applyTransaction(transaction, function (err) {
@@ -69,6 +46,30 @@ private.addDoubleSpending = function (transaction, cb, scope) {
 	setImmediate(cb);
 }
 
+Transactions.prototype.getUnconfirmedTransaction = function (id, cb, scope) {
+	var index = (scope || private).unconfirmedTransactionsIdIndex[id];
+	setImmediate(cb, null, (scope || private).unconfirmedTransactions[index]);
+}
+
+
+
+Transactions.prototype.undoUnconfirmedTransaction = function (transaction, cb, scope) {
+	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+		modules.logic.transaction.undoUnconfirmed(transaction, sender, cb, scope);
+	}, scope);
+}
+
+Transactions.prototype.undoTransaction = function (transaction, cb, scope) {
+	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+		if (err) {
+			return setImmediate(cb, err);
+		}
+		modules.logic.transaction.undo(transaction, sender, cb, scope);
+	}, scope);
+}
 
 Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb, scope) {
 	function done(err) {
@@ -142,41 +143,6 @@ Transactions.prototype.removeUnconfirmedTransaction = function (id, cb, scope) {
 	var index = (scope || private).unconfirmedTransactionsIdIndex[id];
 	delete (scope || private).unconfirmedTransactionsIdIndex[id];
 	(scope || private).unconfirmedTransactions[index] = false;
-}
-
-Transactions.prototype.undoUnconfirmedTransactionList = function (cb, scope, scope) {
-	var ids = [];
-	async.eachSeries((scope || private).unconfirmedTransactions, function (transaction, cb) {
-		if (transaction !== false) {
-			ids.push(transaction.id);
-			private.undoUnconfirmedTransaction(transaction, cb, scope);
-		} else {
-			setImmediate(cb);
-		}
-	}, function (err) {
-		cb(err, ids);
-	})
-}
-
-Transactions.prototype.applyUnconfirmedTransactionList = function (ids, cb, scope) {
-	async.eachSeries(ids, function (id, cb) {
-		private.getUnconfirmedTransaction(id, function (err, transaction) {
-			self.applyUnconfirmedTransaction(transaction, function (err) {
-				if (err) {
-					async.series([
-						function (cb) {
-							self.removeUnconfirmedTransaction(id, cb, scope);
-						},
-						function (cb) {
-							private.addDoubleSpending(transaction, cb, scope);
-						}
-					], cb);
-				} else {
-					setImmediate(cb);
-				}
-			});
-		});
-	}, cb);
 }
 
 Transactions.prototype.addTransaction = function (cb, query) {
