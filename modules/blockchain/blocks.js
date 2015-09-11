@@ -44,21 +44,33 @@ private.popLastBlock = function (oldLastBlock, cb) {
 		}
 		previousBlock = self.readDbRows(previousBlock);
 
+		var fee = 0;
 		async.eachSeries(oldLastBlock.transactions.reverse(), function (transaction, cb) {
 			async.series([
 				function (cb) {
+					fee += transaction.fee;
 					modules.blockchain.transactions.undo(transaction, cb);
 				}, function (cb) {
 					modules.blockchain.transactions.undoUnconfirmed(transaction, cb);
 				}
 			], cb);
 		}, function (err) {
-			private.deleteBlock(oldLastBlock.id, function (err) {
-				if (err) {
-					return cb(err);
-				}
+			if (err) {
+				library.logger(err);
+				process.exit(0);
+			}
 
-				cb(null, previousBlock[0]);
+			modules.accounts.undoMerging({
+				publicKey: oldLastBlock.generatorPublicKey,
+				balance: fee
+			}, function (err) {
+				private.deleteBlock(oldLastBlock.id, function (err) {
+					if (err) {
+						return cb(err);
+					}
+
+					cb(null, previousBlock[0]);
+				});
 			});
 		});
 	}, {id: oldLastBlock.prevBlockId});
@@ -456,7 +468,11 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 						}
 					});
 				} else {
-					cb();
+					// merge account and add fees
+					modules.blockchain.accounts.mergeAccountAndGet({
+						publicKey: block.generatorPublicKey,
+						balance: fee
+					}, cb, scope);
 				}
 			});
 		}
