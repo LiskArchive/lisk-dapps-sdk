@@ -171,9 +171,10 @@ private.rollbackUntilBlock = function (block, cb) {
 			pointHeight: block.pointHeight
 		},
 		fields: ["id", "height"]
-	}, function (err, found) {
+	}, {"id": String, "height": Number}, function (err, found) {
 		if (!err && found.length) {
-			self.deleteBlocksBefore(found, cb);
+			console.log("rollbackUntilBlock", found)
+			self.deleteBlocksBefore(found[0], cb);
 		} else {
 			cb();
 		}
@@ -284,9 +285,11 @@ Blocks.prototype.readDbRows = function (rows) {
 Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	async.whilst(
 		function () {
+			console.log(block.height, private.lastBlock.height)
 			return !(block.height >= private.lastBlock.height)
 		},
 		function (next) {
+			console.log("popLastBlock", private.lastBlock.height)
 			private.popLastBlock(private.lastBlock, function (err, newLastBlock) {
 				if (!err) {
 					private.lastBlock = newLastBlock;
