@@ -63,15 +63,13 @@ private.findUpdate = function (lastBlock, peer, cb) {
 								console.log("apply and save blocks", blocks.map(function (block) {
 									return block.height
 								}).join(","))
-								async.eachSeries(blocks, function (block, cb) {
-									async.series([
-										function (cb) {
-											modules.blockchain.blocks.applyBlock(block, cb);
-										},
-										function (cb) {
-											modules.blockchain.blocks.saveBlock(block, cb);
-										}], cb);
-								}, cb);
+								async.series([
+									function (cb) {
+										modules.blockchain.blocks.applyBatchBlock(blocks, cb);
+									},
+									function (cb) {
+										modules.blockchain.blocks.saveBatchBlock(blocks, cb);
+									}], cb);
 							}
 						], function (err) {
 							if (!err) {

@@ -221,13 +221,13 @@ private.processBlock = function (block, cb, scope) {
 									transactionId: transaction.id,
 									multisigAccountPublicKey: executor.keypair.publicKey
 								}, function (err) {
-										if (err) {
-											errs.push(err);
-										}
+									if (err) {
+										errs.push(err);
+									}
 
-										console.log('sent!', err);
-										cb();
-									});
+									console.log('sent!', err);
+									cb();
+								});
 							} else {
 								return setImmediate(cb);
 							}
@@ -245,6 +245,60 @@ private.processBlock = function (block, cb, scope) {
 			}, scope);
 		}, scope);
 	}, scope);
+}
+
+Blocks.prototype.applyBatchBlock = function (blocks, cb) {
+	async.eachSeries(blocks, function (block, cb) {
+		modules.blockchain.blocks.applyBlock(block, cb);
+	}, cb);
+}
+
+Blocks.prototype.saveBatchBlock = function (blocks, cb) {
+	var blocks_row = [];
+	var transactions_row = [];
+	for (var i = 0; i < blocks.length; i++) {
+		blocks_row.push([
+			blocks[i].id,
+			blocks[i].timestamp,
+			blocks[i].height,
+			blocks[i].prevBlockId,
+			blocks[i].pointId,
+			blocks[i].pointHeight,
+			blocks[i].delegate,
+			blocks[i].signature,
+			blocks[i].count
+		]);
+		for (var n = 0; n < blocks[i].transactions.length; n++) {
+			transactions_row.push([
+				blocks[i].transactions[n].id,
+				blocks[i].transactions[n].type,
+				blocks[i].transactions[n].senderId,
+				blocks[i].transactions[n].senderPublicKey,
+				blocks[i].transactions[n].recipientId,
+				blocks[i].transactions[n].amount,
+				blocks[i].transactions[n].fee,
+				blocks[i].transactions[n].timestamp,
+				blocks[i].transactions[n].signature,
+				blocks[i].transactions[n].blockId
+			]);
+		}
+	}
+	modules.api.sql.batch({
+		table: "blocks",
+		fields: ["id", "timestamp", "height", "prevBlockId", "pointId", "pointHeight", "delegate",
+			"signature", "count"],
+		values: blocks_row
+	}, function (err) {
+		if (err) {
+			return cd(err);
+		}
+		modules.api.sql.batch({
+			table: "transactions",
+			fields: ["id", "type", "senderId", "senderPublicKey", "recipientId", "amount", "fee", "timestamp",
+				"signature", "blockId"],
+			values: transactions_row
+		}, cb);
+	});
 }
 
 Blocks.prototype.saveBlock = function (block, cb, scope) {
