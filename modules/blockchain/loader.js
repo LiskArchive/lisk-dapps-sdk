@@ -11,7 +11,7 @@ function Loader(cb, _library) {
 
 
 private.loadBlockChain = function () {
-	var offset = 0, limit = 100;
+	var offset = 0, limit = 1000;
 
 	modules.blockchain.blocks.count(function (err, count) {
 		if (err) {

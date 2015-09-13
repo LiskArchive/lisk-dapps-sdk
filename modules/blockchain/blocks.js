@@ -62,7 +62,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 				process.exit(0);
 			}
 
-			modules.accounts.undoMerging({
+			modules.blockchain.accounts.undoMerging({
 				publicKey: oldLastBlock.delegate,
 				balance: fee
 			}, function (err) {
@@ -178,9 +178,10 @@ private.rollbackUntilBlock = function (block, cb) {
 			pointHeight: block.pointHeight
 		},
 		fields: ["id", "height"]
-	}, function (err, found) {
+	}, {"id": String, "height": Number}, function (err, found) {
 		if (!err && found.length) {
-			self.deleteBlocksBefore(found, cb);
+			console.log("rollbackUntilBlock", found)
+			self.deleteBlocksBefore(found[0], cb);
 		} else {
 			cb();
 		}
@@ -291,9 +292,11 @@ Blocks.prototype.readDbRows = function (rows) {
 Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	async.whilst(
 		function () {
+			console.log(block.height, private.lastBlock.height)
 			return !(block.height >= private.lastBlock.height)
 		},
 		function (next) {
+			console.log("popLastBlock", private.lastBlock.height)
 			private.popLastBlock(private.lastBlock, function (err, newLastBlock) {
 				if (!err) {
 					private.lastBlock = newLastBlock;
@@ -312,35 +315,35 @@ Blocks.prototype.genesisBlock = function () {
 }
 
 /*
-Blocks.prototype.processBlock = function (block, cb, scope) {
-	private.verify(block, function (err) {
-		if (err) {
-			return cb(err);
-		}
+ Blocks.prototype.processBlock = function (block, cb, scope) {
+ private.verify(block, function (err) {
+ if (err) {
+ return cb(err);
+ }
 
-		modules.blockchain.transactions.undoUnconfirmedTransactionList(function (err, unconfirmedTransactions) {
-			if (err) {
-				return cb(err);
-			}
+ modules.blockchain.transactions.undoUnconfirmedTransactionList(function (err, unconfirmedTransactions) {
+ if (err) {
+ return cb(err);
+ }
 
-			function done(err) {
-				if (!err) {
-					(scope || private).lastBlock = block;
-					!scope && modules.api.transport.message("block", block, function () {
+ function done(err) {
+ if (!err) {
+ (scope || private).lastBlock = block;
+ !scope && modules.api.transport.message("block", block, function () {
 
-					});
-				}
+ });
+ }
 
-				modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
-					setImmediate(cb, err);
-				}, scope);
-			}
+ modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
+ setImmediate(cb, err);
+ }, scope);
+ }
 
 
-		}, scope);
-	});
-}
-*/
+ }, scope);
+ });
+ }
+ */
 
 Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
@@ -507,7 +510,9 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 						balance: fee,
 						u_balance: fee
 					}, function (err) {
-						(scope || private).lastBlock = block;
+						if (!err) {
+							(scope || private).lastBlock = block;
+						}
 						cb(err);
 					}, scope);
 				}
@@ -665,7 +670,7 @@ Blocks.prototype.getBlocks = function (cb, query) {
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
 	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
-		limit: 50,
+		limit: 1000,
 		condition: {
 			"b.height": {$gt: query.lastBlockHeight}
 		},
