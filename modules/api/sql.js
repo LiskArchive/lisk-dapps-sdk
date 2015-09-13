@@ -90,6 +90,15 @@ Sql.prototype.insert = function (request, cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
+Sql.prototype.batch = function (request, cb) {
+	var message = {
+		call: "sql#batch",
+		args: request
+	};
+
+	library.sandbox.sendMessage(message, cb);
+}
+
 Sql.prototype.update = function (request, cb) {
 	var message = {
 		call: "sql#update",
