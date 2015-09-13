@@ -364,7 +364,7 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	);
 }
 
-Blocks.prototype.simpleDeleteAfterBlock = function (height) {
+Blocks.prototype.simpleDeleteAfterBlock = function (height, cb) {
 	modules.api.sql.remove({
 		table: 'blocks',
 		condition: {
