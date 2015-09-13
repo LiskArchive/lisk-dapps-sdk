@@ -290,7 +290,7 @@ Blocks.prototype.saveBatchBlock = function (blocks, cb) {
 		values: blocks_row
 	}, function (err) {
 		if (err) {
-			return cd(err);
+			return cb(err);
 		}
 		modules.api.sql.batch({
 			table: "transactions",
