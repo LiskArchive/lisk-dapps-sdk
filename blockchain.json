@@ -9,6 +9,10 @@
 				"type": "String",
 				"length": 21
 			},
+		    {
+			    "name": "timestamp",
+			    "type": "BigInt"
+		    },
 			{
 				"name": "height",
 				"type": "BigInt"
@@ -105,6 +109,10 @@
 			{
 				"name": "fee",
 				"type": "BigInt"
+			},
+		    {
+			  	"name": "timestamp",
+			    "type": "BigInt"
 			},
 			{
 				"name": "signature",

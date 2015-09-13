@@ -2,8 +2,10 @@ var ByteBuffer = require('bytebuffer');
 var crypto = require('crypto-browserify');
 var bignum = require('browserify-bignum');
 
+
 var private = {}, self = null,
 	library = null, modules = null;
+
 private.types = {};
 
 //constructor
@@ -15,7 +17,7 @@ function Block(cb, _library) {
 
 //public methods
 Block.prototype.getBytes = function (block, withSignature) {
-	var size = 8 + 4 + 32 + 8 + 4 + 4;
+	var size = 8 + 4 + 4 + 32 + 8 + 4 + 4;
 
 	if (withSignature && block.signature) {
 		size = size + 64; //TODO: check size
@@ -35,6 +37,7 @@ Block.prototype.getBytes = function (block, withSignature) {
 	}
 
 	bb.writeInt(block.height);
+	bb.writeInt(block.timestamp);
 
 	var pb = new Buffer(block.delegate, 'hex');
 	for (var i = 0; i < pb.length; i++) {
@@ -80,6 +83,7 @@ Block.prototype.save = function (block, cb) {
 		table: "blocks",
 		values: {
 			id: block.id,
+			timestamp: block.timestamp,
 			height: block.height,
 			prevBlockId: block.prevBlockId,
 			pointId: block.pointId,
@@ -95,6 +99,7 @@ Block.prototype.dbRead = function (row) {
 	return {
 		id: row.b_id,
 		height: row.b_height,
+		timestamp: row.b_timestamp,
 		prevBlockId: row.b_prevBlockId,
 		pointId: row.b_pointId,
 		pointHeight: row.b_pointHeight,

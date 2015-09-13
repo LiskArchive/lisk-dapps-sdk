@@ -1,6 +1,7 @@
 var extend = require("extend");
 var ByteBuffer = require('bytebuffer');
 var bignum = require('browserify-bignum');
+var timeHelper = require('../helpers/time.js');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -32,7 +33,7 @@ Transaction.prototype.create = function (data) {
 		amount: 0,
 		senderId: data.sender.address,
 		senderPublicKey: data.sender.publicKey,
-		timestamp: 0,
+		timestamp: timeHelper.getNow(),
 		asset: {}
 	};
 
@@ -72,8 +73,9 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 		var assetBytes = private.types[trs.type].getBytes.call(self, trs, skipSignature);
 		var assetSize = assetBytes ? assetBytes.length : 0;
 
-		var bb = new ByteBuffer(1 + 32 + 8 + 8 + 64 + 64 + assetSize, true);
+		var bb = new ByteBuffer(1 + 4 + 32 + 8 + 8 + 64 + 64 + assetSize, true);
 		bb.writeByte(trs.type);
+		bb.writeInt(trs.timestamp);
 
 		var senderPublicKeyBuffer = new Buffer(trs.senderPublicKey, 'hex');
 		for (var i = 0; i < senderPublicKeyBuffer.length; i++) {
@@ -193,8 +195,29 @@ Transaction.prototype.verify = function (trs, sender, cb, scope) { //inheritance
 		return setImmediate(cb, "Invalid transaction amount: " + trs.id);
 	}
 
-	//spec
-	private.types[trs.type].verify(trs, sender, cb, scope);
+	if (trs.timestamp > timeHelper.getNow()) {
+		return setImmediate(cb, "Can't process transaction, it sent in feature");
+	}
+
+	modules.blockchain.transactions.getUnconfirmedTransaction(trs.id, function (err, tx) {
+		if (err || tx) {
+			return cb(err? err.toString() : "This transaction in unconfirmed list already");
+		}
+
+		modules.api.sql.select({
+			table: "transactions",
+			condition: {
+				id: trs.id
+			},
+			fields: ["id"]
+		}, function (err, rows) {
+			if (err || rows.length) {
+				return cb(err? err.toString() : "This transaction already confirmed");
+			} else {
+				private.types[trs.type].verify(trs, sender, cb, scope);
+			}
+		});
+	}, scope);
 }
 
 Transaction.prototype.ready = function (trs, sender, cb, scope) {
@@ -247,6 +270,7 @@ Transaction.prototype.save = function (trs, cb) {
 		values: {
 			id: trs.id,
 			type: trs.type,
+			timestamp: trs.timestamp,
 			senderId: trs.senderId,
 			senderPublicKey: trs.senderPublicKey,
 			recipientId: trs.recipientId,
@@ -271,6 +295,7 @@ Transaction.prototype.dbRead = function (row) {
 	var trs = {
 		id: row.t_id,
 		type: row.t_type,
+		timestamp: row.t_timestamp,
 		senderId: row.t_senderId,
 		senderPublicKey: row.t_senderPublicKey,
 		recipientId: row.t_recipientId,

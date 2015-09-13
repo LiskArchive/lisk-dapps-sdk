@@ -3,6 +3,7 @@ var path = require('path');
 var async = require('async');
 var util = require('util');
 var extend = require('extend');
+var timeHelper = require('../helpers/time.js');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -85,7 +86,8 @@ private.verify = function (block, cb, scope) {
 			return cb(e.toString());
 		}
 		if (!valid) {
-			return cb("wrong block");
+			//skip now for genesis, because i don't know how to generate (pending paul)
+			//return cb("wrong block");
 		}
 		return cb();
 	} else {
@@ -96,6 +98,10 @@ private.verify = function (block, cb, scope) {
 		if (block.pointHeight < (scope || private).lastBlock.pointHeight) {
 			return cb("wrong point height")
 		}
+	}
+
+	if (block.timestamp <= (scope || private).lastBlock.timestamp || block.timestamp > timeHelper.getNow()) {
+		return cb("wrong timestamp");
 	}
 
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
@@ -366,6 +372,7 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 				height: private.lastBlock.height + 1,
 				prevBlockId: private.lastBlock.id,
 				pointId: point.id,
+				timestamp: timeHelper.getNow(),
 				pointHeight: point.height,
 				count: ready.length,
 				transactions: ready

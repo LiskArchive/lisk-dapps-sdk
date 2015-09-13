@@ -72,7 +72,6 @@ Transactions.prototype.undoTransaction = function (transaction, cb, scope) {
 }
 
 Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb, scope) {
-	console.log(transaction);
 	function done(err) {
 		if (err) {
 			return cb(err);
@@ -83,7 +82,11 @@ Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb
 				return cb(err);
 			}
 
-			!scope && modules.api.transport.message("transaction", transaction, cb);
+			!scope && modules.api.transport.message("transaction", transaction, function () {
+				cb(null, {
+					transactionId: transaction.id
+				});
+			});
 		}, scope);
 	}
 

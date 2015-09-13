@@ -22,7 +22,7 @@
 	"system/background": "./modules/system/background.js",
 	"system/api": "./modules/system/api.js",
 	"system/sync": "./modules/system/sync.js",
-	"assets/insidetransfer": "./modules/assets/insidetransfer.js",
+    "assets/insidetransfer": "./modules/assets/insidetransfer.js",
 	"assets/outsidetransfer": "./modules/assets/outsidetransfer.js",
 	"assets/myasset": "./modules/assets/myasset.js",
   	"assets/withdrawaltransfer" : "./modules/assets/withdrawaltransfer.js"
