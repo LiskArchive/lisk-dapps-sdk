@@ -368,37 +368,6 @@ Blocks.prototype.genesisBlock = function () {
 	return private.genesisBlock;
 }
 
-/*
- Blocks.prototype.processBlock = function (block, cb, scope) {
- private.verify(block, function (err) {
- if (err) {
- return cb(err);
- }
-
- modules.blockchain.transactions.undoUnconfirmedTransactionList(function (err, unconfirmedTransactions) {
- if (err) {
- return cb(err);
- }
-
- function done(err) {
- if (!err) {
- (scope || private).lastBlock = block;
- !scope && modules.api.transport.message("block", block, function () {
-
- });
- }
-
- modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
- setImmediate(cb, err);
- }, scope);
- }
-
-
- }, scope);
- });
- }
- */
-
 Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
 		var ready = [];
@@ -584,7 +553,6 @@ Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 
 		var blocks = self.readDbRows(res.body.response);
 
-
 		async.eachSeries(blocks, function (block, cb) {
 			private.processBlock(block, cb, scope);
 		}, function (err) {
@@ -602,7 +570,12 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 		blocks = self.readDbRows(blocks);
 
 		async.eachSeries(blocks, function (block, cb) {
-			self.applyBlock(block, cb);
+			private.verify(block, function (err) {
+				if (err) {
+					return cb({message: err, block: block});
+				}
+				self.applyBlock(block, cb);
+			});
 		}, cb);
 	}, {limit: limit, offset: offset})
 }
