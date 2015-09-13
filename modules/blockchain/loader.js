@@ -38,7 +38,7 @@ private.loadBlockChain = function () {
 					library.logger('loadBlocksOffset', err);
 					if (err.block) {
 						library.logger('blockchain failed at ', err.block.height)
-						modules.blockchain.blocks.simpleDeleteAfterBlock(err.block.id, function (err) {
+						modules.blockchain.blocks.simpleDeleteAfterBlock(err.block.height, function (err) {
 							library.logger('blockchain clipped');
 							library.bus.message('blockchainLoaded');
 						})

@@ -364,6 +364,15 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	);
 }
 
+Blocks.prototype.simpleDeleteAfterBlock = function (height) {
+	modules.api.sql.remove({
+		table: 'blocks',
+		condition: {
+			height: {$gt: height}
+		}
+	}, cb);
+}
+
 Blocks.prototype.genesisBlock = function () {
 	return private.genesisBlock;
 }
