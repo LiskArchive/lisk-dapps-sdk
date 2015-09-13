@@ -24,5 +24,6 @@
 	"system/sync": "./modules/system/sync.js",
 	"assets/insidetransfer": "./modules/assets/insidetransfer.js",
 	"assets/outsidetransfer": "./modules/assets/outsidetransfer.js",
-	"assets/myasset": "./modules/assets/myasset.js"
+	"assets/myasset": "./modules/assets/myasset.js",
+  	"assets/withdrawaltransfer" : "./modules/assets/withdrawaltransfer.js"
 }

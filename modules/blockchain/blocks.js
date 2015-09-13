@@ -42,6 +42,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 		if (err || !previousBlock) {
 			return cb(err || 'previousBlock is null');
 		}
+
 		previousBlock = self.readDbRows(previousBlock);
 
 		var fee = 0;
@@ -206,18 +207,18 @@ private.processBlock = function (block, cb, scope) {
 							if (executor || executor.secret) {
 								var address = modules.blockchain.accounts.generateAddressByPublicKey(transaction.senderPublicKey);
 
-								modules.api.transactions.addTransactions(
-									executor.secret,
-									trs.amount,
-									address,
-									null,
-									null,
-									executor.keypair.publicKey
-									, function (err) {
+								modules.api.dapps.sendWithdrawal({
+									secret: executor.secret,
+									amount: transaction.amount,
+									recipientId: address,
+									transactionId: transaction.id,
+									multisigAccountPublicKey: executor.keypair.publicKey
+								}, function (err) {
 										if (err) {
 											errs.push(err);
 										}
 
+										console.log('sent!', err);
 										cb();
 									});
 							} else {
@@ -228,7 +229,7 @@ private.processBlock = function (block, cb, scope) {
 						}
 					}, function () {
 						if (errs.length > 0) {
-							library.logger(err[0].toString());
+							library.logger(errs[0].toString());
 						}
 
 						cb();
@@ -370,12 +371,44 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 				transactions: ready
 			};
 
+			var ids = ready.map(function (item) {
+				return item.id;
+			});
+
 			var blockBytes = modules.logic.block.getBytes(blockObj);
 
 			blockObj.id = modules.api.crypto.getId(blockBytes);
 			blockObj.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
 
-			private.processBlock(blockObj, cb);
+			// unconfirmed transactions
+			var unconfirmedTransactionsList = modules.blockchain.transactions.getUnconfirmedTransactionList(true, function (err, list) {
+				async.eachSeries(list, function (transaction, cb) {
+					modules.blockchain.transactions.undoUnconfirmedTransaction(transaction, cb);
+				}, function (err) {
+					if (err) {
+						library.logger("Can't undo transactions before process block: " + err.toString());
+						cb(err);
+					} else {
+						private.processBlock(blockObj, function (err) {
+							async.eachSeries(list, function (transaction, cb) {
+								if (err) {
+									modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, function (err) {
+										cb();
+									});
+								} else {
+									if (ids.indexOf(transaction.id) < 0) {
+										modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, function (err) {
+											cb();
+										});
+									} else {
+										setImmediate(cb);
+									}
+								}
+							}, cb);
+						});
+					}
+				});
+			});
 		});
 	}, scope);
 }
@@ -406,10 +439,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 			fee += transaction.fee;
 
 			payloadHash.update(bytes);
-
-			modules.blockchain.transactions.getUnconfirmedTransaction(transaction.id, function (err, transaction) {
-				modules.blockchain.transactions.removeUnconfirmedTransaction(transaction.id, cb, scope);
-			}, scope);
+			modules.blockchain.transactions.removeUnconfirmedTransaction(transaction.id, cb, scope);
 		}, scope);
 	}, function (err) {
 		if (err) {
@@ -428,15 +458,17 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 			});
 		} else {
 			appliedTransactions = {};
-
 			async.eachSeries(block.transactions, function (transaction, cb) {
 				modules.blockchain.transactions.applyTransaction(transaction, function (err) {
 					if (err) {
 						library.logger("Can't apply transactions: " + transaction.id);
+						return setImmediate(cb, err);
 					}
-					modules.blockchain.transactions.removeUnconfirmedTransaction(transaction.id, scope);
-					appliedTransactions[transaction.id] = true;
-					setImmediate(cb);
+
+					modules.blockchain.transactions.removeUnconfirmedTransaction(transaction.id, function () {
+						appliedTransactions[transaction.id] = true;
+						setImmediate(cb);
+					}, scope);
 				}, scope);
 			}, function (err) {
 				if (err) {
@@ -465,7 +497,8 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 					// merge account and add fees
 					modules.blockchain.accounts.mergeAccountAndGet({
 						publicKey: block.delegate,
-						balance: fee
+						balance: fee,
+						u_balance: fee
 					}, function (err) {
 						(scope || private).lastBlock = block;
 						cb(err);

@@ -32,6 +32,7 @@ Transaction.prototype.create = function (data) {
 		amount: 0,
 		senderId: data.sender.address,
 		senderPublicKey: data.sender.publicKey,
+		timestamp: 0,
 		asset: {}
 	};
 

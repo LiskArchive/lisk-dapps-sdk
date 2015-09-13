@@ -16,6 +16,15 @@ Dapps.prototype.getGenesis = function (cb) {
 	library.sandbox.sendMessage(message, cb);
 }
 
+Dapps.prototype.sendWithdrawal = function (opts, cb) {
+	var message = {
+		call: "dapps#sendWithdrawal",
+		args: opts
+	};
+
+	library.sandbox.sendMessage(message, cb);
+}
+
 Dapps.prototype.getCommonBlock = function (cb) {
 	var message = {
 		call: "dapps#getCommonBlock",

@@ -112,6 +112,7 @@ Transactions.prototype.applyTransaction = function (transaction, cb, scope) {
 		if (err) {
 			return setImmediate(cb, err);
 		}
+
 		modules.logic.transaction.apply(transaction, sender, cb, scope);
 	}, scope);
 }
@@ -144,6 +145,7 @@ Transactions.prototype.removeUnconfirmedTransaction = function (id, cb, scope) {
 	var index = (scope || private).unconfirmedTransactionsIdIndex[id];
 	delete (scope || private).unconfirmedTransactionsIdIndex[id];
 	(scope || private).unconfirmedTransactions[index] = false;
+	setImmediate(cb);
 }
 
 Transactions.prototype.addTransaction = function (cb, query) {

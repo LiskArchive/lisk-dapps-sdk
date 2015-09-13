@@ -86,10 +86,20 @@ private.getAccount = function (address, scope) {
 }
 
 Accounts.prototype.clone = function (cb) {
-	cb(null, {
+	console.log("clone!");
+	var r = {
 		data: extend(true, {}, private.accounts),
 		index: extend(true, {}, private.accountsIndexById)
-	})
+	};
+
+	console.log(r.data);
+
+	for (var i in r.data) {
+		console.log(r.data[i]);
+		r.data[i].u_balance = r.data[i].balance;
+	}
+
+	cb(null, r);
 }
 
 Accounts.prototype.getExecutor = function () {
@@ -167,6 +177,7 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb, scope) {
 			return cb("must provide address or publicKey");
 		}
 	}
+
 	var account = private.getAccount(address, scope);
 
 	if (!account) {
@@ -216,7 +227,7 @@ Accounts.prototype.undoMerging = function (data, cb, scope) {
 			trueValue = reverseDiff(trueValue);
 			account[key] = applyDiff(account[key], trueValue);
 		}
-	})
+	});
 
 	cb(null, account);
 }
@@ -233,6 +244,8 @@ Accounts.prototype.open = function (cb, query) {
 	if (!account) {
 		account = private.addAccount({
 			address: address,
+			balance: 0,
+			u_balance: 0,
 			publicKey: keypair.publicKey.toString('hex')
 		});
 	}
