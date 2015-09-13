@@ -368,7 +368,7 @@ Blocks.prototype.simpleDeleteAfterBlock = function (height, cb) {
 	modules.api.sql.remove({
 		table: 'blocks',
 		condition: {
-			height: {$gt: height}
+			height: {$gte: height}
 		}
 	}, cb);
 }
