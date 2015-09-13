@@ -689,7 +689,7 @@ Blocks.prototype.getBlock = function (cb, query) {
 
 Blocks.prototype.getBlocks = function (cb, query) {
 	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
-		limit: !query.limit || query.limit > 100 ? 100 : query.limit,
+		limit: !query.limit || query.limit > 1000 ? 1000 : query.limit,
 		offset: !query.offset || query.offset < 0 ? 0 : query.offset,
 		fields: library.scheme.fields
 	}), library.scheme.alias, cb);
