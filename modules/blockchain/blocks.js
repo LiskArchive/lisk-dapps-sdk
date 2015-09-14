@@ -147,6 +147,9 @@ private.getIdSequence = function (height, cb) {
 					having: {
 						height: {$lte: height}
 					}
+				},
+				sort: {
+					height: 1
 				}
 			}, {
 				table: 'blocks',
@@ -603,6 +606,9 @@ Blocks.prototype.findCommon = function (cb, query) {
 			},
 			height: {$between: [query.min, query.max]}
 		},
+		sort: {
+			height: 1
+		},
 		fields: [{expression: "max(height)", alias: "height"}, "id", "prevBlockId"]
 	}, {"height": Number, "id": String, "prevBlockId": String}, function (err, rows) {
 		if (err) {
@@ -705,7 +711,10 @@ Blocks.prototype.getBlocks = function (cb, query) {
 	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
 		limit: !query.limit || query.limit > 1000 ? 1000 : query.limit,
 		offset: !query.offset || query.offset < 0 ? 0 : query.offset,
-		fields: library.scheme.fields
+		fields: library.scheme.fields,
+		sort: {
+			height: 1
+		}
 	}), library.scheme.alias, cb);
 }
 
@@ -715,7 +724,10 @@ Blocks.prototype.getBlocksAfter = function (cb, query) {
 		condition: {
 			"b.height": {$gt: query.lastBlockHeight}
 		},
-		fields: library.scheme.fields
+		fields: library.scheme.fields,
+		sort: {
+			height: 1
+		}
 	}), library.scheme.alias, cb);
 }
 
