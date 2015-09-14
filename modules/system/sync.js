@@ -119,7 +119,7 @@ private.blockSync = function (cb) {
 					console.log("found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
 					private.findUpdate(lastBlock, res.peer, cb);
 				} else {
-					console.log("doesn't found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
+					//console.log("doesn't found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
 					setImmediate(cb);
 				}
 			} else {

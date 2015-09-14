@@ -583,7 +583,12 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 				if (err) {
 					return cb({message: err, block: block});
 				}
-				self.applyBlock(block, cb);
+				self.applyBlock(block, function (err) {
+					if (err) {
+						return cb({block: block, message: err})
+					}
+					cb();
+				});
 			});
 		}, cb);
 	}, {limit: limit, offset: offset})
@@ -718,7 +723,7 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		library.sequence.add(function (cb) {
 			var block = query.message;
-			console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
+			//console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
 			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 				private.processBlock(block, function (err) {
 					if (err) {
