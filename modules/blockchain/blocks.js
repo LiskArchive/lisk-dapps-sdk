@@ -7,6 +7,7 @@ var timeHelper = require('../helpers/time.js');
 
 var private = {}, self = null,
 	library = null, modules = null;
+
 private.lastBlock = null;
 private.genesisBlock = null;
 private.loaded = false;
@@ -103,6 +104,7 @@ private.verify = function (block, cb, scope) {
 	if (block.timestamp <= (scope || private).lastBlock.timestamp || block.timestamp > timeHelper.getNow()) {
 		return cb("wrong timestamp");
 	}
+
 
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
 		if (err || !cryptiBlock) {

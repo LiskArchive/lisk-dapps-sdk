@@ -57,6 +57,6 @@
   	{
 		"path": "/withdrawal",
 		"method": "post",
-		"handler": "assets.withdrawaltransfer.withdrawal"
+		"handler": "contracts.withdrawaltransfer.withdrawal"
 	}
 ]

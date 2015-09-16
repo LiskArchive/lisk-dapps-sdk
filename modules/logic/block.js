@@ -20,7 +20,7 @@ Block.prototype.getBytes = function (block, withSignature) {
 	var size = 8 + 4 + 4 + 32 + 8 + 4 + 4;
 
 	if (withSignature && block.signature) {
-		size = size + 64; //TODO: check size
+		size = size + 64;
 	}
 
 	var bb = new ByteBuffer(size, true);
