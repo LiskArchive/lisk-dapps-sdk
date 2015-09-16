@@ -86,16 +86,12 @@ private.getAccount = function (address, scope) {
 }
 
 Accounts.prototype.clone = function (cb) {
-	console.log("clone!");
 	var r = {
 		data: extend(true, {}, private.accounts),
 		index: extend(true, {}, private.accountsIndexById)
 	};
 
-	console.log(r.data);
-
 	for (var i in r.data) {
-		console.log(r.data[i]);
 		r.data[i].u_balance = r.data[i].balance;
 	}
 

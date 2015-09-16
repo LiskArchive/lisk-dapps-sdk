@@ -63,15 +63,19 @@ private.findUpdate = function (lastBlock, peer, cb) {
 								console.log("apply and save blocks", blocks.map(function (block) {
 									return block.height
 								}).join(","))
-								async.eachSeries(blocks, function (block, cb) {
-									async.series([
-										function (cb) {
-											modules.blockchain.blocks.applyBlock(block, cb);
-										},
-										function (cb) {
-											modules.blockchain.blocks.saveBlock(block, cb);
-										}], cb);
-								}, cb);
+								async.series([
+									function (cb) {
+										modules.blockchain.blocks.applyBatchBlock(blocks, cb);
+									},
+									function (cb) {
+										modules.blockchain.blocks.saveBatchBlock(blocks, function (err) {
+											if (err) {
+												library.logger(err);
+												process.exit(0);
+											}
+											cb();
+										});
+									}], cb);
 							}
 						], function (err) {
 							if (!err) {
@@ -102,21 +106,26 @@ private.transactionsSync = function (cb) {
 }
 
 private.blockSync = function (cb) {
-	var lastBlock = modules.blockchain.blocks.getLastBlock();
+	modules.api.blocks.getHeight(function (err, height) {
+		var lastBlock = modules.blockchain.blocks.getLastBlock();
 
-	modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
-		if (!err && res.body.success) {
-			var lastBlock = modules.blockchain.blocks.getLastBlock();
-			if (bignum(lastBlock.height).lt(res.body.response)) {
-				console.log("found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
-				private.findUpdate(lastBlock, res.peer, cb);
+		if (lastBlock.pointHeight == height) {
+			return cb();
+		}
+
+		modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
+			if (!err && res.body.success) {
+				if (bignum(lastBlock.height).lt(res.body.response)) {
+					console.log("found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
+					private.findUpdate(lastBlock, res.peer, cb);
+				} else {
+					//console.log("doesn't found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
+					setImmediate(cb);
+				}
 			} else {
-				console.log("doesn't found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
 				setImmediate(cb);
 			}
-		} else {
-			setImmediate(cb);
-		}
+		});
 	});
 }
 

@@ -149,6 +149,9 @@ private.getIdSequence = function (height, cb) {
 					having: {
 						height: {$lte: height}
 					}
+				},
+				sort: {
+					height: 1
 				}
 			}, {
 				table: 'blocks',
@@ -223,13 +226,13 @@ private.processBlock = function (block, cb, scope) {
 									transactionId: transaction.id,
 									multisigAccountPublicKey: executor.keypair.publicKey
 								}, function (err) {
-										if (err) {
-											errs.push(err);
-										}
+									if (err) {
+										errs.push(err);
+									}
 
-										console.log('sent!', err);
-										cb();
-									});
+									console.log('sent!', err);
+									cb();
+								});
 							} else {
 								return setImmediate(cb);
 							}
@@ -247,6 +250,60 @@ private.processBlock = function (block, cb, scope) {
 			}, scope);
 		}, scope);
 	}, scope);
+}
+
+Blocks.prototype.applyBatchBlock = function (blocks, cb) {
+	async.eachSeries(blocks, function (block, cb) {
+		modules.blockchain.blocks.applyBlock(block, cb);
+	}, cb);
+}
+
+Blocks.prototype.saveBatchBlock = function (blocks, cb) {
+	var blocks_row = [];
+	var transactions_row = [];
+	for (var i = 0; i < blocks.length; i++) {
+		blocks_row.push([
+			blocks[i].id,
+			blocks[i].timestamp,
+			blocks[i].height,
+			blocks[i].prevBlockId,
+			blocks[i].pointId,
+			blocks[i].pointHeight,
+			blocks[i].delegate,
+			blocks[i].signature,
+			blocks[i].count
+		]);
+		for (var n = 0; n < blocks[i].transactions.length; n++) {
+			transactions_row.push([
+				blocks[i].transactions[n].id,
+				blocks[i].transactions[n].type,
+				blocks[i].transactions[n].senderId,
+				blocks[i].transactions[n].senderPublicKey,
+				blocks[i].transactions[n].recipientId,
+				blocks[i].transactions[n].amount,
+				blocks[i].transactions[n].fee,
+				blocks[i].transactions[n].timestamp,
+				blocks[i].transactions[n].signature,
+				blocks[i].transactions[n].blockId
+			]);
+		}
+	}
+	modules.api.sql.batch({
+		table: "blocks",
+		fields: ["id", "timestamp", "height", "prevBlockId", "pointId", "pointHeight", "delegate",
+			"signature", "count"],
+		values: blocks_row
+	}, function (err) {
+		if (err) {
+			return cb(err);
+		}
+		modules.api.sql.batch({
+			table: "transactions",
+			fields: ["id", "type", "senderId", "senderPublicKey", "recipientId", "amount", "fee", "timestamp",
+				"signature", "blockId"],
+			values: transactions_row
+		}, cb);
+	});
 }
 
 Blocks.prototype.saveBlock = function (block, cb, scope) {
@@ -312,40 +369,18 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	);
 }
 
+Blocks.prototype.simpleDeleteAfterBlock = function (height, cb) {
+	modules.api.sql.remove({
+		table: 'blocks',
+		condition: {
+			height: {$gte: height}
+		}
+	}, cb);
+}
+
 Blocks.prototype.genesisBlock = function () {
 	return private.genesisBlock;
 }
-
-/*
- Blocks.prototype.processBlock = function (block, cb, scope) {
- private.verify(block, function (err) {
- if (err) {
- return cb(err);
- }
-
- modules.blockchain.transactions.undoUnconfirmedTransactionList(function (err, unconfirmedTransactions) {
- if (err) {
- return cb(err);
- }
-
- function done(err) {
- if (!err) {
- (scope || private).lastBlock = block;
- !scope && modules.api.transport.message("block", block, function () {
-
- });
- }
-
- modules.blockchain.transactions.applyUnconfirmedTransactionList(unconfirmedTransactions, function () {
- setImmediate(cb, err);
- }, scope);
- }
-
-
- }, scope);
- });
- }
- */
 
 Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
@@ -532,7 +567,6 @@ Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 
 		var blocks = self.readDbRows(res.body.response);
 
-
 		async.eachSeries(blocks, function (block, cb) {
 			private.processBlock(block, cb, scope);
 		}, function (err) {
@@ -550,7 +584,17 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 		blocks = self.readDbRows(blocks);
 
 		async.eachSeries(blocks, function (block, cb) {
-			self.applyBlock(block, cb);
+			private.verify(block, function (err) {
+				if (err) {
+					return cb({message: err, block: block});
+				}
+				self.applyBlock(block, function (err) {
+					if (err) {
+						return cb({block: block, message: err})
+					}
+					cb();
+				});
+			});
 		}, cb);
 	}, {limit: limit, offset: offset})
 }
@@ -563,6 +607,9 @@ Blocks.prototype.findCommon = function (cb, query) {
 				$in: query.ids
 			},
 			height: {$between: [query.min, query.max]}
+		},
+		sort: {
+			height: 1
 		},
 		fields: [{expression: "max(height)", alias: "height"}, "id", "prevBlockId"]
 	}, {"height": Number, "id": String, "prevBlockId": String}, function (err, rows) {
@@ -664,9 +711,12 @@ Blocks.prototype.getBlock = function (cb, query) {
 
 Blocks.prototype.getBlocks = function (cb, query) {
 	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
-		limit: !query.limit || query.limit > 100 ? 100 : query.limit,
+		limit: !query.limit || query.limit > 1000 ? 1000 : query.limit,
 		offset: !query.offset || query.offset < 0 ? 0 : query.offset,
-		fields: library.scheme.fields
+		fields: library.scheme.fields,
+		sort: {
+			height: 1
+		}
 	}), library.scheme.alias, cb);
 }
 
@@ -676,7 +726,10 @@ Blocks.prototype.getBlocksAfter = function (cb, query) {
 		condition: {
 			"b.height": {$gt: query.lastBlockHeight}
 		},
-		fields: library.scheme.fields
+		fields: library.scheme.fields,
+		sort: {
+			height: 1
+		}
 	}), library.scheme.alias, cb);
 }
 
@@ -684,7 +737,7 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		library.sequence.add(function (cb) {
 			var block = query.message;
-			console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
+			//console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
 			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 				private.processBlock(block, function (err) {
 					if (err) {
