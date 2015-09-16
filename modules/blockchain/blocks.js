@@ -105,6 +105,18 @@ private.verify = function (block, cb, scope) {
 		return cb("wrong timestamp");
 	}
 
+	if (block.payloadLength > 1024 * 1024) {
+		return cb("wrong payload length");
+	}
+
+	try {
+		var hash = new Buffer(block.payloadHash, 'hex');
+		if (hash.length != 32) {
+			return cb("wrong payload hash");
+		}
+	} catch (e) {
+		return cb("wrong payload hash");
+	}
 
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
 		if (err || !cryptiBlock) {
@@ -386,6 +398,9 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
 		var ready = [];
 
+		var payloadHash = crypto.createHash('sha256'),
+			payloadLength = 0;
+
 		async.eachSeries(unconfirmedList, function (transaction, cb) {
 			modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 				if (err) {
@@ -399,6 +414,15 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 						modules.logic.transaction.ready(transaction, sender, cb, scope);
 					},
 					function (cb) {
+						var bytes = modules.logic.transaction.getBytes(transaction);
+
+						if ((payloadLength + bytes.length) > 1024 * 1024) {
+							return setImmediate(cb);
+						}
+
+						payloadHash.update(bytes);
+						payloadLength += bytes.length;
+
 						ready.push(transaction);
 						cb();
 					},
@@ -415,7 +439,9 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 				timestamp: timeHelper.getNow(),
 				pointHeight: point.height,
 				count: ready.length,
-				transactions: ready
+				transactions: ready,
+				payloadHash: payloadHash.digest().toString('hex'),
+				payloadLength: payloadLength
 			};
 
 			var ids = ready.map(function (item) {
@@ -461,8 +487,10 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 }
 
 Blocks.prototype.applyBlock = function (block, cb, scope) {
-	var payloadHash = crypto.createHash('sha256'), appliedTransactions = {};
-	var fee = 0;
+	var payloadHash = crypto.createHash('sha256'),
+		appliedTransactions = {},
+		fee = 0,
+		payloadLength = 0;
 
 	async.eachSeries(block.transactions, function (transaction, cb) {
 		transaction.blockId = block.id;
@@ -482,6 +510,8 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 				return setImmediate(cb, e.toString());
 			}
 
+			payloadHash.update(bytes);
+			payloadLength += bytes.length;
 			appliedTransactions[transaction.id] = transaction;
 			fee += transaction.fee;
 
@@ -489,6 +519,16 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 			modules.blockchain.transactions.removeUnconfirmedTransaction(transaction.id, cb, scope);
 		}, scope);
 	}, function (err) {
+		payloadHash = payloadHash.digest();
+
+		if (payloadLength != block.payloadLength) {
+			err = "wrong payload length";
+		}
+
+		if (payloadHash.toString('hex') != block.payloadHash) {
+			err = "wrong payload hash";
+		}
+
 		if (err) {
 			async.eachSeries(block.transactions, function (transaction, cb) {
 				if (appliedTransactions[transaction.id]) {

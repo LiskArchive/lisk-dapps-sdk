@@ -17,7 +17,7 @@ function Block(cb, _library) {
 
 //public methods
 Block.prototype.getBytes = function (block, withSignature) {
-	var size = 8 + 4 + 4 + 32 + 8 + 4 + 4;
+	var size = 8 + 4 + 4 + 4 + 32 + 32 + 8 + 4 + 4;
 
 	if (withSignature && block.signature) {
 		size = size + 64;
@@ -38,13 +38,19 @@ Block.prototype.getBytes = function (block, withSignature) {
 
 	bb.writeInt(block.height);
 	bb.writeInt(block.timestamp);
+	bb.writeInt(block.payloadLength);
+
+	var ph = new Buffer(block.payloadHash, 'hex');
+	for (var i = 0; i < ph.length; i++) {
+		bb.writeByte(ph[i]);
+	}
 
 	var pb = new Buffer(block.delegate, 'hex');
 	for (var i = 0; i < pb.length; i++) {
 		bb.writeByte(pb[i]);
 	}
 
-	var pb = bignum(block.pointId).toBuffer({size: '8'});
+	pb = bignum(block.pointId).toBuffer({size: '8'});
 	for (var i = 0; i < 8; i++) {
 		bb.writeByte(pb[i]);
 	}
@@ -85,6 +91,8 @@ Block.prototype.save = function (block, cb) {
 			id: block.id,
 			timestamp: block.timestamp,
 			height: block.height,
+			payloadLength: block.payloadLength,
+			payloadHash: block.payloadHash,
 			prevBlockId: block.prevBlockId,
 			pointId: block.pointId,
 			pointHeight: block.pointHeight,
@@ -100,6 +108,8 @@ Block.prototype.dbRead = function (row) {
 		id: row.b_id,
 		height: row.b_height,
 		timestamp: row.b_timestamp,
+		payloadLength: row.b_payloadLength,
+		payloadHash: row.b_payloadHash,
 		prevBlockId: row.b_prevBlockId,
 		pointId: row.b_pointId,
 		pointHeight: row.b_pointHeight,

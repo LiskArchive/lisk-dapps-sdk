@@ -17,6 +17,15 @@
 				"name": "height",
 				"type": "BigInt"
 			},
+		  	{
+			  "name": "payloadLength",
+			  "type": "BigInt"
+			},
+		  	{
+			  "name": "payloadHash",
+			  "type": "String",
+			  "length": 32
+			},
 			{
 				"name": "prevBlockId",
 				"type": "String",
