@@ -1,0 +1,172 @@
+[
+	{
+		"table": "blocks",
+		"alias": "b",
+		"type": "table",
+		"tableFields": [
+			{
+				"name": "id",
+				"type": "String",
+				"length": 21
+			},
+		    {
+			    "name": "timestamp",
+			    "type": "BigInt"
+		    },
+			{
+				"name": "height",
+				"type": "BigInt"
+			},
+		  	{
+			  "name": "payloadLength",
+			  "type": "BigInt"
+			},
+		  	{
+			  "name": "payloadHash",
+			  "type": "String",
+			  "length": 32
+			},
+			{
+				"name": "prevBlockId",
+				"type": "String",
+				"length": 21
+			},
+			{
+				"name": "pointId",
+				"type": "String",
+				"length": 21
+			},
+			{
+				"name": "pointHeight",
+				"type": "BigInt"
+			},
+			{
+				"name": "delegate",
+				"type": "Binary",
+				"length": 32
+			},
+			{
+				"name": "signature",
+				"type": "Binary",
+				"length": 64
+			},
+			{
+				"name": "count",
+				"type": "BigInt"
+			}
+		],
+		"join": [
+			{
+				"type": "left outer",
+				"table": "transactions",
+				"alias": "t",
+				"on": {
+					"b.id": "t.blockId"
+				}
+			},
+			{
+				"type": "left outer",
+				"table": "asset_dapptransfer",
+				"alias": "t_dt",
+				"on": {
+					"t.id": "t_dt.transactionId"
+				}
+			},
+			{
+				"type": "left outer",
+				"table": "asset_myasset",
+				"alias": "t_ma",
+				"on": {
+					"t.id": "t_ma.transactionId"
+				}
+			}
+		]
+	},
+	{
+		"table": "transactions",
+		"alias": "t",
+		"type": "table",
+		"tableFields": [
+			{
+				"name": "id",
+				"type": "String",
+				"length": 21
+			},
+			{
+				"name": "type",
+				"type": "BigInt"
+			},
+			{
+				"name": "senderId",
+				"type": "String",
+				"length": 21
+			},
+			{
+				"name": "senderPublicKey",
+				"type": "Binary",
+				"length": 32
+			},
+			{
+				"name": "recipientId",
+				"type": "String",
+				"length": 21
+			},
+			{
+				"name": "amount",
+				"type": "BigInt"
+			},
+			{
+				"name": "fee",
+				"type": "BigInt"
+			},
+		    {
+			  	"name": "timestamp",
+			    "type": "BigInt"
+			},
+			{
+				"name": "signature",
+				"type": "Binary",
+				"length": 64
+			},
+			{
+				"name": "blockId",
+				"type": "String",
+				"length": 21
+			}
+		]
+	},
+	{
+		"table": "asset_dapptransfer",
+		"alias": "t_dt",
+		"type": "table",
+		"tableFields": [
+			{
+				"name": "src_id",
+				"type": "String",
+				"length": 21
+			},
+			{
+				"name": "transactionId",
+				"type": "String",
+				"length": 21
+			}
+		]
+	},
+	{
+		"table": "asset_myasset",
+		"alias": "t_ma",
+		"type": "table",
+		"tableFields": [
+			{
+				"name": "text",
+				"type": "String",
+				"length": 255
+			},
+			{
+				"name": "transactionId",
+				"type": "String",
+				"length": 21
+			}
+		]
+	}
+]

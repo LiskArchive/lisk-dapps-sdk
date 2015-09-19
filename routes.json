@@ -1,0 +1,62 @@
+[
+	{
+		"path": "/",
+		"method": "get",
+		"handler": "system.api.helloworld"
+	},
+	{
+		"path": "/message",
+		"method": "post",
+		"handler": "system.api.message"
+	},
+	{
+		"path": "/openAccount",
+		"method": "post",
+		"handler": "blockchain.accounts.open"
+	},
+	{
+		"path": "/transaction",
+		"method": "put",
+		"handler": "blockchain.transactions.addTransaction"
+	},
+	{
+		"path": "/transactions",
+		"method": "get",
+		"handler": "blockchain.transactions.getTransactions"
+	},
+	{
+		"path": "/blocks/get",
+		"method": "get",
+		"handler": "blockchain.blocks.getBlock"
+	},
+	{
+		"path": "/blocks",
+		"method": "get",
+		"handler": "blockchain.blocks.getBlocks"
+	},
+	{
+		"path": "/blocks/after",
+		"method": "get",
+		"handler": "blockchain.blocks.getBlocksAfter"
+	},
+	{
+		"path": "/blocks/height",
+		"method": "get",
+		"handler": "blockchain.blocks.getHeight"
+	},
+	{
+		"path": "/blocks/common",
+		"method": "get",
+		"handler": "blockchain.blocks.findCommon"
+	},
+	{
+		"path": "/blocks/count",
+		"method": "get",
+		"handler": "blockchain.blocks.count"
+	},
+  	{
+		"path": "/withdrawal",
+		"method": "post",
+		"handler": "contracts.withdrawaltransfer.withdrawal"
+	}
+]
