@@ -72,7 +72,6 @@ WithdrawalTransfer.prototype.ready = function (trs, sender, cb, scope) {
 	setImmediate(cb);
 }
 
-
 WithdrawalTransfer.prototype.normalize = function (asset, cb) {
 	setImmediate(cb);
 }

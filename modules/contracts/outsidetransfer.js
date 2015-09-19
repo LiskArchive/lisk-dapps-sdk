@@ -97,7 +97,6 @@ OutsideTransfer.prototype.dbRead = function (row) {
 	};
 }
 
-
 OutsideTransfer.prototype.normalize = function (asset, cb) {
 	library.validator.validate(asset, {
 		type: "object",

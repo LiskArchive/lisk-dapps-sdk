@@ -430,7 +430,6 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 					function (cb) {
 						var bytes = modules.logic.transaction.getBytes(transaction);
 
-
 						if ((payloadLength + bytes.length) > 1024 * 1024) {
 							return setImmediate(cb);
 						}
@@ -636,7 +635,6 @@ Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 		}
 
 		var blocks = self.readDbRows(res.body.response);
-
 
 		async.eachSeries(blocks, function (block, cb) {
 			private.processBlock(block, cb, scope);
