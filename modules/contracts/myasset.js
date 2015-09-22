@@ -32,7 +32,7 @@ MyAsset.prototype.verify = function (trs, sender, cb, scope) {
 		if (err) {
 			return cb(err);
 		}
-		if (trs.asset.myasset.text) {
+		if (!trs.asset.myasset.text) {
 			return cb("TRANSACTIONS.EMPTY_TEXT");
 		}
 		cb(null, trs)

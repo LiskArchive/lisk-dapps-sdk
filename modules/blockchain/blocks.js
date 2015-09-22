@@ -767,7 +767,7 @@ Blocks.prototype.getHeight = function (cb) {
 	cb(null, private.lastBlock.height);
 }
 
-Blocks.prototype.getLastBlock = function (cb) {
+Blocks.prototype.getLastBlock = function () {
 	return private.lastBlock;
 }
 
