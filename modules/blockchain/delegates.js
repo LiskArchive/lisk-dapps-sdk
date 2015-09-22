@@ -55,7 +55,7 @@ function applyDiff(source, diff) {
 
 Delegates.prototype.getDelegates = function (height, cb, scope) {
 	var tmpHeight = Object.keys((scope || private).delegates).reverse().find(function (currentHeight) {
-		return height > currentHeight;
+		return height >= currentHeight;
 	});
 	cb(null, (scope || private).delegates[tmpHeight]);
 }
