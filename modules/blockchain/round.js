@@ -88,17 +88,15 @@ Round.prototype.onBind = function (_modules) {
 }
 
 Round.prototype.onBlockchainLoaded = function () {
-	var genesisBlock = modules.blockchain.blocks.genesisBlock();
-	//private.delegates = genesisBlock.associate;
-	//private.delegates.push(modules.blockchain.accounts.generateAddressByPublicKey(genesisBlock.delegate));
-
-	for (var i = 0; i < genesisBlock.delegates.length; i++) {
-		private.delegates.push(modules.blockchain.accounts.generateAddressByPublicKey(genesisBlock.delegates[i]));
-	}
-
-	private.delegates.sort();
-
 	private.loaded = true;
+}
+
+Round.prototype.onDelegates = function (delegates) {
+	private.delegates = [];
+	for (var i = 0; i < delegates.length; i++) {
+		private.delegates.push(modules.blockchain.accounts.generateAddressByPublicKey(delegates[i]));
+		private.delegates.sort();
+	}
 }
 
 Round.prototype.onMessage = function (query) {

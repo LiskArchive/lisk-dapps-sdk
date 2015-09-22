@@ -53,14 +53,17 @@ function applyDiff(source, diff) {
 	return res;
 }
 
-Delegates.prototype.getDelegates = function (cb, height, scope) {
-	cb(null, (scope || private).delegates[height]);
+Delegates.prototype.getDelegates = function (height, cb, scope) {
+	var tmpHeight = Object.keys((scope || private).delegates).reverse().find(function (currentHeight) {
+		return height > currentHeight;
+	});
+	cb(null, (scope || private).delegates[tmpHeight]);
 }
 
 private.mergeDelegates = function (delegates, list, height, cb, scope) {
 	var lastHeight = Math.max.apply(null, Object.keys(delegates));
 
-	if (delegates[height]){
+	if (delegates[height]) {
 		return ("Delegate list exists")
 	}
 
@@ -71,7 +74,7 @@ private.mergeDelegates = function (delegates, list, height, cb, scope) {
 
 private.undoLast = function (delegates, cb, scope) {
 	var lastHeight = Math.max.apply(null, Object.keys(delegates));
-	if (lastHeight == 1){
+	if (lastHeight == 1) {
 		return ("Genesis block is readonly")
 	}
 	delete delegates[lastHeight];
@@ -82,7 +85,12 @@ private.undoLast = function (delegates, cb, scope) {
 
 Delegates.prototype.mergeDelegates = function (list, height, cb, scope) {
 	var delegates = (scope || private).delegates;
-	private.mergeDelegates(delegates, list, height, cb, scope);
+	private.mergeDelegates(delegates, list, height, function (err, list) {
+		if (!err) {
+			!scope && library.bus.message("delegates", list);
+		}
+		cb(err);
+	}, scope);
 }
 
 Delegates.prototype.mergeU_Delegates = function (list, height, cb, scope) {
@@ -93,7 +101,12 @@ Delegates.prototype.mergeU_Delegates = function (list, height, cb, scope) {
 Delegates.prototype.undoLast = function (cb, scope) {
 	var delegates = (scope || private).delegates;
 
-	private.undoLast(delegates, cb, scope);
+	private.undoLast(delegates, function (err, list) {
+		if (!err) {
+			!scope && library.bus.message("delegates", list);
+		}
+		cb(err);
+	}, scope);
 }
 
 Delegates.prototype.undoU_Last = function (cb, scope) {
