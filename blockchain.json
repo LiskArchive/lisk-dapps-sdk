@@ -168,5 +168,21 @@
 				"length": 21
 			}
 		]
+	},
+	{
+		"table": "asset_delegates",
+		"alias": "t_d",
+		"type": "table",
+		"tableFields": [
+			{
+				"name": "delegates",
+				"type": "Text"
+			},
+			{
+				"name": "transactionId",
+				"type": "String",
+				"length": 21
+			}
+		]
 	}
 ]
