@@ -27,6 +27,10 @@ d.run(function () {
 			cb(null, console.log);
 		},
 
+		config: function (cb) {
+			cb(null, require('./config.json'));
+		},
+
 		scheme: ['logger', function (cb, scope) {
 			try {
 				var db = require('./blockchain.json');
@@ -150,7 +154,7 @@ d.run(function () {
 			});
 		},
 
-		modules: ["sandbox", "logger", "bus", "sequence", function (cb, scope) {
+		modules: ["sandbox", "config", "logger", "bus", "sequence", function (cb, scope) {
 			var module = path.join(__dirname, process.argv[3] || 'modules.full.json');
 			var lib = require(module);
 
