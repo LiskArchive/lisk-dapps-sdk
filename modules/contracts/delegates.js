@@ -142,7 +142,7 @@ Delegates.prototype.dbRead = function (row) {
 	}
 	return {
 		delegates: {
-			text: row.t_d_list.split(",")
+			list: row.t_d_list.split(",")
 		}
 	};
 }

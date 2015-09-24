@@ -22,10 +22,6 @@ Block.prototype.getBytes = function (block, withSignature) {
 		size = size + 64;
 	}
 
-	if (block.delegates) {
-		size += block.delegates.length * 32;
-	}
-
 	var bb = new ByteBuffer(size, true);
 
 	if (block.prevBlockId) {
@@ -61,17 +57,6 @@ Block.prototype.getBytes = function (block, withSignature) {
 	bb.writeInt(block.pointHeight);
 
 	bb.writeInt(block.count);
-
-	if (block.delegates) {
-		for (var i = 0; i < block.delegates.length; i++) {
-			var delegate = block.delegates[i];
-			var delegateBuffer = new Buffer(delegate, 'hex');
-
-			for (var j = 0; j < delegateBuffer.length; j++) {
-				bb.writeByte(delegateBuffer[j]);
-			}
-		}
-	}
 
 	if (withSignature && block.signature) {
 		var pb = new Buffer(block.signature, 'hex');
@@ -176,7 +161,6 @@ Block.prototype.dbRead = function (row) {
 		pointId: row.b_pointId,
 		pointHeight: row.b_pointHeight,
 		delegate: row.b_delegate,
-		delegates: (row.b_delegates && row.b_delegates.length)? b.delegates.split(',') : null,
 		signature: row.b_signature,
 		count: row.b_count
 	};
