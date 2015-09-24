@@ -16,6 +16,7 @@
 	"logic/transaction": "./modules/logic/transaction.js",
 	"blockchain/accounts": "./modules/blockchain/accounts.js",
 	"blockchain/blocks": "./modules/blockchain/blocks.js",
+	"blockchain/delegates": "./modules/blockchain/delegates.js",
 	"blockchain/round": "./modules/blockchain/round.js",
 	"blockchain/transactions": "./modules/blockchain/transactions.js",
 	"blockchain/loader": "./modules/blockchain/loader.js",
