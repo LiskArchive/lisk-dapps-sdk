@@ -49,7 +49,7 @@ MyAsset.prototype.save = function (trs, cb) {
 	}, cb);
 }
 
-MyAsset.prototype.normalize = function (asset, db) {
+MyAsset.prototype.normalize = function (asset, cb) {
 	return setImmediate(cb);
 }
 

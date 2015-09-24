@@ -133,7 +133,7 @@ Transactions.prototype.applyTransaction = function (transaction, cb, scope) {
 }
 
 Transactions.prototype.applyUnconfirmedTransaction = function (transaction, cb, scope) {
-	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
+	modules.blockchain.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, sender) {
 		if (err) {
 			return setImmediate(cb, err);
 		}

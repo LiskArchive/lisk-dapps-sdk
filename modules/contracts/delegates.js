@@ -1,4 +1,5 @@
 var util = require('util');
+var async = require('async');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -127,8 +128,12 @@ Delegates.prototype.save = function (trs, cb) {
 	}, cb);
 }
 
-Delegates.prototype.normalize = function (asset, db) {
+Delegates.prototype.normalize = function (asset, cb) {
 	return setImmediate(cb);
+}
+
+Delegates.prototype.ready = function (trs, sender, cb, scope) {
+	setImmediate(cb);
 }
 
 Delegates.prototype.dbRead = function (row) {

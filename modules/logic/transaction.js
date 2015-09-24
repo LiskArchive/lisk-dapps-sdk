@@ -56,7 +56,7 @@ Transaction.prototype.attachAssetType = function (typeId, instance) {
 		typeof instance.apply == 'function' && typeof instance.undo == 'function' &&
 		typeof instance.applyUnconfirmed == 'function' && typeof instance.undoUnconfirmed == 'function' &&
 		typeof instance.save == 'function' && typeof instance.dbRead == 'function' &&
-	    typeof instance.ready == 'function'
+	    typeof instance.ready == 'function' && typeof instance.normalize == 'function'
 	) {
 		private.types[typeId] = instance;
 	} else {
@@ -276,7 +276,9 @@ Transaction.prototype.save = function (trs, cb) {
 }
 
 Transaction.prototype.normalize = function (tx, cb) {
-	var self = this;
+	if (!private.types[tx.type]) {
+		return cb('Unknown transaction type ' + tx.type);
+	}
 
 	for (var i in tx) {
 		if (tx[i] === null || typeof tx[i] === 'undefined') {

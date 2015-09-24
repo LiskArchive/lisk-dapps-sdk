@@ -548,6 +548,9 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 			}, scope);
 		});
 	}, function (err) {
+		if (err) {
+			return cb(err);
+		}
 		payloadHash = payloadHash.digest();
 
 		if (payloadLength != block.payloadLength) {
