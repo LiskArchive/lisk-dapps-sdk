@@ -122,7 +122,7 @@ Delegates.prototype.save = function (trs, cb) {
 	modules.api.sql.insert({
 		table: "asset_delegates",
 		values: {
-			list: trs.asset.delegates.list.join(","),
+			delegates: trs.asset.delegates.list.join(","),
 			transactionId: trs.id
 		}
 	}, cb);
