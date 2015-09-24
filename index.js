@@ -5,6 +5,7 @@ var async = require('async');
 var path = require('path');
 var ZSchema = require("z-schema");
 var extend = require('extend');
+var util = require('util');
 var modules = {};
 var ready = false;
 

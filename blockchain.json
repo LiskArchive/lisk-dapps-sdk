@@ -79,6 +79,14 @@
 				"on": {
 					"t.id": "t_ma.transactionId"
 				}
+			},
+			{
+				"type": "left outer",
+				"table": "asset_delegates",
+				"alias": "t_d",
+				"on": {
+					"t.id": "t_ma.transactionId"
+				}
 			}
 		]
 	},
