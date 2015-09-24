@@ -37,6 +37,9 @@ private.loop = function (point, cb) {
 	}, function (err) {
 		if (err) {
 			library.logger("Problem in block generation", err);
+		}else{
+			var lastBlock = modules.blockchain.blocks.getLastBlock();
+			library.logger("new dapp block id: " + lastBlock.id + " height: " + lastBlock.height + " via point: " + lastBlock.pointHeight);
 		}
 		cb(err)
 	})

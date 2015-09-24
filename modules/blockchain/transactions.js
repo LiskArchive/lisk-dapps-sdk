@@ -77,7 +77,6 @@ Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb
 
 		private.addUnconfirmedTransaction(transaction, function (err) {
 			if (err) {
-				console.log(err);
 				return cb(err);
 			}
 
