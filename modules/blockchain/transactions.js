@@ -51,8 +51,6 @@ Transactions.prototype.getUnconfirmedTransaction = function (id, cb, scope) {
 	setImmediate(cb, null, (scope || private).unconfirmedTransactions[index]);
 }
 
-
-
 Transactions.prototype.undoUnconfirmedTransaction = function (transaction, cb, scope) {
 	modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 		if (err) {

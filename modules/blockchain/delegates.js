@@ -64,7 +64,7 @@ private.mergeDelegates = function (delegates, list, height, cb, scope) {
 	var lastHeight = Math.max.apply(null, Object.keys(delegates));
 
 	if (delegates[height]) {
-		return ("Delegate list exists")
+		return cb("Delegate list exists")
 	}
 
 	delegates[height] = applyDiff(delegates[lastHeight], list);
@@ -75,7 +75,7 @@ private.mergeDelegates = function (delegates, list, height, cb, scope) {
 private.undoLast = function (delegates, cb, scope) {
 	var lastHeight = Math.max.apply(null, Object.keys(delegates));
 	if (lastHeight == 1) {
-		return ("Genesis block is readonly")
+		return cb("Genesis block is readonly")
 	}
 	delete delegates[lastHeight];
 	lastHeight = Math.max.apply(null, Object.keys(delegates));

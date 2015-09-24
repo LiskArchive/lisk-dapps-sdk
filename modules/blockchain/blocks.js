@@ -185,7 +185,7 @@ private.getIdSequence = function (height, cb) {
 		fields: [{height: "height"}, {expression: "group_concat(s.id)", alias: "ids"}]
 	}, {height: Number, ids: Array}, function (err, rows) {
 		if (err || !rows.length) {
-			return (err || "wrong ids request")
+			return cb(err || "wrong ids request")
 		}
 		cb(null, rows[0]);
 	});
@@ -210,8 +210,12 @@ private.rollbackUntilBlock = function (block, cb) {
 }
 
 private.processBlock = function (block, cb, scope) {
-	var blockBytes = modules.logic.block.getBytes(block);
-	block.id = modules.api.crypto.getId(blockBytes);
+	try {
+		var blockBytes = modules.logic.block.getBytes(block);
+		block.id = modules.api.crypto.getId(blockBytes);
+	} catch (e) {
+		return cb(e.toString())
+	}
 
 	modules.logic.block.normalize(block, function (err) {
 		if (err) {
@@ -337,7 +341,11 @@ Blocks.prototype.saveBlock = function (block, cb, scope) {
 		return setImmediate(cb)
 	}
 	modules.logic.block.save(block, function (err) {
+		if (err){
+			return cb(err);
+		}
 		async.eachSeries(block.transactions, function (trs, cb) {
+			trs.blockId = block.id;
 			modules.logic.transaction.save(trs, cb);
 		}, cb);
 	});
@@ -377,7 +385,6 @@ Blocks.prototype.readDbRows = function (rows) {
 Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 	async.whilst(
 		function () {
-			console.log(block.height, private.lastBlock.height)
 			return !(block.height >= private.lastBlock.height)
 		},
 		function (next) {
@@ -534,7 +541,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 				}
 
 				try {
-					var bytes = modules.logic.transaction.getBytes(transaction);
+					var bytes = modules.logic.transaction.getBytes(transaction, true);
 				} catch (e) {
 					return setImmediate(cb, e.toString());
 				}
@@ -551,6 +558,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 		if (err) {
 			return cb(err);
 		}
+
 		payloadHash = payloadHash.digest();
 
 		if (payloadLength != block.payloadLength) {
@@ -857,16 +865,18 @@ Blocks.prototype.onBind = function (_modules) {
 		fields: ["id"]
 	}, function (err, found) {
 		if (err) {
-			library.logger("genesis error 1", err)
+			library.logger("genesis error", err)
+			process.exit(0);
 		}
 		if (!found.length) {
-			private.processBlock(private.genesisBlock, function (err) {
-				if (!err) {
-					library.bus.message("blockchainReady");
+			self.saveBlock(private.genesisBlock, function (err) {
+				if (err) {
+					library.logger("genesis error", err.toString());
+					process.exit(0);
 				} else {
-					library.logger("genesis error 2", err)
+					library.bus.message("blockchainReady");
 				}
-			})
+			});
 		} else {
 			library.bus.message("blockchainReady");
 		}

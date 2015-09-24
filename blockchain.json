@@ -24,7 +24,7 @@
 		  	{
 			  "name": "payloadHash",
 			  "type": "String",
-			  "length": 32
+			  "length": 64
 			},
 			{
 				"name": "prevBlockId",
@@ -42,13 +42,13 @@
 			},
 			{
 				"name": "delegate",
-				"type": "Binary",
-				"length": 32
+				"type": "String",
+				"length": 64
 			},
 			{
 				"name": "signature",
-				"type": "Binary",
-				"length": 64
+				"type": "String",
+				"length": 128
 			},
 			{
 				"name": "count",
@@ -85,7 +85,7 @@
 				"table": "asset_delegates",
 				"alias": "t_d",
 				"on": {
-					"t.id": "t_ma.transactionId"
+					"t.id": "t_d.transactionId"
 				}
 			}
 		]
@@ -111,8 +111,8 @@
 			},
 			{
 				"name": "senderPublicKey",
-				"type": "Binary",
-				"length": 32
+				"type": "String",
+				"length": 64
 			},
 			{
 				"name": "recipientId",
@@ -133,8 +133,8 @@
 			},
 			{
 				"name": "signature",
-				"type": "Binary",
-				"length": 64
+				"type": "String",
+				"length": 128
 			},
 			{
 				"name": "blockId",
