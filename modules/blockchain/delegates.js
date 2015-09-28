@@ -115,6 +115,41 @@ Delegates.prototype.undoU_Last = function (cb, scope) {
 	private.undoLast(delegates, cb, scope);
 }
 
+Delegates.prototype.addDelegates = function (cb, query) {
+	var keypair = modules.api.crypto.keypair(query.secret);
+
+	library.sequence.add(function (cb) {
+		modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
+			console.log(keypair.publicKey.toString('hex'))
+			if (err) {
+				return cb(err.toString());
+			}
+			if (!account || !account.publicKey) {
+				return cb("COMMON.OPEN_ACCOUNT");
+			}
+
+			try {
+				var transaction = modules.logic.transaction.create({
+					type: 4,
+					sender: account,
+					keypair: keypair,
+					delegates: query.delegates
+				});
+			} catch (e) {
+				return cb(e.toString());
+			}
+
+			modules.blockchain.transactions.processUnconfirmedTransaction(transaction, cb)
+		});
+	}, function (err, transaction) {
+		if (err) {
+			return cb(err.toString());
+		}
+
+		cb(null, {transaction: transaction});
+	});
+}
+
 Delegates.prototype.onBind = function (_modules) {
 	modules = _modules;
 }

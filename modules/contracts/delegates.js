@@ -49,7 +49,15 @@ Delegates.prototype.verify = function (trs, sender, cb, scope) {
 		return cb("TRANSACTIONS.EMPTY_TEXT");
 	}
 
-	cb(null, trs);
+	modules.api.dapps.getGenesis(function (err, res) {
+		if (res.senderPublicKey != keypair.publicKey) {
+			return cb("TRANSACTIONS.DAPP_AUTHOR");
+		} else {
+			cb(null, trs);
+
+		}
+	});
+
 }
 
 Delegates.prototype.apply = function (trs, sender, cb, scope) {

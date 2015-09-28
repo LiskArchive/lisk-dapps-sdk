@@ -541,7 +541,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 				}
 
 				try {
-					var bytes = modules.logic.transaction.getBytes(transaction, true);
+					var bytes = modules.logic.transaction.getBytes(transaction);
 				} catch (e) {
 					return setImmediate(cb, e.toString());
 				}

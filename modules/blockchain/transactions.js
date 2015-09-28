@@ -80,8 +80,6 @@ Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb
 				return cb(err);
 			}
 
-			console.log('transaction added');
-
 			!scope && modules.api.transport.message("transaction", transaction, function () {
 				cb(null, {
 					transactionId: transaction.id
