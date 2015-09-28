@@ -98,19 +98,21 @@ Accounts.prototype.clone = function (cb) {
 	cb(null, r);
 }
 
-Accounts.prototype.getExecutor = function () {
-	if (!process.argv[2]) return null;
+Accounts.prototype.getExecutor = function (cb) {
+	if (!process.argv[2]) return setImmediate(cb, "secret is null");
 	if (private.executor) {
-		return private.executor
+		return setImmediate(cb, null, private.executor);
 	}
 	var keypair = modules.api.crypto.keypair(process.argv[2]);
-	private.executor = {
-		address: self.generateAddressByPublicKey(keypair.publicKey),
-		keypair: keypair,
-		secret: process.argv[2]
-	}
-
-	return private.executor;
+	modules.api.dapps.getGenesis(function (err, res) {
+		private.executor = {
+			address: self.generateAddressByPublicKey(keypair.publicKey),
+			keypair: keypair,
+			secret: process.argv[2],
+			isAuthor: res.senderPublicKey == keypair.publicKey
+		}
+		cb(err, private.executor);
+	});
 }
 
 Accounts.prototype.generateAddressByPublicKey = function (publicKey) {

@@ -216,33 +216,33 @@ Transactions.prototype.onMessage = function (query) {
 			});
 			break;
 		case "balance":
-			var executor = modules.blockchain.accounts.getExecutor();
-
-			if (executor) {
-				library.sequence.add(function (cb) {
-					modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
-						if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey) {
-							modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, account) {
-								var transaction = modules.logic.transaction.create({
-									type: 1,
-									sender: account,
-									keypair: executor.keypair,
-									amount: data.transaction.amount,
-									src_id: data.transaction.id
+			modules.blockchain.accounts.getExecutor(function (err, executor) {
+				if (!err) {
+					library.sequence.add(function (cb) {
+						modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
+							if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey) {
+								modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, account) {
+									var transaction = modules.logic.transaction.create({
+										type: 1,
+										sender: account,
+										keypair: executor.keypair,
+										amount: data.transaction.amount,
+										src_id: data.transaction.id
+									});
+									self.processUnconfirmedTransaction(transaction, function (err) {
+										if (err) {
+											library.logger("processUnconfirmedTransaction error", err)
+										}
+										cb(err);
+									});
 								});
-								self.processUnconfirmedTransaction(transaction, function (err) {
-									if (err) {
-										library.logger("processUnconfirmedTransaction error", err)
-									}
-									cb(err);
-								});
-							});
-						} else {
-							cb(err);
-						}
+							} else {
+								cb(err);
+							}
+						});
 					});
-				});
-			}
+				}
+			});
 			break;
 	}
 }

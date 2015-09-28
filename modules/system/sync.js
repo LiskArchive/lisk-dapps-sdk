@@ -130,9 +130,7 @@ private.blockSync = function (cb) {
 }
 
 
-private.loadMultisignatures = function (cb) {
-	var executor = modules.blockchain.accounts.getExecutor();
-
+private.loadMultisignatures = function (executor, cb) {
 	modules.api.multisignatures.pending(executor.keypair.publicKey, function (err, resp) {
 		if (err) {
 			return cb(err.toString());
@@ -140,7 +138,7 @@ private.loadMultisignatures = function (cb) {
 			var errs = [];
 			var transactions = resp.transactions;
 
-			async.forEach(transactions, function (item, cb) {
+			async.eachSeries(transactions, function (item, cb) {
 				if (item.transaction.type != 11) {
 					return setImmediate(cb);
 				}
@@ -191,15 +189,15 @@ Sync.prototype.onBlockchainLoaded = function () {
 	});
 
 	setImmediate(function nextMultisigSync() {
-		var executor = modules.blockchain.accounts.getExecutor();
+		modules.blockchain.accounts.getExecutor(function (err, executor) {
+			if (!err) {
+				private.loadMultisignatures(executor, function (err) {
+					err && library.logger('multisig timer', err);
 
-		if (executor && executor.secret) {
-			private.loadMultisignatures(function (err) {
-				err && library.logger('multisig timer', err);
-
-				setTimeout(nextMultisigSync, 10 * 1000);
-			});
-		}
+					setTimeout(nextMultisigSync, 10 * 1000);
+				});
+			}
+		});
 	});
 }
 

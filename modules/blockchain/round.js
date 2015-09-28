@@ -14,35 +14,35 @@ function Round(cb, _library) {
 }
 
 private.loop = function (point, cb) {
-	var executor = modules.blockchain.accounts.getExecutor();
-	if (!executor || !executor.address) {
-		//library.logger('loop', 'exit: secret doesn´t found');
-		return cb();
-	}
-
-	if (!private.loaded || library.sequence.count()) {
-		library.logger('loop', 'exit: syncing');
-		return;
-	}
-
-	library.sequence.add(function (cb) {
-		var currentDelegate = private.getState(executor, point.height);
-
-		if (currentDelegate) {
-			modules.blockchain.blocks.createBlock(executor, point, cb);
-		} else {
-			cb("skip slot: another delegate");
-		}
-
-	}, function (err) {
+	modules.blockchain.accounts.getExecutor(function (err, executor) {
 		if (err) {
-			library.logger("Problem in block generation", err);
-		}else{
-			var lastBlock = modules.blockchain.blocks.getLastBlock();
-			library.logger("new dapp block id: " + lastBlock.id + " height: " + lastBlock.height + " via point: " + lastBlock.pointHeight);
+			return cb();
 		}
-		cb(err)
-	})
+
+		if (!private.loaded || library.sequence.count()) {
+			library.logger('loop', 'exit: syncing');
+			return setImmediate(cb);
+		}
+
+		library.sequence.add(function (cb) {
+			var currentDelegate = private.getState(executor, point.height);
+
+			if (currentDelegate) {
+				modules.blockchain.blocks.createBlock(executor, point, cb);
+			} else {
+				cb("skip slot: another delegate");
+			}
+
+		}, function (err) {
+			if (err) {
+				library.logger("Problem in block generation", err);
+			} else {
+				var lastBlock = modules.blockchain.blocks.getLastBlock();
+				library.logger("new dapp block id: " + lastBlock.id + " height: " + lastBlock.height + " via point: " + lastBlock.pointHeight);
+			}
+			cb(err);
+		})
+	});
 }
 
 private.getState = function (executor, height) {
