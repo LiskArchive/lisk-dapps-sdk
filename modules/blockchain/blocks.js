@@ -27,35 +27,6 @@ function Blocks(cb, _library) {
 	cb(null, self);
 }
 
-private.withdrawal = function (block, cb, scope) {
-	if (scope) {
-		return setImmediate(cb);
-	}
-
-	var withdrawal = block.transactions.filter(function (trs) {
-		return trs.type == 2;
-	});
-	modules.blockchain.accounts.getExecutor(function (err, executor) {
-		if (err || !executor.isAuthor) {
-			return cb();
-		}
-		async.eachSeries(withdrawal, function (transaction, cb) {
-			var address = modules.blockchain.accounts.generateAddressByPublicKey(transaction.senderPublicKey);
-
-			modules.api.dapps.sendWithdrawal({
-				secret: executor.secret,
-				amount: transaction.amount,
-				recipientId: address,
-				transactionId: transaction.id,
-				multisigAccountPublicKey: executor.keypair.publicKey
-			}, function (err) {
-				cb();
-			});
-		}, cb);
-	});
-
-}
-
 private.deleteBlock = function (blockId, cb) {
 	modules.api.sql.remove({
 		table: 'blocks',
@@ -268,9 +239,8 @@ private.processBlock = function (block, cb, scope) {
 					if (err) {
 						library.logger(err.toString());
 						process.exit(0);
-					} else {
-						private.withdrawal(block, cb, scope)
 					}
+					cb();
 				}, scope);
 
 			}, scope);
@@ -341,7 +311,7 @@ Blocks.prototype.saveBlock = function (block, cb, scope) {
 			return cb(err);
 		}
 		async.eachSeries(block.transactions, function (trs, cb) {
-			trs.blockId = block.id;
+			trs.blockId = block.id; /*TODO: check signature*/
 			modules.logic.transaction.save(trs, cb);
 		}, cb);
 	});

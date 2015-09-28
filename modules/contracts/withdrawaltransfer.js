@@ -79,7 +79,22 @@ WithdrawalTransfer.prototype.normalize = function (asset, cb) {
 }
 
 WithdrawalTransfer.prototype.save = function (trs, cb) {
-	setImmediate(cb);
+	modules.blockchain.accounts.getExecutor(function (err, executor) {
+		if (err || !executor.isAuthor) {
+			return cb();
+		}
+		var address = modules.blockchain.accounts.generateAddressByPublicKey(trs.senderPublicKey);
+
+		modules.api.dapps.sendWithdrawal({
+			secret: executor.secret,
+			amount: trs.amount,
+			recipientId: address,
+			transactionId: trs.id,
+			multisigAccountPublicKey: executor.keypair.publicKey
+		}, function (err) {
+			cb();
+		});
+	});
 }
 
 WithdrawalTransfer.prototype.dbRead = function (row) {
