@@ -105,11 +105,12 @@ Accounts.prototype.getExecutor = function (cb) {
 	}
 	var keypair = modules.api.crypto.keypair(process.argv[2]);
 	modules.api.dapps.getGenesis(function (err, res) {
+		var address = self.generateAddressByPublicKey(keypair.publicKey.toString("hex"));
 		private.executor = {
-			address: self.generateAddressByPublicKey(keypair.publicKey),
+			address: address,
 			keypair: keypair,
 			secret: process.argv[2],
-			isAuthor: res.senderPublicKey == keypair.publicKey
+			isAuthor: res.authorId == address
 		}
 		cb(err, private.executor);
 	});
@@ -236,7 +237,7 @@ Accounts.prototype.onBind = function (_modules) {
 
 Accounts.prototype.open = function (cb, query) {
 	var keypair = modules.api.crypto.keypair(query.secret);
-	var address = self.generateAddressByPublicKey(keypair.publicKey);
+	var address = self.generateAddressByPublicKey(keypair.publicKey.toString("hex"));
 	var account = private.getAccount(address);
 
 	if (!account) {

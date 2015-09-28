@@ -220,8 +220,8 @@ Transactions.prototype.onMessage = function (query) {
 				if (!err) {
 					library.sequence.add(function (cb) {
 						modules.api.transactions.getTransaction(query.message.transactionId, function (err, data) {
-							if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey) {
-								modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, account) {
+							if (!err && data.transaction && data.transaction.senderPublicKey == executor.keypair.publicKey.toString("hex")) {
+								modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey.toString("hex")}, function (err, account) {
 									var transaction = modules.logic.transaction.create({
 										type: 1,
 										sender: account,

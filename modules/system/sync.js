@@ -131,7 +131,7 @@ private.blockSync = function (cb) {
 
 
 private.loadMultisignatures = function (executor, cb) {
-	modules.api.multisignatures.pending(executor.keypair.publicKey, function (err, resp) {
+	modules.api.multisignatures.pending(executor.keypair.publicKey.toString("hex"), function (err, resp) {
 		if (err) {
 			return cb(err.toString());
 		} else {

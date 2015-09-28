@@ -51,7 +51,7 @@ Delegates.prototype.verify = function (trs, sender, cb, scope) {
 	}
 
 	modules.api.dapps.getGenesis(function (err, res) {
-		if (res.senderPublicKey != keypair.publicKey) {
+		if (trs.senderId != res.authorId) {
 			return cb("TRANSACTIONS.DAPP_AUTHOR");
 		} else {
 			cb(null, trs);

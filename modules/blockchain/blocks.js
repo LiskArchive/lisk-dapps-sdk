@@ -423,7 +423,7 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 			}, scope);
 		}, function () {
 			var blockObj = {
-				delegate: executor.keypair.publicKey,
+				delegate: executor.keypair.publicKey.toString("hex"),
 				height: private.lastBlock.height + 1,
 				prevBlockId: private.lastBlock.id,
 				pointId: point.id,

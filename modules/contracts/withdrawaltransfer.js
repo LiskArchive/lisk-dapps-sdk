@@ -90,7 +90,7 @@ WithdrawalTransfer.prototype.save = function (trs, cb) {
 			amount: trs.amount,
 			recipientId: address,
 			transactionId: trs.id,
-			multisigAccountPublicKey: executor.keypair.publicKey
+			multisigAccountPublicKey: executor.keypair.publicKey.toString("hex")
 		}, function (err) {
 			cb();
 		});
@@ -130,7 +130,7 @@ WithdrawalTransfer.prototype.withdrawal = function (cb, query) {
 
 		// find sender
 		var account = modules.blockchain.accounts.getAccount({
-			publicKey: keypair.publicKey
+			publicKey: keypair.publicKey.toString("hex")
 		}, function (err, account) {
 			try {
 				var transaction = library.modules.logic.transaction.create({
