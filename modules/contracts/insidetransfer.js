@@ -1,4 +1,5 @@
 var async = require('async');
+var constants = require('../helpers/constants.js');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -22,7 +23,7 @@ InsideTransfer.prototype.create = function (data, trs) {
 
 InsideTransfer.prototype.calculateFee = function (trs) {
 	var fee = parseInt(trs.amount / 100 * 0.1);
-	return fee || 1;
+	return fee || (1 * constants.fixedPoint);
 }
 
 InsideTransfer.prototype.verify = function (trs, sender, cb, scope) {

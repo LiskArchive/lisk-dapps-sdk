@@ -1,5 +1,6 @@
 var util = require('util');
 var async = require('async');
+var constants = require('../helpers/constants.js');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -23,7 +24,7 @@ Delegates.prototype.create = function (data, trs) {
 }
 
 Delegates.prototype.calculateFee = function (trs) {
-	return 1;
+	return 1 * constants.fixedPoint;
 }
 
 Delegates.prototype.getBytes = function (trs) {
