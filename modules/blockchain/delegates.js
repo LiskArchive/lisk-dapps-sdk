@@ -53,13 +53,6 @@ function applyDiff(source, diff) {
 	return res;
 }
 
-Delegates.prototype.getDelegates = function (height, cb, scope) {
-	var tmpHeight = Object.keys((scope || private).delegates).reverse().find(function (currentHeight) {
-		return height >= currentHeight;
-	});
-	cb(null, (scope || private).delegates[tmpHeight]);
-}
-
 private.mergeDelegates = function (delegates, list, height, cb, scope) {
 	var lastHeight = Math.max.apply(null, Object.keys(delegates));
 
@@ -67,7 +60,12 @@ private.mergeDelegates = function (delegates, list, height, cb, scope) {
 		return cb("Delegate list exists")
 	}
 
-	delegates[height] = applyDiff(delegates[lastHeight], list);
+	var tmp_delegates = applyDiff(delegates[lastHeight], list);
+
+	if (!tmp_delegates) {
+		cb("wrong diff delegates");
+	}
+	delegates[height] = tmp_delegates;
 
 	cb(null, delegates[height]);
 }
@@ -81,6 +79,13 @@ private.undoLast = function (delegates, cb, scope) {
 	lastHeight = Math.max.apply(null, Object.keys(delegates));
 
 	cb(null, delegates[lastHeight]);
+}
+
+Delegates.prototype.getDelegates = function (height, cb, scope) {
+	var tmpHeight = Object.keys((scope || private).delegates).reverse().find(function (currentHeight) {
+		return height >= currentHeight;
+	});
+	cb(null, (scope || private).delegates[tmpHeight]);
 }
 
 Delegates.prototype.mergeDelegates = function (list, height, cb, scope) {
@@ -120,7 +125,6 @@ Delegates.prototype.addDelegates = function (cb, query) {
 
 	library.sequence.add(function (cb) {
 		modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
-			console.log(keypair.publicKey.toString('hex'))
 			if (err) {
 				return cb(err.toString());
 			}

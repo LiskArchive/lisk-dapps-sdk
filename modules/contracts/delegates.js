@@ -38,7 +38,7 @@ Delegates.prototype.getBytes = function (trs) {
 }
 
 Delegates.prototype.verify = function (trs, sender, cb, scope) {
-	if (!isAddress.test(trs.recipientId != sender.address)) {
+	if (trs.recipientId) {
 		return cb("TRANSACTIONS.INVALID_RECIPIENT");
 	}
 
@@ -47,7 +47,7 @@ Delegates.prototype.verify = function (trs, sender, cb, scope) {
 	}
 
 	if (!trs.asset.delegates.list || !trs.asset.delegates.list.length) {
-		return cb("TRANSACTIONS.EMPTY_TEXT");
+		return cb("TRANSACTIONS.EMPTY_DELEGATES");
 	}
 
 	modules.api.dapps.getGenesis(function (err, res) {

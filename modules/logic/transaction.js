@@ -205,7 +205,7 @@ Transaction.prototype.verify = function (trs, sender, cb, scope) { //inheritance
 		return setImmediate(cb, "Can't process transaction, it sent in feature");
 	}
 
-	return setImmediate(cb);
+	private.types[trs.type].verify(trs, sender, cb, scope);
 }
 
 Transaction.prototype.ready = function (trs, sender, cb, scope) {
