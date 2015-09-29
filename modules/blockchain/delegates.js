@@ -35,8 +35,7 @@ function applyDiff(source, diff) {
 			}
 
 			res.push(val);
-		}
-		if (math == "-") {
+		} else if (math == "-") {
 			var index = -1;
 			if (res) {
 				index = res.indexOf(val);
@@ -48,6 +47,8 @@ function applyDiff(source, diff) {
 			if (!res.length) {
 				res = null;
 			}
+		} else {
+			return false;
 		}
 	}
 	return res;
@@ -60,10 +61,14 @@ private.mergeDelegates = function (delegates, list, height, cb, scope) {
 		return cb("Delegate list exists")
 	}
 
-	var tmp_delegates = applyDiff(delegates[lastHeight], list);
+	try {
+		var tmp_delegates = applyDiff(delegates[lastHeight], list);
+	} catch (e) {
+		return cb("wrong diff delegates" + e.toString());
+	}
 
 	if (!tmp_delegates) {
-		cb("wrong diff delegates");
+		return cb("wrong diff delegates");
 	}
 	delegates[height] = tmp_delegates;
 
