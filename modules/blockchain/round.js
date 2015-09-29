@@ -1,5 +1,6 @@
 var async = require('async');
 var crypto = require('crypto-browserify');
+var slots = require('../helpers/slots.js');
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -48,8 +49,10 @@ private.loop = function (point, cb) {
 private.getState = function (executor, height) {
 	var delegates = self.generateDelegateList(height);
 
-	var currentSlot = height;
-	var lastSlot = currentSlot + delegates.length;
+	var currentSlot = slots.getSlotNumber();
+	var lastSlot = slots.getLastSlot(currentSlot);
+
+	var found = null;
 
 	for (; currentSlot < lastSlot; currentSlot += 1) {
 		var delegate_pos = currentSlot % delegates.length;
@@ -57,9 +60,14 @@ private.getState = function (executor, height) {
 		var delegate_id = delegates[delegate_pos];
 
 		if (delegate_id && executor.address == delegate_id) {
-			return executor;
+			found = slots.getSlotTime(currentSlot);
 		}
 	}
+
+	if (found !== null && slots.getSlotNumber(found) == slots.getSlotNumber()) {
+		return executor;
+	}
+
 	return null;
 }
 
@@ -100,6 +108,7 @@ Round.prototype.onDelegates = function (delegates) {
 		private.delegates.push(modules.blockchain.accounts.generateAddressByPublicKey(delegates[i]));
 		private.delegates.sort();
 	}
+	slots.delegates = private.delegates.length;
 }
 
 Round.prototype.onMessage = function (query) {
