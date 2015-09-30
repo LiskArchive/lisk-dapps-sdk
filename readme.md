@@ -1,14 +1,12 @@
 ### DApp Toolkit
 
-Crypti DAppToolkit to easy develop DApps.
+A toolkit for simplified development of Crypti DApps.
 
-Required:
+Requires:
 
   * Crypti 0.5.0
 
 ### Directory Structure
-
-Let's look at the toolkit and give an overview of its directory structure:
 
   * **modules** - Contains the backend code of your dapp.
   * **public** - Contains the frontend user interface of your dapp.
@@ -19,4 +17,4 @@ Let's look at the toolkit and give an overview of its directory structure:
   * **modules.full.json** - JSON file containing a list of defined modules, required by **index.js**.
   * **routes.json** - JSON file defining the HTTP routes of every endpoint in your dapp's API.
 
-Full documentation here [here](https://github.com/crypti/crypti-dapps-docs).
+Full documentation is available [here](https://github.com/crypti/crypti-dapps-docs).
