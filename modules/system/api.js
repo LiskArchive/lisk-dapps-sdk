@@ -38,14 +38,14 @@ Api.prototype.onBlockchainLoaded = function () {
 		private.apies[route.method + " " + route.path] = private.ns(modules, route.handler);
 	});
 
-	library.sandbox.onMessage(function (message, cb) {
+	library.sandbox.onMessage(function (message, cb, callback_id) {
 		var handler = private.apies[message.method + " " + message.path];
 		if (handler) {
 			handler(function (err, response) {
-				cb(err, {response: response});
+				cb(err, {response: response}, callback_id);
 			}, message.query);
 		} else {
-			cb("api not found");
+			cb("api not found", {}, callback_id);
 		}
 	});
 
