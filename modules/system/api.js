@@ -42,6 +42,10 @@ Api.prototype.onBlockchainLoaded = function () {
 		var handler = private.apies[message.method + " " + message.path];
 		if (handler) {
 			handler(function (err, response) {
+				if (err) {
+					err = err.toString();
+				}
+
 				cb(err, {response: response}, callback_id);
 			}, message.query);
 		} else {
@@ -50,7 +54,7 @@ Api.prototype.onBlockchainLoaded = function () {
 	});
 
 	modules.api.dapps.setReady(function () {
-		
+
 	});
 }
 

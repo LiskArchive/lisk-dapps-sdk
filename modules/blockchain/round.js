@@ -20,7 +20,7 @@ private.loop = function (point, cb) {
 			return cb();
 		}
 
-		if (!private.loaded || library.sequence.count()) {
+		if (!private.loaded) {
 			library.logger('loop', 'exit: syncing');
 			return setImmediate(cb);
 		}

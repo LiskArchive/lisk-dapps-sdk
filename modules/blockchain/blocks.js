@@ -165,20 +165,17 @@ private.getIdSequence = function (height, cb) {
 					having: {
 						height: {$lte: height}
 					}
-				},
-				sort: {
-					height: 1
 				}
 			}, {
 				table: 'blocks',
 				condition: {
 					height: 1
 				},
-				fields: [{id: "id"}, {expression: "1", alias: "height"}],
-				sort: {
-					height: -1
-				}
+				fields: [{id: "id"}, {expression: "1", alias: "height"}]
 			}],
+			sort: {
+				height: 1
+			},
 			limit: 1000
 		},
 		alias: "s",
@@ -262,6 +259,8 @@ Blocks.prototype.saveBatchBlock = function (blocks, cb) {
 			blocks[i].id,
 			blocks[i].timestamp,
 			blocks[i].height,
+			blocks[i].payloadLength,
+			blocks[i].payloadHash,
 			blocks[i].prevBlockId,
 			blocks[i].pointId,
 			blocks[i].pointHeight,
@@ -286,7 +285,7 @@ Blocks.prototype.saveBatchBlock = function (blocks, cb) {
 	}
 	modules.api.sql.batch({
 		table: "blocks",
-		fields: ["id", "timestamp", "height", "prevBlockId", "pointId", "pointHeight", "delegate",
+		fields: ["id", "timestamp", "height", "payloadLength", "payloadHash", "prevBlockId", "pointId", "pointHeight", "delegate",
 			"signature", "count"],
 		values: blocks_row
 	}, function (err) {
@@ -311,7 +310,7 @@ Blocks.prototype.saveBlock = function (block, cb, scope) {
 			return cb(err);
 		}
 		async.eachSeries(block.transactions, function (trs, cb) {
-			trs.blockId = block.id; /*TODO: check signature*/
+			trs.blockId = block.id;
 			modules.logic.transaction.save(trs, cb);
 		}, cb);
 	});
@@ -663,8 +662,8 @@ Blocks.prototype.findCommon = function (cb, query) {
 			return cb(err);
 		}
 
-		var commonBlock = rows.length ? rows[0] : null;
-		cb(null, commonBlock);
+		var commonBlock = rows.length && rows[0].height ? rows[0] : null;
+		cb(commonBlock ? null : "No common block", commonBlock);
 	});
 }
 
@@ -691,11 +690,11 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 					min: lastBlockHeight
 				}, function (err, data) {
 					if (err || !data.body.success) {
-						return next(err);
+						return next(err || "Can't find common blocks");
 					}
 
 					if (!data.body.response) {
-						return next();
+						return next("Can't find common blocks");
 					}
 
 					var condition = {
