@@ -129,51 +129,188 @@ private.blockSync = function (cb) {
 	});
 }
 
-
-private.loadMultisignatures = function (executor, cb) {
-	modules.api.multisignatures.pending(executor.keypair.publicKey.toString("hex"), function (err, resp) {
+private.loadMultisignatures = function (cb) {
+	modules.blockchain.accounts.getExecutor(function (err, executor) {
 		if (err) {
-			return cb(err.toString());
-		} else {
-			var errs = [];
-			var transactions = resp.transactions;
+			return cb(err);
+		}
+		modules.api.multisignatures.pending(executor.keypair.publicKey.toString("hex"), function (err, resp) {
+			if (err) {
+				return cb(err.toString());
+			} else {
+				var errs = [];
+				var transactions = resp.transactions;
 
-			async.eachSeries(transactions, function (item, cb) {
-				if (item.transaction.type != 11) {
-					return setImmediate(cb);
-				}
-
-				modules.api.multisignatures.sign(
-					executor.secret,
-					null,
-					item.transaction.id,
-					function (err) {
-						if (err) {
-							errs.push(err);
-						}
-
-						setImmediate(cb);
+				async.eachSeries(transactions, function (item, cb) {
+					if (item.transaction.type != 11) {
+						return setImmediate(cb);
 					}
-				)
-			}, function () {
-				if (errs.length > 0) {
-					return cb(errs[0]);
+
+					modules.api.multisignatures.sign(
+						executor.secret,
+						null,
+						item.transaction.id,
+						function (err) {
+							if (err) {
+								errs.push(err);
+							}
+
+							setImmediate(cb);
+						}
+					)
+				}, function () {
+					if (errs.length > 0) {
+						return cb(errs[0]);
+					}
+
+					cb();
+				});
+			}
+		});
+	});
+}
+
+private.withdrawalSync = function (cb) {
+	modules.blockchain.accounts.getExecutor(function (err, executor) {
+		if (!err/* && executor.isAuthor*/) {
+			modules.api.sql.select({
+				table: "transactions",
+				"alias": "t",
+				join: [
+					{
+						"type": "inner",
+						"table": "blocks",
+						"alias": "b",
+						"on": {
+							"b.id": "t.blockId"
+						}
+					}
+				],
+				fields: [{"t.id": "id"}],
+				condition: {
+					type: 2
+				},
+				order: {
+					"b.height": -1
+				},
+				limit: 1
+			}, function (err, found) {
+				if (err) {
+					return cb(err);
 				}
 
-				cb();
+				var id = null;
+
+				if (found.length) {
+					id = found[0].id;
+				}
+
+				modules.api.dapps.getWithdrawalTransactions(id, function (err, transactions) {
+					setImmediate(cb);
+				});
 			});
+		} else {
+			setImmediate(cb);
 		}
 	});
 }
 
+private.balanceSync = function (cb) {
+	modules.blockchain.accounts.getExecutor(function (err, executor) {
+		if (!err/* && executor.isAuthor*/) {
+			modules.api.sql.select({
+				table: "transactions",
+				"alias": "t",
+				join: [
+					{
+						"type": "inner",
+						"table": "blocks",
+						"alias": "b",
+						"on": {
+							"b.id": "t.blockId"
+						}
+					}, {
+						"type": "inner",
+						"table": "asset_dapptransfer",
+						"alias": "t_dt",
+						"on": {
+							"t.id": "t_dt.transactionId"
+						}
+					}
+				],
+				fields: [{"t_dt.src_id": "id"}],
+				condition: {
+					type: 1
+				},
+				order: {
+					"b.height": -1
+				},
+				limit: 1
+			}, function (err, found) {
+				if (err) {
+					return cb(err);
+				}
+
+				var id = null;
+
+				if (found.length) {
+					id = found[0].id;
+				}
+
+
+				modules.api.dapps.getBalanceTransactions(id, function (err, transactions) {
+					if (err) {
+						return cb(err);
+					}
+					async.eachSeries(transactions, function (transaction, cb) {
+						modules.blockchain.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, account) {
+							var trs = modules.logic.transaction.create({
+								type: 1,
+								sender: account,
+								keypair: executor.keypair,
+								amount: transaction.amount,
+								src_id: transaction.id
+							});
+							modules.blockchain.transactions.processUnconfirmedTransaction(trs, function (err) {
+								console.log(trs.id, transaction.id, err)
+								if (err) {
+									library.logger("processUnconfirmedTransaction error", err)
+								}
+								cb();
+							});
+						});
+					}, cb);
+				});
+			});
+		} else {
+			setImmediate(cb);
+		}
+	});
+}
 
 Sync.prototype.onBind = function (_modules) {
 	modules = _modules;
 }
 
 Sync.prototype.onBlockchainLoaded = function () {
+	setImmediate(function nextWithdrawalSync() {
+		library.sequence.add(private.withdrawalSync, function (err) {
+			err && library.logger('withdrawalSync timer', err);
+
+			setTimeout(nextWithdrawalSync, 10 * 1000)
+		});
+	});
+
+	setImmediate(function nextBalanceSync() {
+		library.sequence.add(private.balanceSync, function (err) {
+			err && library.logger('balanceSync timer', err);
+
+			setTimeout(nextBalanceSync, 10 * 1000)
+		});
+	});
+
 	setImmediate(function nextBlockSync() {
-		private.blockSync(function (err) {
+		library.sequence.add(private.blockSync, function (err) {
 			err && library.logger('blockSync timer', err);
 
 			setTimeout(nextBlockSync, 10 * 1000)
@@ -181,7 +318,7 @@ Sync.prototype.onBlockchainLoaded = function () {
 	});
 
 	setImmediate(function nextU_TransactionsSync() {
-		private.transactionsSync(function (err) {
+		library.sequence.add(private.transactionsSync, function (err) {
 			err && library.logger('transactionsSync timer', err);
 
 			setTimeout(nextU_TransactionsSync, 5 * 1000)
@@ -189,14 +326,10 @@ Sync.prototype.onBlockchainLoaded = function () {
 	});
 
 	setImmediate(function nextMultisigSync() {
-		modules.blockchain.accounts.getExecutor(function (err, executor) {
-			if (!err) {
-				private.loadMultisignatures(executor, function (err) {
-					err && library.logger('multisig timer', err);
+		library.sequence.add(private.loadMultisignatures, function (err) {
+			err && library.logger('multisign timer', err);
 
-					setTimeout(nextMultisigSync, 10 * 1000);
-				});
-			}
+			setTimeout(nextMultisigSync, 10 * 1000);
 		});
 	});
 }

@@ -1,5 +1,5 @@
 var private = {}, self = null,
-library = null, modules = null;
+	library = null, modules = null;
 
 /**
  * Creates instance of Dapps API. Use *modules.api.dapps* to get existing object.
@@ -96,6 +96,29 @@ Dapps.prototype.setReady = function (cb) {
  * @callback Dapps~setReadyCallback
  * @param error - Error of api call execution.
  */
+
+Dapps.prototype.getWithdrawalTransactions = function (lastTransactionId, cb) {
+	var message = {
+		call: "dapps#getWithdrawalTransactions",
+		args: {
+			lastTransactionId: lastTransactionId
+		}
+	};
+
+	library.sandbox.sendMessage(message, cb);
+}
+
+Dapps.prototype.getBalanceTransactions = function (lastTransactionId, cb) {
+
+	var message = {
+		call: "dapps#getBalanceTransactions",
+		args: {
+			lastTransactionId: lastTransactionId
+		}
+	};
+
+	library.sandbox.sendMessage(message, cb);
+}
 
 Dapps.prototype.onBind = function (_modules) {
 	modules = _modules;

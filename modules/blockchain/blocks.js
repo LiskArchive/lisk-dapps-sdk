@@ -629,17 +629,17 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 		blocks = self.readDbRows(blocks);
 
 		async.eachSeries(blocks, function (block, cb) {
-			private.verify(block, function (err) {
-				if (err) {
-					return cb({message: err, block: block});
-				}
+			//private.verify(block, function (err) {
+			//	if (err) {
+			//		return cb({message: err, block: block});
+			//	}
 				self.applyBlock(block, function (err) {
 					if (err) {
 						return cb({block: block, message: err})
 					}
 					cb();
 				});
-			});
+			//});
 		}, cb);
 	}, {limit: limit, offset: offset})
 }

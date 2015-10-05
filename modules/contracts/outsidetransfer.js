@@ -31,7 +31,18 @@ OutsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 		return cb("TRANSACTIONS.INVALID_AMOUNT");
 	}
 
-	cb(null, trs);
+	modules.api.sql.select({
+		table: "asset_dapptransfer",
+		condition: {
+			src_id: trs.asset.outsidetransfer.src_id
+		},
+		fields: ["id"]
+	}, function (err, found) {
+		if (err || found.length) {
+			return cb("reference transaction exists in dapp");
+		}
+		cb(null, trs);
+	});
 }
 
 OutsideTransfer.prototype.getBytes = function (trs) {

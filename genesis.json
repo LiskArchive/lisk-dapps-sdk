@@ -1,16 +1,32 @@
 {
-	"delegate": "631b91fa537f74e23addccd30555fbc7729ea267c7e0517cbf1bfcc46354abc3",
-	"delegates": [
-		"631b91fa537f74e23addccd30555fbc7729ea267c7e0517cbf1bfcc46354abc3"
-	],
-	"height": 1,
-	"pointId": "1904506138016700155",
-	"pointHeight": 1,
-	"payloadLength": 0,
-	"payloadHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
-	"count": 0,
-	"transactions": [],
-	"timestamp": 0,
-	"signature": "8feba2c028bfb329a60e5256ae44033b5171fb74ac67dd9c2f88a1b8cc5183f4ae6035a5ffee498ce27f9d362da5b53802dcd2e6a6f7924a5e75d84f042a330a",
-	"id": "12548565532232751537"
+    "delegate": "631b91fa537f74e23addccd30555fbc7729ea267c7e0517cbf1bfcc46354abc3",
+    "height": 1,
+    "pointId": "2197848808496030230",
+    "pointHeight": 1,
+    "transactions": [
+        {
+            "type": 4,
+            "amount": 0,
+            "fee": 0,
+            "timestamp": 0,
+            "recipientId": null,
+            "senderId": "2334212999465599568C",
+            "senderPublicKey": "631b91fa537f74e23addccd30555fbc7729ea267c7e0517cbf1bfcc46354abc3",
+            "asset": {
+                "delegates": {
+                    "list": [
+                        "+631b91fa537f74e23addccd30555fbc7729ea267c7e0517cbf1bfcc46354abc3"
+                    ]
+                }
+            },
+            "signature": "4ad923dcd9eac995f07f0d3a341587938fb576194b0d612cb1863ec42896087585aa0a19ee0d5849eb20b0fc3cda667d23c9bc1cb9ffcac28e4ed6641db5440d",
+            "id": "11987567831806246387"
+        }
+    ],
+    "timestamp": 0,
+    "count": 1,
+    "payloadLength": 182,
+    "payloadHash": "f3fdb51f6e655ca63f364cc32006a7421909250639b44dffdedff34951a6016e",
+    "signature": "3b8d35624c05af5c79eb0031067d3e2cf82557ab230aad8f67c37346a33455c91741a613fe22aab960f3190825ae7e0597d076b2126ef3c893e8b9abc78e0d01",
+    "id": "164388338732466346"
 }
