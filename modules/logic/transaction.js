@@ -42,7 +42,7 @@ Transaction.prototype.create = function (data) {
 	var trsBytes = self.getBytes(trs);
 	trs.signature = modules.api.crypto.sign(data.keypair, trsBytes);
 
-	var trsBytes = self.getBytes(trs);
+	trsBytes = self.getBytes(trs);
 	trs.id = modules.api.crypto.getId(trsBytes);
 
 	trs.fee = private.types[trs.type].calculateFee.call(self, trs);
@@ -56,7 +56,7 @@ Transaction.prototype.attachAssetType = function (typeId, instance) {
 		typeof instance.apply == 'function' && typeof instance.undo == 'function' &&
 		typeof instance.applyUnconfirmed == 'function' && typeof instance.undoUnconfirmed == 'function' &&
 		typeof instance.save == 'function' && typeof instance.dbRead == 'function' &&
-	    typeof instance.ready == 'function' && typeof instance.normalize == 'function'
+		typeof instance.ready == 'function' && typeof instance.normalize == 'function'
 	) {
 		private.types[typeId] = instance;
 	} else {
@@ -136,7 +136,7 @@ Transaction.prototype.process = function (trs, sender, cb) {
 
 	modules.blockchain.transactions.getUnconfirmedTransaction(trs.id, function (err, tx) {
 		if (err || tx) {
-			return cb(err? err.toString() : "This transaction in unconfirmed list already");
+			return cb(err ? err.toString() : "This transaction in unconfirmed list already");
 		}
 
 		modules.api.transactions.getTransaction(trs.id, function (err, data) {

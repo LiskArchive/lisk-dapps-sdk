@@ -8,7 +8,7 @@ function OutsideTransfer(cb, _library) {
 }
 
 OutsideTransfer.prototype.create = function (data, trs) {
-	trs.recipientId = null;
+	trs.recipientId = data.recipientId;
 	trs.amount = data.amount;
 
 	trs.asset.outsidetransfer = {
@@ -23,7 +23,8 @@ OutsideTransfer.prototype.calculateFee = function (trs) {
 }
 
 OutsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
-	if (trs.recipientId) {
+	var isAddress = /^[0-9]+[C|c]$/g;
+	if (!isAddress.test(trs.recipientId.toLowerCase())) {
 		return cb("TRANSACTIONS.INVALID_RECIPIENT");
 	}
 
@@ -57,28 +58,28 @@ OutsideTransfer.prototype.getBytes = function (trs) {
 
 OutsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.mergeAccountAndGet({
-		address: sender.address,
+		address: trs.recipientId,
 		balance: trs.amount
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.undoMerging({
-		address: sender.address,
+		address: trs.recipientId,
 		balance: trs.amount
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.mergeAccountAndGet({
-		address: sender.address,
+		address: trs.recipientId,
 		u_balance: trs.amount
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.undoMerging({
-		address: sender.address,
+		address: trs.recipientId,
 		u_balance: trs.amount
 	}, cb, scope);
 }

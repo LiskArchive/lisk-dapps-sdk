@@ -380,13 +380,14 @@ Blocks.prototype.genesisBlock = function () {
 	return private.genesisBlock;
 }
 
-Blocks.prototype.createBlock = function (executor, point, cb, scope) {
+Blocks.prototype.createBlock = function (executor, timestamp, point, cb, scope) {
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
 		var ready = [];
 
 		var payloadHash = crypto.createHash('sha256'),
 			payloadLength = 0;
 
+		console.log("found", unconfirmedList.length)
 		async.eachSeries(unconfirmedList, function (transaction, cb) {
 			modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 				if (err) {
@@ -426,7 +427,7 @@ Blocks.prototype.createBlock = function (executor, point, cb, scope) {
 				height: private.lastBlock.height + 1,
 				prevBlockId: private.lastBlock.id,
 				pointId: point.id,
-				timestamp: timeHelper.getNow(),
+				timestamp: timestamp,
 				pointHeight: point.height,
 				count: ready.length,
 				transactions: ready,
@@ -633,12 +634,12 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 			//	if (err) {
 			//		return cb({message: err, block: block});
 			//	}
-				self.applyBlock(block, function (err) {
-					if (err) {
-						return cb({block: block, message: err})
-					}
-					cb();
-				});
+			self.applyBlock(block, function (err) {
+				if (err) {
+					return cb({block: block, message: err})
+				}
+				cb();
+			});
 			//});
 		}, cb);
 	}, {limit: limit, offset: offset})
@@ -733,9 +734,11 @@ Blocks.prototype.count = function (cb) {
 		fields: [{
 			expression: 'count(*)'
 		}]
-	}, function (err, rows) {
-		var count = !err && Number(rows[0][0]);
-		cb(err, count);
+	}, {count: Number}, function (err, rows) {
+		if (err){
+			return cb(err);
+		}
+		cb(err, rows[0].count);
 	});
 }
 

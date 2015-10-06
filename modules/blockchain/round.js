@@ -25,15 +25,26 @@ private.loop = function (point, cb) {
 			return setImmediate(cb);
 		}
 
+		var currentSlot = slots.getSlotNumber();
+		var lastBlock = modules.blockchain.blocks.getLastBlock();
+
+		if (currentSlot == slots.getSlotNumber(lastBlock.timestamp)) {
+			//library.logger.log('loop', 'exit: lastBlock is in the same slot');
+			return setImmediate(cb);
+		}
+
+		var currentBlockData = private.getState(executor, point.height);
+		if (currentBlockData === null) {
+			library.logger('loop', 'skip slot');
+			return setImmediate(cb);
+		}
+
 		library.sequence.add(function (cb) {
-			var currentDelegate = private.getState(executor, point.height);
-
-			if (currentDelegate) {
-				modules.blockchain.blocks.createBlock(executor, point, cb);
+			if (slots.getSlotNumber(currentBlockData) == slots.getSlotNumber()) {
+				modules.blockchain.blocks.createBlock(executor, currentBlockData, point, cb);
 			} else {
-				cb("skip slot: another delegate");
+				setImmediate(cb);
 			}
-
 		}, function (err) {
 			if (err) {
 				library.logger("Problem in block generation", err);
@@ -52,20 +63,14 @@ private.getState = function (executor, height) {
 	var currentSlot = slots.getSlotNumber();
 	var lastSlot = slots.getLastSlot(currentSlot);
 
-	var found = null;
-
 	for (; currentSlot < lastSlot; currentSlot += 1) {
 		var delegate_pos = currentSlot % delegates.length;
 
 		var delegate_id = delegates[delegate_pos];
 
 		if (delegate_id && executor.address == delegate_id) {
-			found = slots.getSlotTime(currentSlot);
+			return slots.getSlotTime(currentSlot);
 		}
-	}
-
-	if (found !== null && slots.getSlotNumber(found) == slots.getSlotNumber()) {
-		return executor;
 	}
 
 	return null;

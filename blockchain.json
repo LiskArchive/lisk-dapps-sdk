@@ -7,24 +7,31 @@
 			{
 				"name": "id",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true,
+				"unique": true,
+				"primary_key": true
 			},
-		    {
-			    "name": "timestamp",
-			    "type": "BigInt"
-		    },
+			{
+				"name": "timestamp",
+				"type": "BigInt",
+				"not_null": true
+			},
 			{
 				"name": "height",
-				"type": "BigInt"
+				"type": "BigInt",
+				"not_null": true
 			},
-		  	{
-			  "name": "payloadLength",
-			  "type": "BigInt"
+			{
+				"name": "payloadLength",
+				"type": "BigInt",
+				"not_null": true
 			},
-		  	{
-			  "name": "payloadHash",
-			  "type": "String",
-			  "length": 64
+			{
+				"name": "payloadHash",
+				"type": "String",
+				"length": 64,
+				"not_null": true
 			},
 			{
 				"name": "prevBlockId",
@@ -34,25 +41,30 @@
 			{
 				"name": "pointId",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true
 			},
 			{
 				"name": "pointHeight",
-				"type": "BigInt"
+				"type": "BigInt",
+				"not_null": true
 			},
 			{
 				"name": "delegate",
 				"type": "String",
-				"length": 64
+				"length": 64,
+				"not_null": true
 			},
 			{
 				"name": "signature",
 				"type": "String",
-				"length": 128
+				"length": 128,
+				"not_null": true
 			},
 			{
 				"name": "count",
-				"type": "BigInt"
+				"type": "BigInt",
+				"not_null": true
 			}
 		],
 		"join": [
@@ -98,21 +110,27 @@
 			{
 				"name": "id",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true,
+				"unique": true,
+				"primary_key": true
 			},
 			{
 				"name": "type",
-				"type": "BigInt"
+				"type": "BigInt",
+				"not_null": true
 			},
 			{
 				"name": "senderId",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true
 			},
 			{
 				"name": "senderPublicKey",
 				"type": "String",
-				"length": 64
+				"length": 64,
+				"not_null": true
 			},
 			{
 				"name": "recipientId",
@@ -121,25 +139,38 @@
 			},
 			{
 				"name": "amount",
-				"type": "BigInt"
+				"type": "BigInt",
+				"not_null": true
 			},
 			{
 				"name": "fee",
-				"type": "BigInt"
+				"type": "BigInt",
+				"not_null": true
 			},
-		    {
-			  	"name": "timestamp",
-			    "type": "BigInt"
+			{
+				"name": "timestamp",
+				"type": "BigInt",
+				"not_null": true
 			},
 			{
 				"name": "signature",
 				"type": "String",
-				"length": 128
+				"length": 128,
+				"not_null": true
 			},
 			{
 				"name": "blockId",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true
+			}
+		],
+		"foreignKeys": [
+			{
+				"field": "blockId",
+				"table": "blocks",
+				"table_field": "id",
+				"on_delete": "cascade"
 			}
 		]
 	},
@@ -151,12 +182,23 @@
 			{
 				"name": "src_id",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true,
+				"unique": true
 			},
 			{
 				"name": "transactionId",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true
+			}
+		],
+		"foreignKeys": [
+			{
+				"field": "transactionId",
+				"table": "transactions",
+				"table_field": "id",
+				"on_delete": "cascade"
 			}
 		]
 	},
@@ -168,12 +210,22 @@
 			{
 				"name": "text",
 				"type": "String",
-				"length": 255
+				"length": 255,
+				"not_null": true
 			},
 			{
 				"name": "transactionId",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true
+			}
+		],
+		"foreignKeys": [
+			{
+				"field": "transactionId",
+				"table": "transactions",
+				"table_field": "id",
+				"on_delete": "cascade"
 			}
 		]
 	},
@@ -184,12 +236,22 @@
 		"tableFields": [
 			{
 				"name": "delegates",
-				"type": "Text"
+				"type": "Text",
+				"not_null": true
 			},
 			{
 				"name": "transactionId",
 				"type": "String",
-				"length": 21
+				"length": 21,
+				"not_null": true
+			}
+		],
+		"foreignKeys": [
+			{
+				"field": "transactionId",
+				"table": "transactions",
+				"table_field": "id",
+				"on_delete": "cascade"
 			}
 		]
 	}

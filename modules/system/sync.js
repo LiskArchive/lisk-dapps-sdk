@@ -172,41 +172,46 @@ private.loadMultisignatures = function (cb) {
 
 private.withdrawalSync = function (cb) {
 	modules.blockchain.accounts.getExecutor(function (err, executor) {
-		if (!err/* && executor.isAuthor*/) {
-			modules.api.sql.select({
-				table: "transactions",
-				"alias": "t",
-				join: [
-					{
-						"type": "inner",
-						"table": "blocks",
-						"alias": "b",
-						"on": {
-							"b.id": "t.blockId"
+		if (!err && executor.isAuthor) {
+			modules.api.dapps.getWithdrawalLastTransaction(function (err, res) {
+				//res.lastTransactionId
+				modules.api.sql.select({
+					table: "transactions",
+					"alias": "t",
+					join: [
+						{
+							"type": "inner",
+							"table": "blocks",
+							"alias": "b",
+							"on": {
+								"b.id": "t.blockId",
+								"type": 2
+							}
 						}
+					],
+					fields: [{"t.amount": "amount"}, {"t.id": "id"}, {"t.senderPublicKey": "senderPublicKey"}],
+					condition: {
+						"b.height": {$gt: ""}
+					},
+					sort: {
+						"b.height": 1
 					}
-				],
-				fields: [{"t.id": "id"}],
-				condition: {
-					type: 2
-				},
-				order: {
-					"b.height": -1
-				},
-				limit: 1
-			}, function (err, found) {
-				if (err) {
-					return cb(err);
-				}
+				}, {amount: Number, id: String, senderPublicKey: String}, function (err, transactions) {
+					if (err) {
+						return cb(err);
+					}
 
-				var id = null;
+					async.eachSeries(transactions, function (transaction, cb) {
+						var address = modules.blockchain.accounts.generateAddressByPublicKey(trs.senderPublicKey);
 
-				if (found.length) {
-					id = found[0].id;
-				}
-
-				modules.api.dapps.getWithdrawalTransactions(id, function (err, transactions) {
-					setImmediate(cb);
+						modules.api.dapps.sendWithdrawal({
+							secret: executor.secret,
+							amount: trs.amount,
+							recipientId: address,
+							transactionId: trs.id,
+							multisigAccountPublicKey: executor.keypair.publicKey.toString("hex")
+						}, cb);
+					}, cb);
 				});
 			});
 		} else {
@@ -217,7 +222,7 @@ private.withdrawalSync = function (cb) {
 
 private.balanceSync = function (cb) {
 	modules.blockchain.accounts.getExecutor(function (err, executor) {
-		if (!err/* && executor.isAuthor*/) {
+		if (!err && executor.isAuthor) {
 			modules.api.sql.select({
 				table: "transactions",
 				"alias": "t",
@@ -242,11 +247,11 @@ private.balanceSync = function (cb) {
 				condition: {
 					type: 1
 				},
-				order: {
+				sort: {
 					"b.height": -1
 				},
 				limit: 1
-			}, function (err, found) {
+			}, {id: String}, function (err, found) {
 				if (err) {
 					return cb(err);
 				}
@@ -254,32 +259,36 @@ private.balanceSync = function (cb) {
 				var id = null;
 
 				if (found.length) {
-					id = found[0].id;
+					id = id = found[0].id;
 				}
-
 
 				modules.api.dapps.getBalanceTransactions(id, function (err, transactions) {
 					if (err) {
 						return cb(err);
 					}
-					async.eachSeries(transactions, function (transaction, cb) {
-						modules.blockchain.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, account) {
-							var trs = modules.logic.transaction.create({
-								type: 1,
-								sender: account,
-								keypair: executor.keypair,
-								amount: transaction.amount,
-								src_id: transaction.id
+					modules.blockchain.accounts.setAccountAndGet({publicKey: executor.keypair.publicKey}, function (err, sender) {
+						if (err) {
+							return cb(err);
+						}
+						async.eachSeries(transactions, function (transaction, cb) {
+							modules.blockchain.accounts.setAccountAndGet({publicKey: transaction.senderPublicKey}, function (err, recipient) {
+								var trs = modules.logic.transaction.create({
+									type: 1,
+									sender: sender,
+									keypair: executor.keypair,
+									amount: transaction.amount,
+									src_id: transaction.id,
+									recipientId: recipient.address
+								});
+								modules.blockchain.transactions.processUnconfirmedTransaction(trs, function (err) {
+									if (err) {
+										library.logger("processUnconfirmedTransaction error", err)
+									}
+									cb(err);
+								});
 							});
-							modules.blockchain.transactions.processUnconfirmedTransaction(trs, function (err) {
-								console.log(trs.id, transaction.id, err)
-								if (err) {
-									library.logger("processUnconfirmedTransaction error", err)
-								}
-								cb();
-							});
-						});
-					}, cb);
+						}, cb);
+					});
 				});
 			});
 		} else {
@@ -294,18 +303,22 @@ Sync.prototype.onBind = function (_modules) {
 
 Sync.prototype.onBlockchainLoaded = function () {
 	setImmediate(function nextWithdrawalSync() {
+		console.log("nextWithdrawalSync start")
 		library.sequence.add(private.withdrawalSync, function (err) {
 			err && library.logger('withdrawalSync timer', err);
-
-			setTimeout(nextWithdrawalSync, 10 * 1000)
+			console.log("nextWithdrawalSync end")
+			setTimeout(nextWithdrawalSync, 30 * 1000)
 		});
 	});
 
 	setImmediate(function nextBalanceSync() {
+		console.log("nextBalanceSync start")
 		library.sequence.add(private.balanceSync, function (err) {
 			err && library.logger('balanceSync timer', err);
 
-			setTimeout(nextBalanceSync, 10 * 1000)
+			console.log("nextBalanceSync start")
+
+			setTimeout(nextBalanceSync, 30 * 1000)
 		});
 	});
 
