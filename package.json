@@ -2,6 +2,7 @@
 	"name": "DAppToolkit",
 	"version": "1.0.0",
 	"description": "The official Crypti decentralized applications (DApps) toolkit.",
+	"repository": "git@github.com:crypti/DAppToolkit.git",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
