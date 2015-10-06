@@ -1,7 +1,7 @@
 {
 	"name": "DAppToolkit",
 	"version": "1.0.0",
-	"description": "The official Crypti decentralized applications (DApps) toolkit.",
+	"description": "The official Crypti decentralized application (DApp) toolkit",
 	"repository": "git@github.com:crypti/DAppToolkit.git",
 	"main": "index.js",
 	"scripts": {

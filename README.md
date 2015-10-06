@@ -1,6 +1,6 @@
 ### DApp Toolkit
 
-The official Crypti decentralized applications (DApps) toolkit.
+The official Crypti decentralized application (DApp) toolkit.
 
 Requires:
 
