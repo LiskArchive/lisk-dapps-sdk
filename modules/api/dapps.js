@@ -97,7 +97,7 @@ Dapps.prototype.setReady = function (cb) {
  * @param error - Error of api call execution.
  */
 
-Dapps.prototype.getWithdrawalLastTransaction = function (lastTransactionId, cb) {
+Dapps.prototype.getWithdrawalLastTransaction = function (cb) {
 	var message = {
 		call: "dapps#getWithdrawalLastTransaction",
 		args: {}
