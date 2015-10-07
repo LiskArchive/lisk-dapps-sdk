@@ -174,45 +174,109 @@ private.withdrawalSync = function (cb) {
 	modules.blockchain.accounts.getExecutor(function (err, executor) {
 		if (!err && executor.isAuthor) {
 			modules.api.dapps.getWithdrawalLastTransaction(function (err, res) {
-				//res.lastTransactionId
-				modules.api.sql.select({
-					table: "transactions",
-					"alias": "t",
-					join: [
-						{
-							"type": "inner",
-							"table": "blocks",
-							"alias": "b",
-							"on": {
-								"b.id": "t.blockId",
-								"type": 2
-							}
-						}
-					],
-					fields: [{"t.amount": "amount"}, {"t.id": "id"}, {"t.senderPublicKey": "senderPublicKey"}],
-					condition: {
-						"b.height": {$gt: ""}
-					},
-					sort: {
-						"b.height": 1
-					}
-				}, {amount: Number, id: String, senderPublicKey: String}, function (err, transactions) {
-					if (err) {
-						return cb(err);
-					}
+				if (err) {
+					return cb(err);
+				}
 
+				function send(transactions, cb) {
 					async.eachSeries(transactions, function (transaction, cb) {
-						var address = modules.blockchain.accounts.generateAddressByPublicKey(trs.senderPublicKey);
+						var address = modules.blockchain.accounts.generateAddressByPublicKey(transaction.senderPublicKey);
+
+						console.log("sendWithdrawal", transaction)
 
 						modules.api.dapps.sendWithdrawal({
 							secret: executor.secret,
-							amount: trs.amount,
+							amount: transaction.amount,
 							recipientId: address,
-							transactionId: trs.id,
+							transactionId: transaction.id,
 							multisigAccountPublicKey: executor.keypair.publicKey.toString("hex")
 						}, cb);
 					}, cb);
-				});
+				}
+
+				if (res.id) {
+					modules.api.sql.select({
+						table: "transactions",
+						"alias": "t",
+						join: [
+							{
+								"type": "inner",
+								"table": "blocks",
+								"alias": "b",
+								"on": {
+									"b.id": "t.blockId",
+								}
+							}
+						],
+						fields: [{"b.height": "height"}],
+						condition: {
+							"t.type": 2,
+							"t.id": res.id
+						},
+						limit: 1
+					}, {"height": Number}, function (err, res) {
+						if (err || !res.length) {
+							return cb(err);
+						}
+
+						modules.api.sql.select({
+							table: "transactions",
+							"alias": "t",
+							join: [
+								{
+									"type": "inner",
+									"table": "blocks",
+									"alias": "b",
+									"on": {
+										"b.id": "t.blockId",
+									}
+								}
+							],
+							fields: [{"t.amount": "amount"}, {"t.id": "id"}, {"t.senderPublicKey": "senderPublicKey"}],
+							condition: {
+								"type": 2,
+								"b.height": {$gt: res[0].height}
+							},
+							sort: {
+								"b.height": 1
+							}
+						}, {amount: Number, id: String, senderPublicKey: String}, function (err, transactions) {
+							if (err) {
+								return cb(err);
+							}
+
+							send(transactions, cb);
+						});
+					});
+				} else {
+					modules.api.sql.select({
+						table: "transactions",
+						"alias": "t",
+						join: [
+							{
+								"type": "inner",
+								"table": "blocks",
+								"alias": "b",
+								"on": {
+									"b.id": "t.blockId",
+								}
+							}
+						],
+						fields: [{"t.amount": "amount"}, {"t.id": "id"}, {"t.senderPublicKey": "senderPublicKey"}],
+						condition: {
+							"type": 2
+						},
+						sort: {
+							"b.height": 1
+						}
+					}, {amount: Number, id: String, senderPublicKey: String}, function (err, transactions) {
+						if (err) {
+							return cb(err);
+						}
+
+						send(transactions, cb);
+					});
+				}
 			});
 		} else {
 			setImmediate(cb);
