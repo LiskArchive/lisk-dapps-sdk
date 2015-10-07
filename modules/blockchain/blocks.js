@@ -607,7 +607,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
 	console.log("load blocks after", scope.lastBlock.height)
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
-		if (err || !res.body.success) {
+		if (err || !res.body || !res.body.success) {
 			return cb(err);
 		}
 
@@ -690,7 +690,7 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 					max: max,
 					min: lastBlockHeight
 				}, function (err, data) {
-					if (err || !data.body.success) {
+					if (err || !data.body || !data.body.success) {
 						return next(err || "Can't find common blocks");
 					}
 

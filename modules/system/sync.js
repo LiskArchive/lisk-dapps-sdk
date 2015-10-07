@@ -94,7 +94,7 @@ private.findUpdate = function (lastBlock, peer, cb) {
 
 private.transactionsSync = function (cb) {
 	modules.api.transport.getRandomPeer("get", "/transactions", null, function (err, res) {
-		if (err || !res.body.success) {
+		if (err || !res.body || !res.body.success) {
 			return cb(err);
 		}
 		async.eachSeries(res.body.response, function (transaction, cb) {
@@ -114,7 +114,7 @@ private.blockSync = function (cb) {
 		}
 
 		modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
-			if (!err && res.body.success) {
+			if (!err && res.body && res.body.success) {
 				if (bignum(lastBlock.height).lt(res.body.response)) {
 					console.log("found blocks at " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
 					private.findUpdate(lastBlock, res.peer, cb);
