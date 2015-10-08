@@ -182,8 +182,6 @@ private.withdrawalSync = function (cb) {
 					async.eachSeries(transactions, function (transaction, cb) {
 						var address = modules.blockchain.accounts.generateAddressByPublicKey(transaction.senderPublicKey);
 
-						console.log("sendWithdrawal", transaction)
-
 						modules.api.dapps.sendWithdrawal({
 							secret: executor.secret,
 							amount: transaction.amount,
@@ -367,20 +365,15 @@ Sync.prototype.onBind = function (_modules) {
 
 Sync.prototype.onBlockchainLoaded = function () {
 	setImmediate(function nextWithdrawalSync() {
-		console.log("nextWithdrawalSync start")
 		library.sequence.add(private.withdrawalSync, function (err) {
 			err && library.logger('withdrawalSync timer', err);
-			console.log("nextWithdrawalSync end")
 			setTimeout(nextWithdrawalSync, 30 * 1000)
 		});
 	});
 
 	setImmediate(function nextBalanceSync() {
-		console.log("nextBalanceSync start")
 		library.sequence.add(private.balanceSync, function (err) {
 			err && library.logger('balanceSync timer', err);
-
-			console.log("nextBalanceSync start")
 
 			setTimeout(nextBalanceSync, 30 * 1000)
 		});

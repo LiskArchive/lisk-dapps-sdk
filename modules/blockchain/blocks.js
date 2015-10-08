@@ -387,7 +387,6 @@ Blocks.prototype.createBlock = function (executor, timestamp, point, cb, scope) 
 		var payloadHash = crypto.createHash('sha256'),
 			payloadLength = 0;
 
-		console.log("found", unconfirmedList.length)
 		async.eachSeries(unconfirmedList, function (transaction, cb) {
 			modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 				if (err) {
