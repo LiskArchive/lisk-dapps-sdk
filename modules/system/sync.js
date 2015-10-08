@@ -50,42 +50,40 @@ private.findUpdate = function (lastBlock, peer, cb) {
 						return cb(err);
 					}
 
-					library.sequence.add(function (cb) {
-						async.series([
-							function (cb) {
-								if (commonBlock.height == modules.blockchain.blocks.getLastBlock().height) {
-									return cb()
-								}
-								console.log("deleteBlocksBefore", commonBlock.height)
-								modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
-							},
-							function (cb) {
-								console.log("apply and save blocks", blocks.map(function (block) {
-									return block.height
-								}).join(","))
-								async.series([
-									function (cb) {
-										modules.blockchain.blocks.applyBatchBlock(blocks, cb);
-									},
-									function (cb) {
-										modules.blockchain.blocks.saveBatchBlock(blocks, function (err) {
-											if (err) {
-												library.logger(err);
-												process.exit(0);
-											}
-											cb();
-										});
-									}], cb);
+					async.series([
+						function (cb) {
+							if (commonBlock.height == modules.blockchain.blocks.getLastBlock().height) {
+								return cb()
 							}
-						], function (err) {
-							if (!err) {
-								return cb();
-							}
-							library.logger("sync", err);
-							//TODO:rollback after last error block
+							console.log("deleteBlocksBefore", commonBlock.height)
 							modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
-						});
-					}, cb);
+						},
+						function (cb) {
+							console.log("apply and save blocks", blocks.map(function (block) {
+								return block.height
+							}).join(","))
+							async.series([
+								function (cb) {
+									modules.blockchain.blocks.applyBatchBlock(blocks, cb);
+								},
+								function (cb) {
+									modules.blockchain.blocks.saveBatchBlock(blocks, function (err) {
+										if (err) {
+											library.logger(err);
+											process.exit(0);
+										}
+										cb();
+									});
+								}], cb);
+						}
+					], function (err) {
+						if (!err) {
+							return cb();
+						}
+						library.logger("sync", err);
+						//TODO:rollback after last error block
+						modules.blockchain.blocks.deleteBlocksBefore(commonBlock, cb);
+					});
 				}, sandbox);
 			});
 		}, {id: commonBlock.id});
