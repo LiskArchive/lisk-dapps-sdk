@@ -1,3 +1,4 @@
+var ed2curve = require('ed2curve');
 var nacl_factory = require('js-nacl');
 var crypto = require('crypto-browserify');
 var bignum = require('browserify-bignum');
