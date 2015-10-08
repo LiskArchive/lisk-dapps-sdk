@@ -245,6 +245,46 @@ private.processBlock = function (block, cb, scope) {
 	});
 }
 
+private.cleanProcess = function (blockObj, cb, scope) {
+	var ids = blockObj.transactions.map(function (item) {
+		return item.id;
+	});
+
+	// unconfirmed transactions
+	modules.blockchain.transactions.getUnconfirmedTransactionList(true, function (err, list) {
+		async.eachSeries(list, function (transaction, cb) {
+			modules.blockchain.transactions.undoUnconfirmedTransaction(transaction, cb, scope);
+		}, function (err) {
+			if (err) {
+				library.logger("Can't undo transactions before process block: " + err.toString());
+				cb(err);
+			} else {
+				private.processBlock(blockObj, function (err) {
+					if (err) {
+						library.logger("Block generation error", err);
+					}
+
+					async.eachSeries(list, function (transaction, cb) {
+						if (err) {
+							modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, function (err) {
+								cb();
+							}, scope);
+						} else {
+							if (ids.indexOf(transaction.id) < 0) {
+								modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, function (err) {
+									cb();
+								}, scope);
+							} else {
+								setImmediate(cb);
+							}
+						}
+					}, cb);
+				}, scope);
+			}
+		});
+	}, scope);
+}
+
 Blocks.prototype.applyBatchBlock = function (blocks, cb) {
 	async.eachSeries(blocks, function (block, cb) {
 		modules.blockchain.blocks.applyBlock(block, cb);
@@ -434,48 +474,12 @@ Blocks.prototype.createBlock = function (executor, timestamp, point, cb, scope) 
 				payloadLength: payloadLength
 			};
 
-			var ids = ready.map(function (item) {
-				return item.id;
-			});
-
 			var blockBytes = modules.logic.block.getBytes(blockObj);
 
 			blockObj.id = modules.api.crypto.getId(blockBytes);
 			blockObj.signature = modules.api.crypto.sign(executor.keypair, blockBytes);
 
-			// unconfirmed transactions
-			var unconfirmedTransactionsList = modules.blockchain.transactions.getUnconfirmedTransactionList(true, function (err, list) {
-				async.eachSeries(list, function (transaction, cb) {
-					modules.blockchain.transactions.undoUnconfirmedTransaction(transaction, cb);
-				}, function (err) {
-					if (err) {
-						library.logger("Can't undo transactions before process block: " + err.toString());
-						cb(err);
-					} else {
-						private.processBlock(blockObj, function (err) {
-							if (err) {
-								library.logger("Block generation error", err);
-							}
-
-							async.eachSeries(list, function (transaction, cb) {
-								if (err) {
-									modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, function (err) {
-										cb();
-									});
-								} else {
-									if (ids.indexOf(transaction.id) < 0) {
-										modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, function (err) {
-											cb();
-										});
-									} else {
-										setImmediate(cb);
-									}
-								}
-							}, cb);
-						});
-					}
-				});
-			});
+			private.cleanProcess(blockObj, cb);
 		});
 	}, scope);
 }
@@ -734,7 +738,7 @@ Blocks.prototype.count = function (cb) {
 			expression: 'count(*)'
 		}]
 	}, {count: Number}, function (err, rows) {
-		if (err){
+		if (err) {
 			return cb(err);
 		}
 		cb(err, rows[0].count);
@@ -786,7 +790,7 @@ Blocks.prototype.onMessage = function (query) {
 			var block = query.message;
 			//console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
 			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
-				private.processBlock(block, function (err) {
+				private.cleanProcess(block, function (err) {
 					if (err) {
 						library.logger("processBlock err", err);
 					}
