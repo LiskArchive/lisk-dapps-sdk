@@ -32,6 +32,10 @@ OutsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 		return cb("TRANSACTIONS.INVALID_AMOUNT");
 	}
 
+	if (trs.senderPublicKey != modules.blockchain.blocks.genesisBlock().delegate){
+		return cb("TRANSACTIONS.WRONG_TX_SENDER");
+	}
+
 	modules.api.sql.select({
 		table: "asset_dapptransfer",
 		condition: {
