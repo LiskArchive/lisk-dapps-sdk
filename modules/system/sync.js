@@ -319,7 +319,7 @@ private.balanceSync = function (cb) {
 				var id = null;
 
 				if (found.length) {
-					id = id = found[0].id;
+					id = found[0].id;
 				}
 
 				modules.api.dapps.getBalanceTransactions(id, function (err, transactions) {
