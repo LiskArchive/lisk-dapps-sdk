@@ -39,34 +39,34 @@ WithdrawalTransfer.prototype.getBytes = function (trs) {
 WithdrawalTransfer.prototype.apply = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: sender.address,
-		balance: -(trs.amount + trs.fee)
+		balance: {"default": -(trs.amount + trs.fee)}
 	}, cb, scope);
 }
 
 WithdrawalTransfer.prototype.undo = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.undoMerging({
 		address: sender.address,
-		balance: -(trs.amount + trs.fee)
+		balance: {"default": -(trs.amount + trs.fee)}
 	}, cb, scope);
 }
 
 WithdrawalTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	var sum = trs.amount + trs.fee;
 
-	if (sender.u_balance < sum) {
+	if (sender.u_balance["default"] < sum) {
 		return cb("Sender don't have enough balance");
 	}
 
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: sender.address,
-		u_balance: -(trs.amount + trs.fee)
+		u_balance: {"default": -(trs.amount + trs.fee)}
 	}, cb, scope);
 }
 
 WithdrawalTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.undoMerging({
 		address: sender.address,
-		u_balance: -(trs.amount + trs.fee)
+		u_balance: {"default": -(trs.amount + trs.fee)}
 	}, cb, scope);
 }
 

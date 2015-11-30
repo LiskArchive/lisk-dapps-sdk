@@ -46,21 +46,27 @@ InsideTransfer.prototype.getBytes = function (trs) {
 InsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
 	var amount = trs.amount + trs.fee;
 
-	if (sender.balance < amount) {
+	if (sender.balance[trs.token || "default"] < amount) {
 		return setImmediate(cb, "Account has no LISK: " + trs.id);
 	}
 
 	async.series([
 		function (cb) {
+			var token = {};
+			token[trs.token || "default"] = -amount;
+
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				balance: -amount
+				balance: token
 			}, cb, scope);
 		},
 		function (cb) {
+			var token = {};
+			token[trs.token || "default"] =  trs.amount;
+
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: trs.recipientId,
-				balance: trs.amount
+				balance: token
 			}, cb, scope);
 		}
 	], cb);
@@ -71,15 +77,21 @@ InsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 
 	async.series([
 		function (cb) {
+			var token = {};
+			token[trs.token || "default"] = -amount;
+
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				balance: -amount
+				balance: token
 			}, cb, scope);
 		},
 		function (cb) {
+			var token = {};
+			token[trs.token || "default"] =  trs.amount;
+
 			modules.blockchain.accounts.undoMerging({
 				address: trs.recipientId,
-				balance: trs.amount
+				balance: token
 			}, cb, scope);
 		}
 	], cb);
@@ -88,21 +100,27 @@ InsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 InsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	var amount = trs.amount + trs.fee;
 
-	if (sender.u_balance < amount) {
+	if (sender.u_balance[trs.token || "default"] < amount) {
 		return setImmediate(cb, 'Account has no balance: ' + trs.id);
 	}
 
 	async.series([
 		function (cb) {
+			var token = {};
+			token[trs.token || "default"] = -amount;
+
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				u_balance: -amount
+				u_balance: token
 			}, cb, scope);
 		},
 		function (cb) {
+			var token = {};
+			token[trs.token || "default"] =  trs.amount;
+
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: trs.recipientId,
-				u_balance: trs.amount
+				u_balance: token
 			}, cb, scope);
 		}
 	], cb);
@@ -113,15 +131,21 @@ InsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 
 	async.series([
 		function (cb) {
+			var token = {};
+			token[trs.token || "default"] = -amount;
+
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				u_balance: -amount
+				u_balance: token
 			}, cb, scope);
 		},
 		function (cb) {
+			var token = {};
+			token[trs.token || "default"] =  trs.amount;
+
 			modules.blockchain.accounts.undoMerging({
 				address: trs.recipientId,
-				u_balance: trs.amount
+				u_balance: token
 			}, cb, scope);
 		}
 	], cb);

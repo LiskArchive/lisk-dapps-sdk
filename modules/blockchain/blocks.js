@@ -65,7 +65,7 @@ private.popLastBlock = function (oldLastBlock, cb) {
 
 			modules.blockchain.accounts.undoMerging({
 				publicKey: oldLastBlock.delegate,
-				balance: fee
+				balance: {"default": fee}
 			}, function (err) {
 				private.deleteBlock(oldLastBlock.id, function (err) {
 					if (err) {
@@ -593,8 +593,8 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 					// merge account and add fees
 					modules.blockchain.accounts.mergeAccountAndGet({
 						publicKey: block.delegate,
-						balance: fee,
-						u_balance: fee
+						balance: {"default": fee},
+						u_balance: {"default": fee}
 					}, function (err) {
 						if (!err) {
 							(scope || private).lastBlock = block;

@@ -67,8 +67,10 @@ private.addAccount = function (account, scope) {
 	if (!account.address) {
 		account.address = self.generateAddressByPublicKey(account.publicKey);
 	}
-	account.balance = account.balance || 0;
-	account.u_balance = account.u_balance || 0;
+	account.balance = account.balance || {};
+	account.u_balance = account.u_balance || {};
+	account.balance["default"] = account.balance["default"] || 0;
+	account.u_balance["default"] = account.u_balance["default"] || 0;
 	(scope || private).accounts.push(account);
 	var index = (scope || private).accounts.length - 1;
 	(scope || private).accountsIndexById[account.address] = index;
@@ -94,7 +96,9 @@ Accounts.prototype.clone = function (cb) {
 	};
 
 	for (var i in r.data) {
-		r.data[i].u_balance = r.data[i].balance;
+		for (var t in r.data[i].u_balance) {
+			r.data[i].u_balance[t] = r.data[i].balance[t] || 0;
+		}
 	}
 
 	cb(null, r);
@@ -195,6 +199,10 @@ Accounts.prototype.mergeAccountAndGet = function (data, cb, scope) {
 			account[key] = (account[key] || 0) + trueValue;
 		} else if (util.isArray(trueValue)) {
 			account[key] = applyDiff(account[key], trueValue);
+		} else if (typeof trueValue == "object") {
+			for (var token in trueValue) {
+				account[key][token] = (account[key][token] || 0) + trueValue[token];
+			}
 		}
 	})
 
@@ -227,6 +235,10 @@ Accounts.prototype.undoMerging = function (data, cb, scope) {
 		} else if (util.isArray(trueValue)) {
 			trueValue = reverseDiff(trueValue);
 			account[key] = applyDiff(account[key], trueValue);
+		} else if (typeof trueValue == "object") {
+			for (var token in trueValue) {
+				account[key][token] = (account[key][token] || 0) - trueValue[token];
+			}
 		}
 	});
 
@@ -245,8 +257,6 @@ Accounts.prototype.open = function (cb, query) {
 	if (!account) {
 		account = private.addAccount({
 			address: address,
-			balance: 0,
-			u_balance: 0,
 			publicKey: keypair.publicKey.toString('hex')
 		});
 	}else{

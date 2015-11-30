@@ -32,7 +32,7 @@ OutsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 		return cb("TRANSACTIONS.INVALID_AMOUNT");
 	}
 
-	if (trs.senderPublicKey != modules.blockchain.blocks.genesisBlock().delegate){
+	if (trs.senderPublicKey != modules.blockchain.blocks.genesisBlock().delegate) {
 		return cb("TRANSACTIONS.WRONG_TX_SENDER");
 	}
 
@@ -63,28 +63,28 @@ OutsideTransfer.prototype.getBytes = function (trs) {
 OutsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: trs.recipientId,
-		balance: trs.amount
+		balance: {"default": trs.amount}
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.undoMerging({
 		address: trs.recipientId,
-		balance: trs.amount
+		balance: {"default": trs.amount}
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: trs.recipientId,
-		u_balance: trs.amount
+		u_balance: {"default": trs.amount}
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.undoMerging({
 		address: trs.recipientId,
-		u_balance: trs.amount
+		u_balance: {"default": trs.amount}
 	}, cb, scope);
 }
 
