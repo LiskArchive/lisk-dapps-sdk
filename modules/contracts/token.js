@@ -66,7 +66,7 @@ Token.prototype.apply = function (trs, sender, cb, scope) {
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.id] = trs.fund;
+			token[trs.id] = trs.asset.token.fund;
 
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
@@ -86,7 +86,7 @@ Token.prototype.undo = function (trs, sender, cb, scope) {
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.id] = trs.fund;
+			token[trs.id] = trs.asset.token.fund;
 
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
@@ -110,7 +110,7 @@ Token.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.id] = trs.fund;
+			token[trs.id] = trs.asset.token.fund;
 
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
@@ -130,15 +130,15 @@ Token.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.id] = trs.fund;
+			token[trs.id] = trs.asset.token.fund;
 
-			modules.blockchain.accounts.mergeAccountAndGet({
+			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
 				u_balance: token
 			}, cb, scope);
 		},
 		function (cb) {
-			modules.blockchain.accounts.mergeAccountAndGet({
+			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
 				u_balance: {"default": -trs.fee}
 			}, cb, scope);
