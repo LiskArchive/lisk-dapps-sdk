@@ -171,6 +171,11 @@
 				"type": "String",
 				"length": 21,
 				"not_null": true
+			},
+			{
+				"name": "token",
+				"type": "String",
+				"length": 21
 			}
 		],
 		"foreignKeys": [
@@ -277,6 +282,11 @@
 			{
 				"name": "description",
 				"type": "Text",
+				"not_null": true
+			},
+			{
+				"name": "fund",
+				"type": "BigInt",
 				"not_null": true
 			},
 			{

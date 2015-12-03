@@ -20,6 +20,7 @@
 	"blockchain/round": "./modules/blockchain/round.js",
 	"blockchain/transactions": "./modules/blockchain/transactions.js",
 	"blockchain/loader": "./modules/blockchain/loader.js",
+	"blockchain/token": "./modules/blockchain/token.js",
 	"system/background": "./modules/system/background.js",
 	"system/api": "./modules/system/api.js",
 	"system/sync": "./modules/system/sync.js",
@@ -27,5 +28,6 @@
 	"contracts/outsidetransfer": "./modules/contracts/outsidetransfer.js",
 	"contracts/myasset": "./modules/contracts/myasset.js",
 	"contracts/delegates": "./modules/contracts/delegates.js",
-  	"contracts/withdrawaltransfer" : "./modules/contracts/withdrawaltransfer.js"
+  	"contracts/withdrawaltransfer" : "./modules/contracts/withdrawaltransfer.js",
+	"contracts/token": "./modules/contracts/token.js"
 }

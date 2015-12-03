@@ -43,26 +43,19 @@ Token.prototype.verify = function (trs, sender, cb, scope) {
 	if (trs.recipientId) {
 		return cb("TRANSACTIONS.INVALID_RECIPIENT");
 	}
-
 	if (trs.amount != 0) {
 		return cb("TRANSACTIONS.INVALID_AMOUNT");
 	}
-
-	if (!trs.asset.name) {
+	if (!trs.asset.token.name) {
 		return cb("TRANSACTIONS.EMPTY_NAME");
 	}
-
-	if (!trs.asset.description) {
+	if (!trs.asset.token.description) {
 		return cb("TRANSACTIONS.EMPTY_DESCRIPTION");
 	}
-
-	if (!trs.asset.description) {
-		return cb("TRANSACTIONS.EMPTY_DESCRIPTION");
-	}
-
-	if (typeof trs.asset.fund != "number") {
+	if (typeof trs.asset.token.fund != "number") {
 		return cb("TRANSACTIONS.EMPTY_FUND");
 	}
+	cb(null, trs);
 }
 
 Token.prototype.apply = function (trs, sender, cb, scope) {
@@ -155,7 +148,7 @@ Token.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 
 Token.prototype.save = function (trs, cb) {
 	modules.api.sql.insert({
-		table: "asset_tokens",
+		table: "asset_token",
 		values: {
 			name: trs.asset.token.name,
 			description: trs.asset.token.description,
@@ -189,7 +182,7 @@ Token.prototype.dbRead = function (row) {
 Token.prototype.onBind = function (_modules) {
 	modules = _modules;
 
-	modules.logic.transaction.attachAssetType(4, self);
+	modules.logic.transaction.attachAssetType(5, self);
 }
 
 module.exports = Token;

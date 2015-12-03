@@ -63,5 +63,10 @@
 		"path": "/delegates",
 		"method": "put",
 		"handler": "blockchain.delegates.addDelegates"
+	},
+	{
+		"path": "/tokens",
+		"method": "put",
+		"handler": "blockchain.token.addToken"
 	}
 ]

@@ -104,7 +104,6 @@ Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb
 			if (err) {
 				return done(err);
 			}
-
 			async.series([
 				function (cb) {
 					modules.logic.transaction.process(transaction, sender, cb);
@@ -180,6 +179,7 @@ Transactions.prototype.addTransaction = function (cb, query) {
 						amount: query.amount,
 						sender: account,
 						recipientId: query.recipientId,
+						token: query.token,
 						keypair: keypair
 					});
 				} catch (e) {

@@ -17,6 +17,7 @@ InsideTransfer.prototype.inheritance = function(){
 InsideTransfer.prototype.create = function (data, trs) {
 	trs.recipientId = data.recipientId;
 	trs.amount = data.amount;
+	trs.token = data.token || "default";
 
 	return trs;
 }
@@ -46,14 +47,14 @@ InsideTransfer.prototype.getBytes = function (trs) {
 InsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
 	var amount = trs.amount + trs.fee;
 
-	if (sender.balance[trs.token || "default"] < amount) {
+	if (sender.balance[trs.token] < amount) {
 		return setImmediate(cb, "Account has no LISK: " + trs.id);
 	}
 
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.token || "default"] = -amount;
+			token[trs.token] = -amount;
 
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
@@ -62,7 +63,7 @@ InsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
 		},
 		function (cb) {
 			var token = {};
-			token[trs.token || "default"] =  trs.amount;
+			token[trs.token] =  trs.amount;
 
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: trs.recipientId,
@@ -78,7 +79,7 @@ InsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.token || "default"] = -amount;
+			token[trs.token] = -amount;
 
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
@@ -87,7 +88,7 @@ InsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 		},
 		function (cb) {
 			var token = {};
-			token[trs.token || "default"] =  trs.amount;
+			token[trs.token] =  trs.amount;
 
 			modules.blockchain.accounts.undoMerging({
 				address: trs.recipientId,
@@ -100,14 +101,14 @@ InsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 InsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	var amount = trs.amount + trs.fee;
 
-	if (sender.u_balance[trs.token || "default"] < amount) {
+	if (sender.u_balance[trs.token] < amount) {
 		return setImmediate(cb, 'Account has no balance: ' + trs.id);
 	}
 
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.token || "default"] = -amount;
+			token[trs.token] = -amount;
 
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
@@ -116,7 +117,7 @@ InsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 		},
 		function (cb) {
 			var token = {};
-			token[trs.token || "default"] =  trs.amount;
+			token[trs.token] =  trs.amount;
 
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: trs.recipientId,
@@ -132,7 +133,7 @@ InsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.token || "default"] = -amount;
+			token[trs.token] = -amount;
 
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
@@ -141,7 +142,7 @@ InsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 		},
 		function (cb) {
 			var token = {};
-			token[trs.token || "default"] =  trs.amount;
+			token[trs.token] =  trs.amount;
 
 			modules.blockchain.accounts.undoMerging({
 				address: trs.recipientId,
