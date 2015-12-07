@@ -591,7 +591,6 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 					});
 				} else {
 					// merge account and add fees
-					console.log("return fee")
 					modules.blockchain.accounts.mergeAccountAndGet({
 						publicKey: block.delegate,
 						balance: {"XCR": fee},
