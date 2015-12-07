@@ -49,6 +49,16 @@ Token.prototype.addToken = function (cb, query) {
 	});
 }
 
+Token.prototype.getTokens = function (cb, query) {
+	modules.api.sql.select({
+		table: "asset_token",
+		fields: ["transactionId", "name"]
+	}, {"id": String, "name": String}, function (err, tokens) {
+		cb(err, {tokens: tokens});
+	});
+
+}
+
 Token.prototype.onBind = function (_modules) {
 	modules = _modules;
 }

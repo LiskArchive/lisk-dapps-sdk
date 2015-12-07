@@ -5,6 +5,8 @@ var constants = require('../helpers/constants.js');
 var private = {}, self = null,
 	library = null, modules = null;
 
+private.tokens = {}, private.u_tokens = [];
+
 function Token(cb, _library) {
 	self = this;
 	library = _library;
@@ -49,24 +51,36 @@ Token.prototype.verify = function (trs, sender, cb, scope) {
 	if (!trs.asset.token.name) {
 		return cb("TRANSACTIONS.EMPTY_NAME");
 	}
+	if (trs.asset.token.name.length > 16) {
+		return cb("Token name is more then 16 symbols");
+	}
 	if (!trs.asset.token.description) {
 		return cb("TRANSACTIONS.EMPTY_DESCRIPTION");
 	}
 	if (typeof trs.asset.token.fund != "number") {
 		return cb("TRANSACTIONS.EMPTY_FUND");
 	}
+
+	var isToken = /^[A-Z]+$/g;
+	if (!isToken.test(trs.asset.token.name)){
+		return setImmediate(cb, 'Token has wrong hame');
+	}
+
 	cb(null, trs);
 }
 
 Token.prototype.apply = function (trs, sender, cb, scope) {
-	if (sender.balance["default"] < trs.fee) {
+	delete private.u_tokens[trs.asset.token.name];
+	private.tokens[trs.asset.token.name] = trs.id;
+
+	if (sender.balance["XCR"] < trs.fee) {
 		return setImmediate(cb, "Balance has no XCR: " + trs.id);
 	}
 
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.id] = trs.asset.token.fund;
+			token[trs.asset.token.name] = trs.asset.token.fund;
 
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
@@ -76,17 +90,20 @@ Token.prototype.apply = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				balance: {"default": -trs.fee}
+				balance: {"XCR": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
 }
 
 Token.prototype.undo = function (trs, sender, cb, scope) {
+	delete private.tokens[trs.asset.token.name];
+	private.u_tokens[trs.asset.token.name] = trs.id;
+
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.id] = trs.asset.token.fund;
+			token[trs.asset.token.name] = trs.asset.token.fund;
 
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
@@ -96,21 +113,27 @@ Token.prototype.undo = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				balance: {"default": -trs.fee}
+				balance: {"XCR": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
 }
 
 Token.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
-	if (sender.u_balance["default"] < trs.fee) {
+	if (sender.u_balance["XCR"] < trs.fee) {
 		return setImmediate(cb, 'Account has no balance: ' + trs.id);
 	}
+
+	if (private.u_tokens[trs.asset.token.name] || private.tokens[trs.asset.token.name]){
+		return setImmediate(cb, 'Token already exists: ' + trs.id);
+	}
+
+	private.u_tokens[trs.asset.token.name] = trs.id;
 
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.id] = trs.asset.token.fund;
+			token[trs.asset.token.name] = trs.asset.token.fund;
 
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
@@ -120,17 +143,19 @@ Token.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				u_balance: {"default": -trs.fee}
+				u_balance: {"XCR": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
 }
 
 Token.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
+	delete private.u_tokens[trs.asset.token.name];
+
 	async.series([
 		function (cb) {
 			var token = {};
-			token[trs.id] = trs.asset.token.fund;
+			token[trs.asset.token.name] = trs.asset.token.fund;
 
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
@@ -140,7 +165,7 @@ Token.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				u_balance: {"default": -trs.fee}
+				u_balance: {"XCR": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
@@ -177,6 +202,10 @@ Token.prototype.dbRead = function (row) {
 			fund: row.t_t_fund
 		}
 	};
+}
+
+Token.prototype.findToken = function (name) {
+	return private.tokens[name];
 }
 
 Token.prototype.onBind = function (_modules) {

@@ -62,7 +62,7 @@ Delegates.prototype.verify = function (trs, sender, cb, scope) {
 }
 
 Delegates.prototype.apply = function (trs, sender, cb, scope) {
-	if (sender.balance["default"] < trs.fee) {
+	if (sender.balance["XCR"] < trs.fee) {
 		return setImmediate(cb, "Account has no Lisk: " + trs.id);
 	}
 
@@ -74,7 +74,7 @@ Delegates.prototype.apply = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				balance: {"default": -trs.fee}
+				balance: {"XCR": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
@@ -88,15 +88,15 @@ Delegates.prototype.undo = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				balance: {"default": -trs.fee}
+				balance: {"XCR": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
 }
 
 Delegates.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
-	if (sender.u_balance["default"] < trs.fee) {
-		return setImmediate(cb, 'Account has no balance: ' + trs.id);
+	if (sender.u_balance["XCR"] < trs.fee) {
+		return setImmediate(cb, 'Account has no XCR: ' + trs.id);
 	}
 
 	async.series([
@@ -107,7 +107,7 @@ Delegates.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				u_balance: {"default": -trs.fee}
+				u_balance: {"XCR": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
@@ -121,7 +121,7 @@ Delegates.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				u_balance: {"default": -trs.fee}
+				u_balance: {"XCR": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);

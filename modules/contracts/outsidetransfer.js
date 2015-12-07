@@ -63,28 +63,28 @@ OutsideTransfer.prototype.getBytes = function (trs) {
 OutsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: trs.recipientId,
-		balance: {"default": trs.amount}
+		balance: {"XCR": trs.amount}
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.undoMerging({
 		address: trs.recipientId,
-		balance: {"default": trs.amount}
+		balance: {"XCR": trs.amount}
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.mergeAccountAndGet({
 		address: trs.recipientId,
-		u_balance: {"default": trs.amount}
+		u_balance: {"XCR": trs.amount}
 	}, cb, scope);
 }
 
 OutsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 	modules.blockchain.accounts.undoMerging({
 		address: trs.recipientId,
-		u_balance: {"default": trs.amount}
+		u_balance: {"XCR": trs.amount}
 	}, cb, scope);
 }
 

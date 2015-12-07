@@ -69,8 +69,8 @@ private.addAccount = function (account, scope) {
 	}
 	account.balance = account.balance || {};
 	account.u_balance = account.u_balance || {};
-	account.balance["default"] = account.balance["default"] || 0;
-	account.u_balance["default"] = account.u_balance["default"] || 0;
+	account.balance["XCR"] = account.balance["XCR"] || 0;
+	account.u_balance["XCR"] = account.u_balance["XCR"] || 0;
 	(scope || private).accounts.push(account);
 	var index = (scope || private).accounts.length - 1;
 	(scope || private).accountsIndexById[account.address] = index;
