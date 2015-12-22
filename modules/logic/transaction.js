@@ -34,6 +34,7 @@ Transaction.prototype.create = function (data) {
 		senderId: data.sender.address,
 		senderPublicKey: data.sender.publicKey,
 		timestamp: timeHelper.getNow(),
+		token: "XCR",
 		asset: {}
 	};
 
@@ -73,7 +74,12 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 		var assetBytes = private.types[trs.type].getBytes.call(self, trs, skipSignature);
 		var assetSize = assetBytes ? assetBytes.length : 0;
 
-		var bb = new ByteBuffer(1 + 4 + 32 + 8 + 8 + 64 + 64 + assetSize, true);
+		var tokenBytes = [];
+		if (trs.token != "XCR") {
+			tokenBytes = new Buffer(trs.token, 'hex');
+		}
+
+		var bb = new ByteBuffer(1 + 4 + 32 + 8 + 8 + 64 + 64 + assetSize + tokenBytes.length, true);
 		bb.writeByte(trs.type);
 		bb.writeInt(trs.timestamp);
 
@@ -96,6 +102,12 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 		}
 
 		bb.writeLong(trs.amount);
+
+		if (tokenBytes.length > 0) {
+			for (var i = 0; i < tokenBytes.length; i++) {
+				bb.writeByte(tokenBytes[i]);
+			}
+		}
 
 		if (assetSize > 0) {
 			for (var i = 0; i < assetSize; i++) {
@@ -265,7 +277,8 @@ Transaction.prototype.save = function (trs, cb) {
 			amount: trs.amount,
 			fee: trs.fee,
 			signature: trs.signature,
-			blockId: trs.blockId
+			blockId: trs.blockId,
+			token: trs.token == "XCR" ? null : trs.token
 		}
 	}, function (err) {
 		if (err) {
@@ -323,6 +336,9 @@ Transaction.prototype.normalize = function (tx, cb) {
 			blockId: {
 				type: "string"
 			},
+			token: {
+				type: "string"
+			},
 			asset: {
 				type: "object"
 			}
@@ -353,6 +369,7 @@ Transaction.prototype.dbRead = function (row) {
 		fee: row.t_fee,
 		signature: row.t_signature,
 		blockId: row.t_blockId,
+		token: row.t_token || "XCR",
 		asset: {}
 	};
 

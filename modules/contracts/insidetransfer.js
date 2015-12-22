@@ -17,7 +17,7 @@ InsideTransfer.prototype.inheritance = function () {
 InsideTransfer.prototype.create = function (data, trs) {
 	trs.recipientId = data.recipientId;
 	trs.amount = data.amount;
-	trs.token = data.token || "XCR";
+	trs.token = data.token || trs.token;
 
 	return trs;
 }
@@ -37,9 +37,11 @@ InsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 		return cb("TRANSACTIONS.INVALID_AMOUNT");
 	}
 
-	var tokenId = modules.contracts.token.findToken(trs.token);
-	if (!tokenId) {
-		return cb("Token doesn't exist");
+	if (trs.token != "XCR") {
+		var tokenId = modules.contracts.token.findToken(trs.token);
+		if (!tokenId) {
+			return cb("Token doesn't exist");
+		}
 	}
 
 	cb(null, trs);

@@ -50,13 +50,45 @@ Token.prototype.addToken = function (cb, query) {
 }
 
 Token.prototype.getTokens = function (cb, query) {
-	modules.api.sql.select({
-		table: "asset_token",
-		fields: ["transactionId", "name"]
-	}, {"id": String, "name": String}, function (err, tokens) {
-		cb(err, {tokens: tokens});
+	modules.api.dapps.getGenesis(function (err, res) {
+		if (err) {
+			return cb(err);
+		}
+		modules.api.sql.select({
+			table: "asset_token",
+			"alias": "tkn",
+			join: [
+				{
+					"type": "inner",
+					"table": "transactions",
+					"alias": "t",
+					"on": {
+						"tkn.transactionId": "t.id"
+					}
+				}
+			],
+			fields: [
+				{"tkn.transactionId": "transactionId"},
+				{"tkn.name": "name"},
+				{"t.senderId": "owner"},
+				{"tkn.fund": "fund"},
+				{"tkn.description": "description"},
+				{
+					"name": "balance",
+					expression: "tkn.fund - ifnull((select sum(amount) from dapp_" + res.dappid + "_transactions where senderId = t.senderId and token = tkn.name), 0)"
+				}
+			]
+		}, {
+			"id": String,
+			"tiker": String,
+			"owner": String,
+			"fund": Number,
+			"name": String,
+			"balance": Number
+		}, function (err, tokens) {
+			cb(err, {tokens: tokens});
+		});
 	});
-
 }
 
 Token.prototype.onBind = function (_modules) {
