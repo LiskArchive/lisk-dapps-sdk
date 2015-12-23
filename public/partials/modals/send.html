@@ -1,0 +1,49 @@
+<div flex="40">
+    <md-dialog aria-label="Create token" ng-cloak>
+        <form name="newTokenForm" class="light-gray-background">
+            <md-toolbar class="crypti">
+                <div class="md-toolbar-tools">
+                    <span flex></span>
+                    <md-button class="md-icon-button close-btn" ng-click="cancel()">
+                        <md-icon aria-label="Close dialog"></md-icon>
+                    </md-button>
+                </div>
+            </md-toolbar>
+
+            <md-dialog-content>
+                <div class="md-dialog-content header-content"><h1>Send</h1>
+                    <span>Please fill out all fields.</span></div>
+                <div class="md-dialog-content">
+                    <md-input-container class="md-block" flex-gt-sm>
+                        <label>Rrecipient ID</label>
+                        <input ng-model="transaction.recipientId" name="recipientId" type="text" ng-disabled="sending">
+                    </md-input-container>
+                    <md-input-container class="md-block" flex-gt-sm>
+                        <label>Amount</label>
+                        <input ng-model="transaction.amount" type="number" name="amount" ng-disabled="sending">
+                    </md-input-container>
+                    <md-input-container class="md-block" flex-gt-sm ng-if="!secret">
+                        <label>Your Passphrase</label>
+                        <input ng-model="transaction.secret" type="password" ng-disabled="sending">
+                    </md-input-container>
+                    <md-input-container style="display: none;" class="md-block" flex-gt-sm>
+                        <label>token</label>
+                        <input ng-model="transaction.token" hidden>
+                    </md-input-container>
+                    <div ng-if="error">
+                        <div class="error">{{error}}</div>
+                    </div>
+                </div>
+            </md-dialog-content>
+            <md-dialog-actions layout="row">
+                <span flex></span>
+                <md-button ng-click="cancel()" ng-disabled="sending">
+                    cancel
+                </md-button>
+                <md-button class="main-action" ng-click="send()" style="margin-right:20px;" ng-disabled="sending">
+                    send
+                </md-button>
+            </md-dialog-actions>
+        </form>
+    </md-dialog>
+</div>

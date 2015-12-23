@@ -1,8 +1,25 @@
-<html>
+<!DOCTYPE html>
+<html lang="en" ng-app="tokenApp">
 <head>
-    <title>Hello, world!</title>
+    <meta charset="UTF-8">
+    <title>crypti tokens</title>
+    <link rel="stylesheet" href="node_modules/angular-material/angular-material.css">
+
+    <link rel="stylesheet" href="static/css/app.css">
+    <script src="node_modules/angular/angular.js"></script>
+    <script src="node_modules/angular-ui-router/build/angular-ui-router.js"></script>
+    <script src="node_modules/angular-aria/angular-aria.js"></script>
+    <script src="node_modules/angular-animate/angular-animate.js"></script>
+    <script src="node_modules/angular-material/angular-material.js"></script>
+    <script src="bower_components/ng-table/dist/ng-table.js"></script>
+    <script src="bower_components/angular-animate/angular-animate.js"></script>
+    <script src="bower_components/angular-messages/angular-messages.js"></script>
+    <script src="static/js/app.js"></script>
+    <base href="/dapps/{{appID}}/">
 </head>
 <body>
-<h1>Hello, world!</h1>
+<div ui-view class="tokenDApp_wrapper">
+
+</div>
 </body>
 </html>
