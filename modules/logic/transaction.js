@@ -76,7 +76,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 
 		var tokenBytes = [];
 		if (trs.token != "XCR") {
-			tokenBytes = new Buffer(trs.token, 'hex');
+			tokenBytes = new Buffer(trs.token, 'utf8');
 		}
 
 		var bb = new ByteBuffer(1 + 4 + 32 + 8 + 8 + 64 + 64 + assetSize + tokenBytes.length, true);
@@ -346,7 +346,7 @@ Transaction.prototype.normalize = function (tx, cb) {
 		required: ['id', 'type', 'timestamp', 'senderPublicKey']
 	}, function (err) {
 		if (err) {
-			return cb(err);
+			return cb(err[0].message);
 		}
 
 		private.types[tx.type].normalize.call(self, tx.asset, cb);

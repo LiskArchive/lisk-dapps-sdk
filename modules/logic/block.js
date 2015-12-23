@@ -147,7 +147,12 @@ Block.prototype.normalize = function (block, cb) {
 			}
 		},
 		required: ['id', 'timestamp', 'payloadLength', 'payloadHash', 'pointId', 'pointHeight', 'delegate', 'signature', 'count']
-	}, cb);
+	}, function (err) {
+		if (err) {
+			return cb(err[0].message);
+		}
+		cb();
+	});
 }
 
 Block.prototype.dbRead = function (row) {

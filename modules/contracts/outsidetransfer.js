@@ -129,7 +129,12 @@ OutsideTransfer.prototype.normalize = function (asset, cb) {
 			}
 		},
 		required: ['outsidetransfer']
-	}, cb)
+	}, function (err) {
+		if (err) {
+			return cb(err[0].message);
+		}
+		cb();
+	})
 }
 
 OutsideTransfer.prototype.onBind = function (_modules) {
