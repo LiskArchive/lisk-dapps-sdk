@@ -249,6 +249,8 @@ Accounts.prototype.open = function (cb, query) {
 			u_balance: 0,
 			publicKey: keypair.publicKey.toString('hex')
 		});
+	}else{
+		account.publicKey = keypair.publicKey.toString('hex');
 	}
 
 	cb(null, {account: account});
