@@ -1,14 +1,14 @@
 {
-	"name": "DAppToolkit",
+	"name": "lisk-dapps-sdk",
 	"version": "1.0.0",
-	"description": "The official Crypti decentralized application (DApp) toolkit",
+	"description": "Official SDK for the Lisk decentralized application platform",
 	"repository": "git@github.com:crypti/DAppToolkit.git",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
 	"author": "",
-	"license": "ISC",
+	"license": "MIT",
 	"dependencies": {
 		"async": "*",
 		"browserify-bignum": "^1.3.0-2",
@@ -18,6 +18,6 @@
 		"ed2curve": "^0.1.3",
 		"ip": "*",
 		"js-nacl": "^0.6.0",
-		"z-schema": "https://github.com/crypti/z-schema/tarball/master"
+		"z-schema": "https://github.com/LiskHQ/z-schema/tarball/master"
 	}
 }

@@ -1,12 +1,8 @@
-### DApp Toolkit
+# Lisk Dapps SDK
 
-The official Crypti decentralized application (DApp) toolkit.
+The official SDK for building dapps on the [Lisk](https://lisk.io) decentralized application platform.
 
-Requires:
-
-  * Crypti 0.5.0
-
-### Directory Structure
+## Directory Structure
 
   * **modules** - Contains the backend code of your dapp.
   * **public** - Contains the frontend user interface of your dapp.
@@ -17,4 +13,14 @@ Requires:
   * **modules.full.json** - JSON file containing a list of defined modules, required by **index.js**.
   * **routes.json** - JSON file defining the HTTP routes of every endpoint in your dapp's API.
 
-Full documentation is available [here](https://github.com/crypti/crypti-dapps-docs).
+Full documentation is available [here](https://github.com/LiskHQ/lisk-dapps-docs).
+
+## Authors
+
+- Boris Povod <boris@crypti.me>
+- Pavel Nekrasov <landgraf.paul@gmail.com>
+- Olivier Beddows <olivier@lisk.io>
+
+## License
+
+MIT
