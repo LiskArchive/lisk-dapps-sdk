@@ -2,12 +2,12 @@
 	"name": "lisk-dapps-sdk",
 	"version": "1.0.0",
 	"description": "Official SDK for the Lisk decentralized application platform",
-	"repository": "git@github.com:crypti/DAppToolkit.git",
+	"repository": "git@github.com:LiskHQ/lisk-dapps-sdk.git",
 	"main": "index.js",
 	"scripts": {
 		"test": "echo \"Error: no test specified\" && exit 1"
 	},
-	"author": "",
+	"author": "Boris Povod <boris@crypti.me>,Pavel Nekrasov <landgraf.paul@gmail.com>",
 	"license": "MIT",
 	"dependencies": {
 		"async": "*",
