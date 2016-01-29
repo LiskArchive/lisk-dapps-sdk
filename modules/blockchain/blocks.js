@@ -124,7 +124,7 @@ private.verify = function (block, cb, scope) {
 
 	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
 		if (err || !cryptiBlock) {
-			return cb(err || "block doesn´t exist in crypti");
+			return cb(err || "block could not be found");
 		}
 
 		modules.api.sql.select({
@@ -145,7 +145,7 @@ private.verify = function (block, cb, scope) {
 			}
 
 			if (!valid) {
-				return cb("can´t verify block signature");
+				return cb("failed to verify block signature");
 			}
 
 			return cb();
