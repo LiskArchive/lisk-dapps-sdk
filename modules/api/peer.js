@@ -15,7 +15,7 @@ function Peer(cb, _library) {
 }
 
 /**
- * Get peers of Crypti by filter.
+ * Get peers of Lisk by filter.
  * @param filter - Filter with parameters.
  * @param filter.state - State of peer.
  * @param filter.os - Os of peer.
@@ -25,7 +25,7 @@ function Peer(cb, _library) {
  * @param filter.orderBy - Order by field for peers.
  * @param filter.offset - Offset to get peers.
  * @param filter.port - Port of peers
- * @param {Peer~getPeersCallback} cb - Callback handles response from Crypti.
+ * @param {Peer~getPeersCallback} cb - Callback handles response from Lisk.
  */
 Peer.prototype.getPeers = function (filter, cb) {
 	var message = {
@@ -62,7 +62,7 @@ Peer.prototype.getPeers = function (filter, cb) {
  * Get peer by ip or port.
  * @param ip_str - Ip of peer.
  * @param port - Port of peer.
- * @param {Peer~getPeerCallback} cb - Callback handles response from Crypti.
+ * @param {Peer~getPeerCallback} cb - Callback handles response from Lisk.
  */
 Peer.prototype.getPeer = function (ip_str, port, cb) {
 	var message = {
@@ -91,7 +91,7 @@ Peer.prototype.getPeer = function (ip_str, port, cb) {
 
 /**
  * Get version of our peer.
- * @param {Peer~versionCallback} cb - Callback handles response from Crypti.
+ * @param {Peer~versionCallback} cb - Callback handles response from Lisk.
  */
 Peer.prototype.version = function (cb) {
 	var message = {

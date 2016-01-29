@@ -1,5 +1,5 @@
 /*
- Crypti delegates API calls
+ Lisk delegates API calls
  */
 
 var private = {}, self = null,
@@ -24,7 +24,7 @@ function Delegates(cb, _library) {
  * @param filter.transactionId - Id of transaction where delegate registered.
  * @param filter.publicKey - Public key of delegate.
  * @param filter.username - Username of delegate.
- * @param {Delegates~getDelegateCallback} cb - Callback handles response from Crypti.
+ * @param {Delegates~getDelegateCallback} cb - Callback handles response from Lisk.
  */
 Delegates.prototype.getDelegate = function (filter, cb) {
 	var message = {
@@ -59,7 +59,7 @@ Delegates.prototype.getDelegate = function (filter, cb) {
  * @param filter.limit - Limit of delegates to get.
  * @param filter.offset - Offset of delegates to get.
  * @param filter.orderBy - Order by field to sort delegates.
- * @param {Delegates~getDelegatesCallback} cb - Callback handles response from Crypti.
+ * @param {Delegates~getDelegatesCallback} cb - Callback handles response from Lisk.
  */
 Delegates.prototype.getDelegates = function (filter, cb) {
 	var message = {
@@ -84,7 +84,7 @@ Delegates.prototype.getDelegates = function (filter, cb) {
 /**
  * Get fee amount of delegate registration.
  *
- * @param {Delegates~getFeeCallback} cb - Callback handles response from Crypti.
+ * @param {Delegates~getFeeCallback} cb - Callback handles response from Lisk.
  */
 Delegates.prototype.getFee = function (cb) {
 	var message = {
@@ -107,7 +107,7 @@ Delegates.prototype.getFee = function (cb) {
 /**
  * Get amount forged by delegate.
  * @param generatorPublicKey - Public key of delegate.
- * @param {Delegates~getForgedByAccount} cb - Callback handles response from Crypti.
+ * @param {Delegates~getForgedByAccount} cb - Callback handles response from Lisk.
  */
 Delegates.prototype.getForgedByAccount = function (generatorPublicKey, cb) {
 	var message = {
@@ -134,7 +134,7 @@ Delegates.prototype.getForgedByAccount = function (generatorPublicKey, cb) {
  * @param publicKey - Public key of account (optional).
  * @param secondSecret - Second secret of account, if second signature enabled (optional).
  * @param username - Username to register.
- * @param {Delegates~addDelegate} cb - Callback handles response from Crypti.
+ * @param {Delegates~addDelegate} cb - Callback handles response from Lisk.
  */
 Delegates.prototype.addDelegate = function (secret, publicKey, secondSecret, username, cb) {
 	var message = {

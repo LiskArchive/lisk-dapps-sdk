@@ -1,5 +1,5 @@
 /*
- Crypti contacts API calls
+ Lisk contacts API calls
  */
 
 var private = {}, self = null,
@@ -22,7 +22,7 @@ function Contacts(cb, _library) {
 /**
  * Get contacts of account.
  * @param publicKey - Public key of account.
- * @param {Contacts~getContactsCallback} cb - Callback handles response from Crypti.
+ * @param {Contacts~getContactsCallback} cb - Callback handles response from Lisk.
  */
 Contacts.prototype.getContacts = function (publicKey, cb) {
 	var message = {
@@ -49,7 +49,7 @@ Contacts.prototype.getContacts = function (publicKey, cb) {
  * @param publicKey - Account public key (optional).
  * @param secondSecret - Second secret if second signature enabled (optional).
  * @param following - Address/username of account to add to contacts.
- * @param {Contacts~addContactCallback} cb - Callback handles response from Crypti
+ * @param {Contacts~addContactCallback} cb - Callback handles response from Lisk
  */
 Contacts.prototype.addContact = function (secret, publicKey, secondSecret, following, cb) {
 	var message = {
@@ -75,7 +75,7 @@ Contacts.prototype.addContact = function (secret, publicKey, secondSecret, follo
 
 /**
  * Get fee amount to add contact.
- * @param {Contacts~getFeeCallback} cb - Callback handles response from Crypti.
+ * @param {Contacts~getFeeCallback} cb - Callback handles response from Lisk.
  */
 
 Contacts.prototype.getFee = function (cb) {

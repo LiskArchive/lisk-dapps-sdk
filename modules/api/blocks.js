@@ -1,5 +1,5 @@
 /*
- Crypti blocks API calls
+ Lisk blocks API calls
  */
 var private = {}, self = null,
 library = null, modules = null;
@@ -21,7 +21,7 @@ function Blocks(cb, _library) {
  * Get block by id.
  *
  * @param id - Block id.
- * @param {Blocks~blockCallback} cb - Callback handles response from Crypti.
+ * @param {Blocks~blockCallback} cb - Callback handles response from Lisk.
  */
 Blocks.prototype.getBlock = function (id, cb) {
 	var message = {
@@ -55,7 +55,7 @@ Blocks.prototype.getBlock = function (id, cb) {
  */
 
 /**
- * Get blocks from Crypti.
+ * Get blocks from Lisk.
  *
  * @param filter - Filter object.
  * @param filter.limit - Limit of blocks to get.
@@ -66,7 +66,7 @@ Blocks.prototype.getBlock = function (id, cb) {
  * @param filter.totalFee - Total fee of block.
  * @param filter.previousBlock - Previous block id.
  * @param filter.height - Height of block.
- * @param {Blocks~getBlocksCallback} cb - Callback handles response from Crypti.
+ * @param {Blocks~getBlocksCallback} cb - Callback handles response from Lisk.
  */
 Blocks.prototype.getBlocks = function (filter, cb) {
 	var message = {
@@ -95,7 +95,7 @@ Blocks.prototype.getBlocks = function (filter, cb) {
 
 /**
  * Get height of blockchain.
- * @param {Blocks~getHeightCallback} cb - Callback handles response from Crypti.
+ * @param {Blocks~getHeightCallback} cb - Callback handles response from Lisk.
  */
 Blocks.prototype.getHeight = function (cb) {
 	var message = {
@@ -115,7 +115,7 @@ Blocks.prototype.getHeight = function (cb) {
 
 /**
  * Get fee percent of transaction in blockchain.
- * @param {Blocks~getFeeCallback} cb - Callback handles response from Crypti.
+ * @param {Blocks~getFeeCallback} cb - Callback handles response from Lisk.
  */
 Blocks.prototype.getFee = function (cb) {
 	var message = {

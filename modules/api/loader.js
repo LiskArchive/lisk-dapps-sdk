@@ -16,7 +16,7 @@ function Loader(cb, _library) {
 
 /**
  * Get status of loading bc.db file
- * @param {Loader~statusCallback} cb - Callback handles response from Crypti.
+ * @param {Loader~statusCallback} cb - Callback handles response from Lisk.
  */
 Loader.prototype.status = function (cb) {
 	var message = {
@@ -40,7 +40,7 @@ Loader.prototype.status = function (cb) {
 /**
  * Get status of wallet sync.
  *
- * @param {Loader~syncCallback} cb - Callback handles response from Crypti.
+ * @param {Loader~syncCallback} cb - Callback handles response from Lisk.
  */
 Loader.prototype.sync = function (cb) {
 	var message = {

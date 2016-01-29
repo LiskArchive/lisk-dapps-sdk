@@ -18,7 +18,7 @@ function Multisignatures(cb, _library) {
  * Get pending transactions, that account need to sign.
  *
  * @param publicKey - Public key of account.
- * @param {Multisignatures~pendingCallback} cb - Callback handles response from Crypti.
+ * @param {Multisignatures~pendingCallback} cb - Callback handles response from Lisk.
  */
 Multisignatures.prototype.pending = function (publicKey, cb) {
 	var message = {
@@ -49,7 +49,7 @@ Multisignatures.prototype.pending = function (publicKey, cb) {
  * @param secret - Secret of account.
  * @param publicKey - Public key of account (optional).
  * @param transactionId - Id of transaction to sign.
- * @param {Multisignatures~signCallback} cb - Callback handles response from Crypti.
+ * @param {Multisignatures~signCallback} cb - Callback handles response from Lisk.
  */
 Multisignatures.prototype.sign = function (secret, publicKey, transactionId, cb) {
 	var message = {
@@ -80,7 +80,7 @@ Multisignatures.prototype.sign = function (secret, publicKey, transactionId, cb)
  * @param min - Minimum signers of multisignature to verify transaction.
  * @param lifetime - Life time of transaction. From 1 to 72 hours.
  * @param keysgroup - Array of public keys of members of multisignature. Each public key must start with '+'.
- * @param {Multisignatures~addCallback} cb - Callback handles response from Crypti.
+ * @param {Multisignatures~addCallback} cb - Callback handles response from Lisk.
  */
 Multisignatures.prototype.addMultisignature = function (secret, publicKey, secondSecret, min, lifetime, keysgroup, cb) {
 	var message = {

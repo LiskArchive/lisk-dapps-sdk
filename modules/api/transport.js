@@ -15,10 +15,10 @@ function Transport(cb, _library) {
 }
 
 /**
- * Send message to Crypti.
+ * Send message to Lisk.
  * @param topic - Topic of message.
  * @param message - Message.
- * @param {Transport~message} cb - Callback handles response from Crypti.
+ * @param {Transport~message} cb - Callback handles response from Lisk.
  */
 Transport.prototype.message = function (topic, message, cb) {
 	var message = {
@@ -44,7 +44,7 @@ Transport.prototype.message = function (topic, message, cb) {
  * @param method - Http Method.
  * @param path - Path (part of url).
  * @param query - Query.
- * @param {Transport~getRandomPeerCallback} cb - Callback handles response from Crypti.
+ * @param {Transport~getRandomPeerCallback} cb - Callback handles response from Lisk.
  */
 Transport.prototype.getRandomPeer = function (method, path, query, cb) {
 	//console.log(method + " " + path, query);
@@ -73,7 +73,7 @@ Transport.prototype.getRandomPeer = function (method, path, query, cb) {
  * @param method - Http Method.
  * @param path - Path (part of url).
  * @param query - Query.
- * @param {Transport~getPeerCallback} cb - Callback handles response from Crypti.
+ * @param {Transport~getPeerCallback} cb - Callback handles response from Lisk.
  */
 Transport.prototype.getPeer = function (peer, method, path, query, cb) {
 	//console.log(method + " " + path, query);

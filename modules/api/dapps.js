@@ -16,7 +16,7 @@ function Dapps(cb, _library) {
 
 /**
  * Get genesis block of DApp.
- * @param {Dapps~getGenesisCallback} cb - Callback handles response from Crypti.
+ * @param {Dapps~getGenesisCallback} cb - Callback handles response from Lisk.
  */
 Dapps.prototype.getGenesis = function (cb) {
 	var message = {
@@ -46,7 +46,7 @@ Dapps.prototype.getGenesis = function (cb) {
  * @param opts.secondSecret - Second secret to withdrawal (optional).
  * @param opts.publicKey - Public key of account (optional).
  * @param opts.multisigAccountPublicKey - Multisignature account to withdrawal (optional).
- * @param {Dapps~sendWithdrawal} cb - Callback handles response from Crypti.
+ * @param {Dapps~sendWithdrawal} cb - Callback handles response from Lisk.
  */
 Dapps.prototype.sendWithdrawal = function (opts, cb) {
 	var message = {
@@ -67,7 +67,7 @@ Dapps.prototype.sendWithdrawal = function (opts, cb) {
 
 /**
  * Find common block for DApp.
- * @param cb - Callback handles response from Crypti.
+ * @param cb - Callback handles response from Lisk.
  */
 Dapps.prototype.getCommonBlock = function (cb) {
 	var message = {
@@ -81,7 +81,7 @@ Dapps.prototype.getCommonBlock = function (cb) {
 
 /**
  * Change state of dapp to ready.
- * @param {Dapps~setReadyCallback} cb - Callback handles response from Crypti.
+ * @param {Dapps~setReadyCallback} cb - Callback handles response from Lisk.
  */
 Dapps.prototype.setReady = function (cb) {
 	var message = {
