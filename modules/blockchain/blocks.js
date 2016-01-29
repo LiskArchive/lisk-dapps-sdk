@@ -122,8 +122,8 @@ private.verify = function (block, cb, scope) {
 		return cb("wrong payload hash");
 	}
 
-	modules.api.blocks.getBlock(block.pointId, function (err, cryptiBlock) {
-		if (err || !cryptiBlock) {
+	modules.api.blocks.getBlock(block.pointId, function (err, liskBlock) {
+		if (err || !liskBlock) {
 			return cb(err || "block could not be found");
 		}
 
