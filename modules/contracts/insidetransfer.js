@@ -47,7 +47,7 @@ InsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
 	var amount = trs.amount + trs.fee;
 
 	if (sender.balance < amount) {
-		return setImmediate(cb, "Balance has no XCR: " + trs.id);
+		return setImmediate(cb, "Account has no LISK: " + trs.id);
 	}
 
 	async.series([

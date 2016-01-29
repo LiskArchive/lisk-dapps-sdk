@@ -125,7 +125,7 @@ Delegates.prototype.getForgedByAccount = function (generatorPublicKey, cb) {
  *
  * @param error - Error of api call execution.
  * @param response - Response of api call execution.
- * @param response.fees - Amount of XCR that delegate forged.
+ * @param response.fees - Amount of LISK that delegate forged.
  */
 
 /**
