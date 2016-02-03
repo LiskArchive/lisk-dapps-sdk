@@ -37,7 +37,7 @@ InsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 		return cb("TRANSACTIONS.INVALID_AMOUNT");
 	}
 
-	if (trs.token != "XCR") {
+	if (trs.token != "LISK") {
 		var tokenId = modules.contracts.token.findToken(trs.token);
 		if (!tokenId) {
 			return cb("Token doesn't exist");
@@ -69,7 +69,7 @@ InsideTransfer.prototype.apply = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				balance: {"XCR": -trs.fee}
+				balance: {"LISK": -trs.fee}
 			}, cb, scope);
 		},
 		function (cb) {
@@ -98,7 +98,7 @@ InsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				balance: {"XCR": -trs.fee}
+				balance: {"LISK": -trs.fee}
 			}, cb, scope);
 		},
 		function (cb) {
@@ -123,16 +123,16 @@ InsideTransfer.prototype.undo = function (trs, sender, cb, scope) {
 }
 
 InsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
-	if (trs.token == "XCR") {
+	if (trs.token == "LISK") {
 		if (sender.u_balance[trs.token] < trs.amount + trs.fee) {
-			return setImmediate(cb, "Balance has no XCR: " + trs.id);
+			return setImmediate(cb, "Balance has no LISK: " + trs.id);
 		}
 	} else {
 		if (sender.u_balance[trs.token] < trs.amount) {
 			return setImmediate(cb, "Balance has no " + trs.token + ": " + trs.id);
 		}
-		if (sender.u_balance["XCR"] < trs.fee) {
-			return setImmediate(cb, "Balance has no XCR: " + trs.id);
+		if (sender.u_balance["LISK"] < trs.fee) {
+			return setImmediate(cb, "Balance has no LISK: " + trs.id);
 		}
 	}
 
@@ -140,7 +140,7 @@ InsideTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				u_balance: {"XCR": -trs.fee}
+				u_balance: {"LISK": -trs.fee}
 			}, cb, scope);
 		},
 		function (cb) {
@@ -169,7 +169,7 @@ InsideTransfer.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				u_balance: {"XCR": -trs.fee}
+				u_balance: {"LISK": -trs.fee}
 			}, cb, scope);
 		},
 		function (cb) {

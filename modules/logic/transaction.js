@@ -34,7 +34,7 @@ Transaction.prototype.create = function (data) {
 		senderId: data.sender.address,
 		senderPublicKey: data.sender.publicKey,
 		timestamp: timeHelper.getNow(),
-		token: "XCR",
+		token: "LISK",
 		asset: {}
 	};
 
@@ -75,7 +75,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 		var assetSize = assetBytes ? assetBytes.length : 0;
 
 		var tokenBytes = [];
-		if (trs.token != "XCR") {
+		if (trs.token != "LISK") {
 			tokenBytes = new Buffer(trs.token, 'utf8');
 		}
 
@@ -278,7 +278,7 @@ Transaction.prototype.save = function (trs, cb) {
 			fee: trs.fee,
 			signature: trs.signature,
 			blockId: trs.blockId,
-			token: trs.token == "XCR" ? null : trs.token
+			token: trs.token == "LISK" ? null : trs.token
 		}
 	}, function (err) {
 		if (err) {
@@ -369,7 +369,7 @@ Transaction.prototype.dbRead = function (row) {
 		fee: row.t_fee,
 		signature: row.t_signature,
 		blockId: row.t_blockId,
-		token: row.t_token || "XCR",
+		token: row.t_token || "LISK",
 		asset: {}
 	};
 

@@ -73,8 +73,8 @@ Token.prototype.apply = function (trs, sender, cb, scope) {
 	delete private.u_tokens[trs.asset.token.name];
 	private.tokens[trs.asset.token.name] = trs.id;
 
-	if (sender.balance["XCR"] < trs.fee) {
-		return setImmediate(cb, "Balance has no XCR: " + trs.id);
+	if (sender.balance["LISK"] < trs.fee) {
+		return setImmediate(cb, "Balance has no LISK: " + trs.id);
 	}
 
 	async.series([
@@ -90,7 +90,7 @@ Token.prototype.apply = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				balance: {"XCR": -trs.fee}
+				balance: {"LISK": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
@@ -113,14 +113,14 @@ Token.prototype.undo = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				balance: {"XCR": -trs.fee}
+				balance: {"LISK": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
 }
 
 Token.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
-	if (sender.u_balance["XCR"] < trs.fee) {
+	if (sender.u_balance["LISK"] < trs.fee) {
 		return setImmediate(cb, 'Account has no balance: ' + trs.id);
 	}
 
@@ -143,7 +143,7 @@ Token.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.mergeAccountAndGet({
 				address: sender.address,
-				u_balance: {"XCR": -trs.fee}
+				u_balance: {"LISK": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
@@ -165,7 +165,7 @@ Token.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 		function (cb) {
 			modules.blockchain.accounts.undoMerging({
 				address: sender.address,
-				u_balance: {"XCR": -trs.fee}
+				u_balance: {"LISK": -trs.fee}
 			}, cb, scope);
 		}
 	], cb);
