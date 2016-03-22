@@ -28,7 +28,7 @@ InsideTransfer.prototype.calculateFee = function (trs) {
 
 InsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 	var isAddress = /^[0-9]+[L|l]$/g;
-	if (!isAddress.test(trs.recipientId.toLowerCase())) {
+	if (!trs.recipientId || !isAddress.test(trs.recipientId)) {
 		return cb("TRANSACTIONS.INVALID_RECIPIENT");
 	}
 
