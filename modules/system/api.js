@@ -1,7 +1,7 @@
 var private = {}, self = null,
-	library = null, modules = null;
-private.apies = {};
-private.loaded = false;
+    library = null, modules = null;
+    private.apies = {};
+    private.loaded = false;
 
 function Api(cb, _library) {
 	self = this;
@@ -28,6 +28,7 @@ Api.prototype.onBind = function (_modules) {
 
 Api.prototype.onBlockchainLoaded = function () {
 	private.loaded = true;
+
 	try {
 		var router = require('../../routes.json');
 	} catch (e) {

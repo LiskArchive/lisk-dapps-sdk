@@ -1,5 +1,5 @@
 var private = {}, self = null,
-	library = null, modules = null;
+    library = null, modules = null;
 
 function Generator(cb, _library) {
 	self = this;
