@@ -58,7 +58,6 @@ Delegates.prototype.verify = function (trs, sender, cb, scope) {
 
 		}
 	});
-
 }
 
 Delegates.prototype.apply = function (trs, sender, cb, scope) {
