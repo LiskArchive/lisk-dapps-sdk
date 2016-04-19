@@ -1,7 +1,7 @@
-var ed2curve = require('ed2curve');
-var nacl_factory = require('js-nacl');
-var crypto = require('crypto-browserify');
-var bignum = require('browserify-bignum');
+var ed2curve = require("ed2curve");
+var nacl_factory = require("js-nacl");
+var crypto = require("crypto-browserify");
+var bignum = require("browserify-bignum");
 
 var nacl = nacl_factory.instantiate();
 
@@ -51,7 +51,7 @@ private.decrypt_cryptobox = function (text, nonce, key) {
 }
 
 Crypto.prototype.encrypt = function (keypair, text, nonce, cb) {
-	if (typeof nonce == 'function') {
+	if (typeof nonce == "function") {
 		cb = nonce;
 		nonce = null;
 	}
@@ -59,22 +59,22 @@ Crypto.prototype.encrypt = function (keypair, text, nonce, cb) {
 	if (!nonce) {
 		nonce = private.getNonce();
 	} else {
-		nonce = new Buffer(nonce, 'hex');
+		nonce = new Buffer(nonce, "hex");
 	}
 
 	var encrypted = private.cryptobox(text, nonce, keypair.privateKey);
 
 	return cb(null, {
-		nonce: new Buffer(nonce).toString('hex'),
-		encrypted: new Buffer(encrypted).toString('hex')
+		nonce: new Buffer(nonce).toString("hex"),
+		encrypted: new Buffer(encrypted).toString("hex")
 	});
 }
 
 Crypto.prototype.decrypt = function (keypair, encrypted, nonce, cb) {
-	var decrypted = private.decrypt_cryptobox(new Buffer(encrypted, 'hex'), new Buffer(nonce, 'hex'), keypair.privateKey);
+	var decrypted = private.decrypt_cryptobox(new Buffer(encrypted, "hex"), new Buffer(nonce, "hex"), keypair.privateKey);
 
 	return cb(null, {
-		decrypted: new Buffer(decrypted).toString('utf8')
+		decrypted: new Buffer(decrypted).toString("utf8")
 	});
 }
 
@@ -85,12 +85,12 @@ Crypto.prototype.decrypt = function (keypair, encrypted, nonce, cb) {
  * @returns {{publicKey, privateKey}}
  */
 Crypto.prototype.keypair = function (secret) {
-	var hash = crypto.createHash('sha256').update(secret, 'utf8').digest();
+	var hash = crypto.createHash("sha256").update(secret, "utf8").digest();
 	var kp = nacl.crypto_sign_keypair_from_seed(hash);
 
 	var keypair = {
-		publicKey: new Buffer(kp.signPk).toString('hex'),
-		privateKey: new Buffer(kp.signSk).toString('hex')
+		publicKey: new Buffer(kp.signPk).toString("hex"),
+		privateKey: new Buffer(kp.signSk).toString("hex")
 	}
 
 	return keypair;
@@ -104,9 +104,9 @@ Crypto.prototype.keypair = function (secret) {
  * @return Signature in hex.
  */
 Crypto.prototype.sign = function (keypair, data) {
-	var hash = crypto.createHash('sha256').update(data).digest();
-	var signature = nacl.crypto_sign_detached(hash, new Buffer(keypair.privateKey, 'hex'));
-	return new Buffer(signature).toString('hex');
+	var hash = crypto.createHash("sha256").update(data).digest();
+	var signature = nacl.crypto_sign_detached(hash, new Buffer(keypair.privateKey, "hex"));
+	return new Buffer(signature).toString("hex");
 }
 
 /**
@@ -118,9 +118,9 @@ Crypto.prototype.sign = function (keypair, data) {
  * @returns Boolean (true/false).
  */
 Crypto.prototype.verify = function (publicKey, signature, data) {
-	var hash = crypto.createHash('sha256').update(data).digest();
-	var signatureBuffer = new Buffer(signature, 'hex');
-	var senderPublicKeyBuffer = new Buffer(publicKey, 'hex');
+	var hash = crypto.createHash("sha256").update(data).digest();
+	var signatureBuffer = new Buffer(signature, "hex");
+	var senderPublicKeyBuffer = new Buffer(publicKey, "hex");
 	return nacl.crypto_sign_verify_detached(signatureBuffer, hash, senderPublicKeyBuffer);
 }
 
@@ -131,7 +131,7 @@ Crypto.prototype.verify = function (publicKey, signature, data) {
  * @return id (string).
  */
 Crypto.prototype.getId = function (data) {
-	var hash = crypto.createHash('sha256').update(data).digest();
+	var hash = crypto.createHash("sha256").update(data).digest();
 	var temp = new Buffer(8);
 	for (var i = 0; i < 8; i++) {
 		temp[i] = hash[7 - i];
