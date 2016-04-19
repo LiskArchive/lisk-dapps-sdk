@@ -1,6 +1,6 @@
-var ByteBuffer = require('bytebuffer');
-var crypto = require('crypto-browserify');
-var bignum = require('browserify-bignum');
+var ByteBuffer = require("bytebuffer");
+var crypto = require("crypto-browserify");
+var bignum = require("browserify-bignum");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -25,7 +25,7 @@ Block.prototype.getBytes = function (block, withSignature) {
 	var bb = new ByteBuffer(size, true);
 
 	if (block.prevBlockId) {
-		var pb = bignum(block.prevBlockId).toBuffer({size: '8'});
+		var pb = bignum(block.prevBlockId).toBuffer({size: "8"});
 		for (var i = 0; i < 8; i++) {
 			bb.writeByte(pb[i]);
 		}
@@ -39,17 +39,17 @@ Block.prototype.getBytes = function (block, withSignature) {
 	bb.writeInt(block.timestamp);
 	bb.writeInt(block.payloadLength);
 
-	var ph = new Buffer(block.payloadHash, 'hex');
+	var ph = new Buffer(block.payloadHash, "hex");
 	for (var i = 0; i < ph.length; i++) {
 		bb.writeByte(ph[i]);
 	}
 
-	var pb = new Buffer(block.delegate, 'hex');
+	var pb = new Buffer(block.delegate, "hex");
 	for (var i = 0; i < pb.length; i++) {
 		bb.writeByte(pb[i]);
 	}
 
-	pb = bignum(block.pointId).toBuffer({size: '8'});
+	pb = bignum(block.pointId).toBuffer({size: "8"});
 	for (var i = 0; i < 8; i++) {
 		bb.writeByte(pb[i]);
 	}
@@ -59,7 +59,7 @@ Block.prototype.getBytes = function (block, withSignature) {
 	bb.writeInt(block.count);
 
 	if (withSignature && block.signature) {
-		var pb = new Buffer(block.signature, 'hex');
+		var pb = new Buffer(block.signature, "hex");
 		for (var i = 0; i < pb.length; i++) {
 			bb.writeByte(pb[i]);
 		}
@@ -104,7 +104,7 @@ Block.prototype.save = function (block, cb) {
 
 Block.prototype.normalize = function (block, cb) {
 	for (var i in block) {
-		if (block[i] === null || typeof block[i] == 'undefined') {
+		if (block[i] === null || typeof block[i] == "undefined") {
 			delete block[i];
 		}
 	}
@@ -146,7 +146,7 @@ Block.prototype.normalize = function (block, cb) {
 				type: "integer"
 			}
 		},
-		required: ['id', 'timestamp', 'payloadLength', 'payloadHash', 'pointId', 'pointHeight', 'delegate', 'signature', 'count']
+		required: ["id", "timestamp", "payloadLength", "payloadHash", "pointId", "pointHeight", "delegate", "signature", "count"]
 	}, function (err) {
 		if (err) {
 			return cb(err[0].message);
