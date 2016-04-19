@@ -1,9 +1,9 @@
-var crypto = require('crypto-browserify');
-var path = require('path');
-var async = require('async');
-var util = require('util');
-var extend = require('extend');
-var timeHelper = require('../helpers/time.js');
+var crypto = require("crypto-browserify");
+var path = require("path");
+var async = require("async");
+var util = require("util");
+var extend = require("extend");
+var timeHelper = require("../helpers/time.js");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -19,7 +19,7 @@ function Blocks(cb, _library) {
 	try {
 		private.genesisBlock = require(path.join(__dirname, "../../genesis.json"));
 	} catch (e) {
-		library.logger("failed genesis file");
+		library.logger("Failed to load genesis.json");
 	}
 
 	private.lastBlock = private.genesisBlock;
@@ -29,7 +29,7 @@ function Blocks(cb, _library) {
 
 private.deleteBlock = function (blockId, cb) {
 	modules.api.sql.remove({
-		table: 'blocks',
+		table: "blocks",
 		condition: {
 			id: blockId
 		}
@@ -38,11 +38,11 @@ private.deleteBlock = function (blockId, cb) {
 
 private.popLastBlock = function (oldLastBlock, cb) {
 	if (!oldLastBlock.prevBlockId) {
-		return cb("Can´t remove genesis block");
+		return cb("Can't remove genesis block");
 	}
 	self.getBlock(function (err, previousBlock) {
 		if (err || !previousBlock) {
-			return cb(err || 'previousBlock is null');
+			return cb(err || "Previous block is null");
 		}
 
 		previousBlock = self.readDbRows(previousBlock);
@@ -87,44 +87,44 @@ private.verify = function (block, cb, scope) {
 			return cb(e.toString());
 		}
 		if (!valid) {
-			//skip now for genesis, because i don't know how to generate (pending paul)
-			//return cb("wrong block");
+			// Skip now for genesis, because i don't know how to generate (pending paul)
+			// return cb("Invalid block");
 		}
 		return cb();
 	} else {
 		if (block.delegates) {
-			return cb("wrong delegates in block");
+			return cb("Invalid delegates in block");
 		}
 
 		if (block.prevBlockId != (scope || private).lastBlock.id) {
-			return cb("wrong prev block");
+			return cb("Invalid previous block");
 		}
 
 		if (block.pointHeight < (scope || private).lastBlock.pointHeight) {
-			return cb("wrong point height")
+			return cb("Invalid point height")
 		}
 	}
 
 	if (block.timestamp <= (scope || private).lastBlock.timestamp || block.timestamp > timeHelper.getNow()) {
-		return cb("wrong timestamp");
+		return cb("Invalid timestamp");
 	}
 
 	if (block.payloadLength > 1024 * 1024) {
-		return cb("wrong payload length");
+		return cb("Invalid payload length");
 	}
 
 	try {
-		var hash = new Buffer(block.payloadHash, 'hex');
+		var hash = new Buffer(block.payloadHash, "hex");
 		if (hash.length != 32) {
-			return cb("wrong payload hash");
+			return cb("Invalid payload hash");
 		}
 	} catch (e) {
-		return cb("wrong payload hash");
+		return cb("Invalid payload hash");
 	}
 
 	modules.api.blocks.getBlock(block.pointId, function (err, liskBlock) {
 		if (err || !liskBlock) {
-			return cb(err || "block could not be found");
+			return cb(err || "Block not found");
 		}
 
 		modules.api.sql.select({
@@ -135,7 +135,7 @@ private.verify = function (block, cb, scope) {
 			fields: ["id"]
 		}, function (err, found) {
 			if (err || found.length) {
-				return cb("block exists in dapp");
+				return cb("Block already exists");
 			}
 
 			try {
@@ -145,7 +145,7 @@ private.verify = function (block, cb, scope) {
 			}
 
 			if (!valid) {
-				return cb("failed to verify block signature");
+				return cb("Failed to verify block signature");
 			}
 
 			return cb();
@@ -156,18 +156,18 @@ private.verify = function (block, cb, scope) {
 private.getIdSequence = function (height, cb) {
 	modules.api.sql.select({
 		query: {
-			type: 'union',
+			type: "union",
 			unionqueries: [{
-				table: 'blocks',
-				fields: [{id: "id"}, {expression: "max(height)", alias: "height"}],
+				table: "blocks",
+				fields: [{id: "id"}, {expression: "MAX(\"height\")", alias: "height"}],
 				group: {
-					expression: "(cast(height / 101 as integer) + (case when height % 101 > 0 then 1 else 0 end))",
+					expression: "(CAST(\"height\" / 101 AS INTEGER) + (CASE WHEN \"height\" % 101 > 0 THEN 1 ELSE 0 END))",
 					having: {
 						height: {$lte: height}
 					}
 				}
 			}, {
-				table: 'blocks',
+				table: "blocks",
 				condition: {
 					height: 1
 				},
@@ -179,10 +179,10 @@ private.getIdSequence = function (height, cb) {
 			limit: 1000
 		},
 		alias: "s",
-		fields: [{height: "height"}, {expression: "group_concat(s.id)", alias: "ids"}]
+		fields: [{height: "height"}, {expression: "ARRAY_AGG(s.\"id\")", alias: "ids"}]
 	}, {height: Number, ids: Array}, function (err, rows) {
 		if (err || !rows.length) {
-			return cb(err || "wrong ids request")
+			return cb(err || "Failed to get block id sequence")
 		}
 		cb(null, rows[0]);
 	});
@@ -198,7 +198,7 @@ private.rollbackUntilBlock = function (block, cb) {
 		fields: ["id", "height"]
 	}, {"id": String, "height": Number}, function (err, found) {
 		if (!err && found.length) {
-			console.log("rollbackUntilBlock", found)
+			console.log("Blocks#rollbackUntilBlock", found);
 			self.deleteBlocksBefore(found[0], cb);
 		} else {
 			cb();
@@ -250,18 +250,18 @@ private.cleanProcess = function (blockObj, cb, scope) {
 		return item.id;
 	});
 
-	// unconfirmed transactions
+	// Unconfirmed transactions
 	modules.blockchain.transactions.getUnconfirmedTransactionList(true, function (err, list) {
 		async.eachSeries(list, function (transaction, cb) {
 			modules.blockchain.transactions.undoUnconfirmedTransaction(transaction, cb, scope);
 		}, function (err) {
 			if (err) {
-				library.logger("Can't undo transactions before process block: " + err.toString());
+				library.logger("Failed to undo transactions: " + err.toString());
 				cb(err);
 			} else {
 				private.processBlock(blockObj, function (err) {
 					if (err) {
-						library.logger("Block generation error", err);
+						library.logger("Failed to process block", err);
 					}
 
 					async.eachSeries(list, function (transaction, cb) {
@@ -393,7 +393,7 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 			return !(block.height >= private.lastBlock.height)
 		},
 		function (next) {
-			console.log("popLastBlock", private.lastBlock.height)
+			console.log("Blocks#popLastBlock", private.lastBlock.height);
 			private.popLastBlock(private.lastBlock, function (err, newLastBlock) {
 				if (!err) {
 					private.lastBlock = newLastBlock;
@@ -409,7 +409,7 @@ Blocks.prototype.deleteBlocksBefore = function (block, cb) {
 
 Blocks.prototype.simpleDeleteAfterBlock = function (height, cb) {
 	modules.api.sql.remove({
-		table: 'blocks',
+		table: "blocks",
 		condition: {
 			height: {$gte: height}
 		}
@@ -424,13 +424,13 @@ Blocks.prototype.createBlock = function (executor, timestamp, point, cb, scope) 
 	modules.blockchain.transactions.getUnconfirmedTransactionList(false, function (err, unconfirmedList) {
 		var ready = [];
 
-		var payloadHash = crypto.createHash('sha256'),
+		var payloadHash = crypto.createHash("sha256"),
 			payloadLength = 0;
 
 		async.eachSeries(unconfirmedList, function (transaction, cb) {
 			modules.blockchain.accounts.getAccount({publicKey: transaction.senderPublicKey}, function (err, sender) {
 				if (err) {
-					return cb("sender doesn´t found");
+					return cb("Sender not found");
 				}
 				async.series([
 					function (cb) {
@@ -470,7 +470,7 @@ Blocks.prototype.createBlock = function (executor, timestamp, point, cb, scope) 
 				pointHeight: point.height,
 				count: ready.length,
 				transactions: ready,
-				payloadHash: payloadHash.digest().toString('hex'),
+				payloadHash: payloadHash.digest().toString("hex"),
 				payloadLength: payloadLength
 			};
 
@@ -485,7 +485,7 @@ Blocks.prototype.createBlock = function (executor, timestamp, point, cb, scope) 
 }
 
 Blocks.prototype.applyBlock = function (block, cb, scope) {
-	var payloadHash = crypto.createHash('sha256'),
+	var payloadHash = crypto.createHash("sha256"),
 		appliedTransactions = {},
 		fee = 0,
 		payloadLength = 0;
@@ -501,12 +501,12 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 			transaction.blockId = block.id;
 
 			if (appliedTransactions[transaction.id]) {
-				return setImmediate(cb, "Dublicated transaction in block: " + transaction.id);
+				return setImmediate(cb, "Duplicate transaction in block: " + transaction.id);
 			}
 
 			modules.blockchain.transactions.applyUnconfirmedTransaction(transaction, function (err) {
 				if (err) {
-					return setImmediate(cb, "Can't apply transaction: " + transaction.id);
+					return setImmediate(cb, "Failed to apply transaction: " + transaction.id);
 				}
 
 				try {
@@ -531,11 +531,11 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 		payloadHash = payloadHash.digest();
 
 		if (payloadLength != block.payloadLength) {
-			err = "wrong payload length";
+			err = "Invalid payload length";
 		}
 
-		if (payloadHash.toString('hex') != block.payloadHash) {
-			err = "wrong payload hash";
+		if (payloadHash.toString("hex") != block.payloadHash) {
+			err = "Invalid payload hash";
 		}
 
 		if (err) {
@@ -557,7 +557,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 			async.eachSeries(block.transactions, function (transaction, cb) {
 				modules.blockchain.transactions.applyTransaction(transaction, function (err) {
 					if (err) {
-						library.logger("Can't apply transactions: " + transaction.id);
+						library.logger("Failed to apply transactions: " + transaction.id);
 						return setImmediate(cb, err);
 					}
 
@@ -590,7 +590,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 						}
 					});
 				} else {
-					// merge account and add fees
+					// Merge account and add fees
 					modules.blockchain.accounts.mergeAccountAndGet({
 						publicKey: block.delegate,
 						balance: {"LISK": fee},
@@ -608,7 +608,7 @@ Blocks.prototype.applyBlock = function (block, cb, scope) {
 }
 
 Blocks.prototype.loadBlocksPeer = function (peer, cb, scope) {
-	console.log("load blocks after", scope.lastBlock.height)
+	console.log("Load blocks after:", scope.lastBlock.height)
 	modules.api.transport.getPeer(peer, "get", "/blocks/after", {lastBlockHeight: scope.lastBlock.height}, function (err, res) {
 		if (err || !res.body || !res.body.success) {
 			return cb(err);
@@ -633,17 +633,17 @@ Blocks.prototype.loadBlocksOffset = function (limit, offset, cb) {
 		blocks = self.readDbRows(blocks);
 
 		async.eachSeries(blocks, function (block, cb) {
-			//private.verify(block, function (err) {
-			//	if (err) {
-			//		return cb({message: err, block: block});
-			//	}
+			// private.verify(block, function (err) {
+			// if (err) {
+			// 	return cb({message: err, block: block});
+			// }
 			self.applyBlock(block, function (err) {
 				if (err) {
 					return cb({block: block, message: err})
 				}
 				cb();
 			});
-			//});
+			// });
 		}, cb);
 	}, {limit: limit, offset: offset})
 }
@@ -660,7 +660,7 @@ Blocks.prototype.findCommon = function (cb, query) {
 		sort: {
 			height: 1
 		},
-		fields: [{expression: "max(height)", alias: "height"}, "id", "prevBlockId"]
+		fields: [{expression: "MAX(\"height\")", alias: "height"}, "id", "prevBlockId"]
 	}, {"height": Number, "id": String, "prevBlockId": String}, function (err, rows) {
 		if (err) {
 			return cb(err);
@@ -694,11 +694,11 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 					min: lastBlockHeight
 				}, function (err, data) {
 					if (err || !data.body || !data.body.success) {
-						return next(err || "Can't find common blocks");
+						return next(err || "Failed to find common block");
 					}
 
 					if (!data.body.response) {
-						return next("Can't find common blocks");
+						return next("Failed to find common block");
 					}
 
 					var condition = {
@@ -711,10 +711,10 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 					modules.api.sql.select({
 						table: "blocks",
 						condition: condition,
-						fields: [{expression: "count(id)", alias: "cnt"}]
+						fields: [{expression: "COUNT(\"id\")", alias: "cnt"}]
 					}, {"cnt": Number}, function (err, rows) {
 						if (err || !rows.length) {
-							return next(err || "Can't compare blocks");
+							return next(err || "Block comparision failed");
 						}
 
 						if (rows[0].cnt) {
@@ -735,7 +735,7 @@ Blocks.prototype.count = function (cb) {
 	modules.api.sql.select({
 		table: "blocks",
 		fields: [{
-			expression: 'count(*)'
+			expression: "COUNT(*)"
 		}]
 	}, {count: Number}, function (err, rows) {
 		if (err) {
@@ -788,11 +788,11 @@ Blocks.prototype.onMessage = function (query) {
 	if (query.topic == "block" && private.loaded) {
 		library.sequence.add(function (cb) {
 			var block = query.message;
-			//console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
+			// console.log("check", block.prevBlockId + " == " + private.lastBlock.id, block.id + " != " + private.lastBlock.id)
 			if (block.prevBlockId == private.lastBlock.id && block.id != private.lastBlock.id && block.id != private.genesisBlock.id) {
 				private.cleanProcess(block, function (err) {
 					if (err) {
-						library.logger("processBlock err", err);
+						library.logger("Blocks#cleanProcess error", err);
 					}
 					cb(err);
 				})
@@ -809,7 +809,7 @@ Blocks.prototype.onMessage = function (query) {
 			if (block.pointHeight <= private.lastBlock.pointHeight) {
 				private.rollbackUntilBlock(block, function (err) {
 					if (err) {
-						library.logger("rollbackUntilBlock err", err);
+						library.logger("Blocks#rollbackUntilBlock error", err);
 					}
 					cb(err);
 				});
@@ -817,7 +817,6 @@ Blocks.prototype.onMessage = function (query) {
 				cb();
 			}
 		});
-
 	}
 }
 
@@ -836,13 +835,13 @@ Blocks.prototype.onBind = function (_modules) {
 		fields: ["id"]
 	}, function (err, found) {
 		if (err) {
-			library.logger("genesis error", err)
+			library.logger("Failed to get genesis block", err)
 			process.exit(0);
 		}
 		if (!found.length) {
 			self.saveBlock(private.genesisBlock, function (err) {
 				if (err) {
-					library.logger("genesis error", err.toString());
+					library.logger("Failed to save genesis block", err.toString());
 					process.exit(0);
 				} else {
 					library.bus.message("blockchainReady");
