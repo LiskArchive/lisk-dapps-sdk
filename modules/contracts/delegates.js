@@ -1,6 +1,6 @@
-var util = require('util');
-var async = require('async');
-var constants = require('../helpers/constants.js');
+var util = require("util");
+var async = require("async");
+var constants = require("../helpers/constants.js");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -29,7 +29,7 @@ Delegates.prototype.calculateFee = function (trs) {
 
 Delegates.prototype.getBytes = function (trs) {
 	try {
-		var buf = new Buffer(trs.asset.delegates.list.join(","), 'utf8');
+		var buf = new Buffer(trs.asset.delegates.list.join(","), "utf8");
 	} catch (e) {
 		throw Error(e.toString());
 	}
@@ -39,20 +39,20 @@ Delegates.prototype.getBytes = function (trs) {
 
 Delegates.prototype.verify = function (trs, sender, cb, scope) {
 	if (trs.recipientId) {
-		return cb("TRANSACTIONS.INVALID_RECIPIENT");
+		return cb("Invalid recipient");
 	}
 
 	if (trs.amount != 0) {
-		return cb("TRANSACTIONS.INVALID_AMOUNT");
+		return cb("Invalid transaction amount");
 	}
 
 	if (!trs.asset.delegates.list || !trs.asset.delegates.list.length) {
-		return cb("TRANSACTIONS.EMPTY_DELEGATES");
+		return cb("No delegates found");
 	}
 
 	modules.api.dapps.getGenesis(function (err, res) {
 		if (trs.senderId != res.authorId) {
-			return cb("TRANSACTIONS.DAPP_AUTHOR");
+			return cb("Failed to match sender with author");
 		} else {
 			cb(null, trs);
 
@@ -63,7 +63,7 @@ Delegates.prototype.verify = function (trs, sender, cb, scope) {
 
 Delegates.prototype.apply = function (trs, sender, cb, scope) {
 	if (sender.balance["LISK"] < trs.fee) {
-		return setImmediate(cb, "Account has no Lisk: " + trs.id);
+		return setImmediate(cb, "Account has no LISK: " + trs.id);
 	}
 
 	async.series([
@@ -96,7 +96,7 @@ Delegates.prototype.undo = function (trs, sender, cb, scope) {
 
 Delegates.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	if (sender.u_balance["LISK"] < trs.fee) {
-		return setImmediate(cb, 'Account has no LISK: ' + trs.id);
+		return setImmediate(cb, "Account has no LISK: " + trs.id);
 	}
 
 	async.series([
