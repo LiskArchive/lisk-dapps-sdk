@@ -1,4 +1,4 @@
-var async = require('async');
+var async = require("async");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -15,15 +15,15 @@ private.loadBlockChain = function () {
 
 	modules.blockchain.blocks.count(function (err, count) {
 		if (err) {
-			return library.logger('blocks.count', err)
+			return library.logger("Failed to get blocks count", err)
 		}
 
-		library.logger('blocks ' + count);
+		library.logger("Blocks " + count);
 		async.until(
 			function () {
 				return count < offset
 			}, function (cb) {
-				library.logger('current ' + offset);
+				library.logger("Current " + offset);
 				modules.blockchain.blocks.loadBlocksOffset(limit, offset, function (err) {
 					if (err) {
 						return setImmediate(cb, err);
@@ -35,17 +35,17 @@ private.loadBlockChain = function () {
 				});
 			}, function (err) {
 				if (err) {
-					library.logger('loadBlocksOffset', err);
+					library.logger("loadBlocksOffset", err);
 					if (err.block) {
-						library.logger('blockchain failed at ', err.block.height)
+						library.logger("Blockchain failed at ", err.block.height)
 						modules.blockchain.blocks.simpleDeleteAfterBlock(err.block.height, function (err) {
-							library.logger('blockchain clipped');
-							library.bus.message('blockchainLoaded');
+							library.logger("Blockchain clipped");
+							library.bus.message("blockchainLoaded");
 						})
 					}
 				} else {
-					library.logger('blockchain loaded');
-					library.bus.message('blockchainLoaded');
+					library.logger("Blockchain loaded");
+					library.bus.message("blockchainLoaded");
 				}
 			}
 		)
@@ -61,7 +61,6 @@ Loader.prototype.onBlockchainReady = function () {
 }
 
 Loader.prototype.onMessage = function (msg) {
-
 }
 
 module.exports = Loader;
