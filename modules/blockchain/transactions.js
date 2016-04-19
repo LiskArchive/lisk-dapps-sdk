@@ -1,4 +1,4 @@
-var async = require('async');
+var async = require("async");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -89,7 +89,7 @@ Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb
 	}
 
 	if ((scope || private).unconfirmedTransactionsIdIndex[transaction.id] !== undefined || (scope || private).doubleSpendingTransactions[transaction.id]) {
-		return done("This transaction already exists");
+		return done("Transaction already exists");
 	}
 
 	var trsBytes = modules.logic.transaction.getBytes(transaction);
@@ -132,7 +132,7 @@ Transactions.prototype.applyUnconfirmedTransaction = function (transaction, cb, 
 			return setImmediate(cb, err);
 		}
 		if (!sender) {
-			return cb('Failed account: ' + transaction.id);
+			return cb("Failed get sender: " + transaction.id);
 		} else {
 			modules.logic.transaction.applyUnconfirmed(transaction, sender, cb, scope);
 		}
@@ -165,12 +165,12 @@ Transactions.prototype.addTransaction = function (cb, query) {
 			if (err) {
 				return cb(err.toString());
 			}
-			modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
+			modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString("hex")}, function (err, account) {
 				if (err) {
 					return cb(err.toString());
 				}
 				if (!account || !account.publicKey) {
-					return cb("COMMON.OPEN_ACCOUNT");
+					return cb("Account not found");
 				}
 
 				try {
@@ -209,7 +209,7 @@ Transactions.prototype.onMessage = function (query) {
 				var transaction = query.message;
 				self.processUnconfirmedTransaction(transaction, function (err) {
 					if (err) {
-						library.logger("processUnconfirmedTransaction error", err)
+						library.logger("Failed to process unconfirmed transaction", err)
 					}
 					cb(err);
 				});
