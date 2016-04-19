@@ -73,7 +73,7 @@
 				"table": "transactions",
 				"alias": "t",
 				"on": {
-					"b.id": "t.blockId"
+					"b.\"id\"": "t.\"blockId\""
 				}
 			},
 			{
@@ -81,7 +81,7 @@
 				"table": "asset_dapptransfer",
 				"alias": "t_dt",
 				"on": {
-					"t.id": "t_dt.transactionId"
+					"t.id": "t_dt.\"transactionId\""
 				}
 			},
 			{
@@ -89,7 +89,7 @@
 				"table": "asset_myasset",
 				"alias": "t_ma",
 				"on": {
-					"t.id": "t_ma.transactionId"
+					"t.id": "t_ma.\"transactionId\""
 				}
 			},
 			{
@@ -97,7 +97,7 @@
 				"table": "asset_delegates",
 				"alias": "t_d",
 				"on": {
-					"t.id": "t_d.transactionId"
+					"t.id": "t_d.\"transactionId\""
 				}
 			},
 			{
@@ -105,7 +105,7 @@
 				"table": "asset_token",
 				"alias": "t_t",
 				"on": {
-					"t.id": "t_t.transactionId"
+					"t.id": "t_t.\"transactionId\""
 				}
 			}
 		]
