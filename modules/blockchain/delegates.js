@@ -1,7 +1,7 @@
-var extend = require('extend');
-var util = require('util');
-var crypto = require('crypto-browserify');
-var bignum = require('browserify-bignum');
+var extend = require("extend");
+var util = require("util");
+var crypto = require("crypto-browserify");
+var bignum = require("browserify-bignum");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -58,17 +58,17 @@ private.mergeDelegates = function (delegates, list, height, cb, scope) {
 	var lastHeight = Math.max.apply(null, Object.keys(delegates));
 
 	if (delegates[height]) {
-		return cb("Delegate list exists")
+		return cb("Delegates list already exists")
 	}
 
 	try {
 		var tmp_delegates = applyDiff(delegates[lastHeight], list);
 	} catch (e) {
-		return cb("wrong diff delegates" + e.toString());
+		return cb("Invalid delegates diff " + e.toString());
 	}
 
 	if (!tmp_delegates) {
-		return cb("wrong diff delegates");
+		return cb("Invalid delegates diff");
 	}
 	delegates[height] = tmp_delegates;
 
@@ -78,7 +78,7 @@ private.mergeDelegates = function (delegates, list, height, cb, scope) {
 private.undoLast = function (delegates, cb, scope) {
 	var lastHeight = Math.max.apply(null, Object.keys(delegates));
 	if (lastHeight == 1) {
-		return cb("Genesis block is readonly")
+		return cb("Genesis block is read only")
 	}
 	delete delegates[lastHeight];
 	lastHeight = Math.max.apply(null, Object.keys(delegates));
@@ -129,12 +129,12 @@ Delegates.prototype.addDelegates = function (cb, query) {
 	var keypair = modules.api.crypto.keypair(query.secret);
 
 	library.sequence.add(function (cb) {
-		modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
+		modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString("hex")}, function (err, account) {
 			if (err) {
 				return cb(err.toString());
 			}
 			if (!account || !account.publicKey) {
-				return cb("COMMON.OPEN_ACCOUNT");
+				return cb("Failed to get account");
 			}
 
 			try {
