@@ -36,7 +36,7 @@ d.run(function () {
 			try {
 				var db = require("./blockchain.json");
 			} catch (e) {
-				scope.logger("Failed to read blockchain.json");
+				scope.logger("Failed to load blockchain.json");
 			}
 
 			var fields = [];
