@@ -1,27 +1,27 @@
-console.log("dapp loading process pid " + process.pid)
+console.log("Dapp loading process pid " + process.pid)
 
-//require('longjohn');
-var async = require('async');
-var path = require('path');
+// require("longjohn");
+var async = require("async");
+var path = require("path");
 var ZSchema = require("z-schema");
-var extend = require('extend');
-var util = require('util');
+var extend = require("extend");
+var util = require("util");
 var modules = {};
 var ready = false;
 
-process.on('uncaughtException', function (err) {
-	console.log('dapp system error', {message: err.message, stack: err.stack});
+process.on("uncaughtException", function (err) {
+	console.log("Dapp system error", {message: err.message, stack: err.stack});
 });
 
-var d = require('domain').create();
-d.on('error', function (err) {
-	console.log('domain master', {message: err.message, stack: err.stack});
+var d = require("domain").create();
+d.on("error", function (err) {
+	console.log("Domain master", {message: err.message, stack: err.stack});
 });
 
 d.run(function () {
 	async.auto({
 		sandbox: function (cb) {
-			cb(null, process.binding('sandbox'));
+			cb(null, process.binding("sandbox"));
 		},
 
 		logger: function (cb) {
@@ -29,14 +29,14 @@ d.run(function () {
 		},
 
 		config: function (cb) {
-			cb(null, require('./config.json'));
+			cb(null, require("./config.json"));
 		},
 
-		scheme: ['logger', function (cb, scope) {
+		scheme: ["logger", function (cb, scope) {
 			try {
-				var db = require('./blockchain.json');
+				var db = require("./blockchain.json");
 			} catch (e) {
-				scope.logger("failed blockchain file");
+				scope.logger("Failed to read blockchain.json");
 			}
 
 			var fields = [];
@@ -70,27 +70,27 @@ d.run(function () {
 		}],
 
 		validator: function (cb) {
-			ZSchema.registerFormat('publicKey', function (value) {
+			ZSchema.registerFormat("publicKey", function (value) {
 				try {
-					var b = new Buffer(value, 'hex');
+					var b = new Buffer(value, "hex");
 					return b.length == 32;
 				} catch (e) {
 					return false;
 				}
 			});
 
-			ZSchema.registerFormat('signature', function (value) {
+			ZSchema.registerFormat("signature", function (value) {
 				try {
-					var b = new Buffer(value, 'hex');
+					var b = new Buffer(value, "hex");
 					return b.length == 64;
 				} catch (e) {
 					return false;
 				}
 			});
 
-			ZSchema.registerFormat('hex', function (value) {
+			ZSchema.registerFormat("hex", function (value) {
 				try {
-					new Buffer(value, 'hex');
+					new Buffer(value, "hex");
 				} catch (e) {
 					return false;
 				}
@@ -103,7 +103,7 @@ d.run(function () {
 		},
 
 		bus: function (cb) {
-			var changeCase = require('change-case');
+			var changeCase = require("change-case");
 			var bus = function () {
 				this.message = function () {
 					if (ready) {
@@ -112,8 +112,8 @@ d.run(function () {
 						var topic = args.shift();
 						Object.keys(modules).forEach(function (namespace) {
 							Object.keys(modules[namespace]).forEach(function (moduleName) {
-								var eventName = 'on' + changeCase.pascalCase(topic);
-								if (typeof(modules[namespace][moduleName][eventName]) == 'function') {
+								var eventName = "on" + changeCase.pascalCase(topic);
+								if (typeof(modules[namespace][moduleName][eventName]) == "function") {
 									modules[namespace][moduleName][eventName].apply(modules[namespace][moduleName][eventName], args);
 								}
 							});
@@ -125,17 +125,17 @@ d.run(function () {
 		},
 
 		sequence: function (cb) {
-			var Sequence = require('./modules/helpers/sequence.js');
+			var Sequence = require("./modules/helpers/sequence.js");
 			var sequence = new Sequence({
 				onWarning: function(current, limit){
-					scope.logger.warn("main queue", current)
+					scope.logger.warn("Main queue", current)
 				}
 			});
 			cb(null, sequence);
 		},
 
 		modules: ["sandbox", "config", "logger", "bus", "sequence", function (cb, scope) {
-			var module = path.join(__dirname, process.argv[3] || 'modules.full.json');
+			var module = path.join(__dirname, process.argv[3] || "modules.full.json");
 			var lib = require(module);
 
 			var tasks = [];
@@ -145,9 +145,9 @@ d.run(function () {
 				var namespace = raw[0];
 				var moduleName = raw[1];
 				tasks.push(function (cb) {
-					var d = require('domain').create();
-					d.on('error', function (err) {
-						scope.logger('domain ' + moduleName, {message: err.message, stack: err.stack});
+					var d = require("domain").create();
+					d.on("error", function (err) {
+						scope.logger("Domain " + moduleName, {message: err.message, stack: err.stack});
 					});
 					d.run(function () {
 						var library = require(lib[path]);
@@ -163,12 +163,12 @@ d.run(function () {
 			});
 		}],
 
-		ready: ['modules', 'bus', 'logger', function (cb, scope) {
+		ready: ["modules", "bus", "logger", function (cb, scope) {
 			ready = true;
 
 			scope.bus.message("bind", scope.modules);
 
-			scope.logger("dapp loaded process pid " + process.pid)
+			scope.logger("Dapp loaded, process pid " + process.pid)
 			cb();
 		}]
 	});
