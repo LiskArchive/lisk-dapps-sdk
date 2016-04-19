@@ -1,4 +1,4 @@
-var constants = require('../helpers/constants.js');
+var constants = require("../helpers/constants.js");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -21,11 +21,11 @@ WithdrawalTransfer.prototype.calculateFee = function (trs) {
 
 WithdrawalTransfer.prototype.verify = function (trs, sender, cb, scope) {
 	if (trs.recipientId) {
-		return cb("TRANSACTIONS.INVALID_RECIPIENT");
+		return cb("Invalid recipient");
 	}
 
 	if (trs.amount <= 0) {
-		return cb("TRANSACTIONS.INVALID_AMOUNT");
+		return cb("Invalid transaction amount");
 	}
 
 	cb(null, trs);
@@ -53,7 +53,7 @@ WithdrawalTransfer.prototype.applyUnconfirmed = function (trs, sender, cb, scope
 	var sum = trs.amount + trs.fee;
 
 	if (sender.u_balance["LISK"] < sum) {
-		return cb("Sender don't have enough balance");
+		return cb("Account does not have enough LISK");
 	}
 
 	modules.blockchain.accounts.mergeAccountAndGet({
@@ -112,7 +112,6 @@ WithdrawalTransfer.prototype.withdrawal = function (cb, query) {
 
 		var keypair = modules.api.crypto.keypair(query.secret);
 
-		// find sender
 		var account = modules.blockchain.accounts.getAccount({
 			publicKey: keypair.publicKey.toString("hex")
 		}, function (err, account) {
