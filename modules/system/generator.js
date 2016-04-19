@@ -12,13 +12,13 @@ Generator.prototype.onBind = function (_modules) {
 
 	modules.api.dapps.getGenesis(function (err, res) {
 		if (err) {
-			return library.logger("genesis error", err)
+			return library.logger("Failed to get genesis block", err)
 		}
 
 		var executor = modules.blockchain.accounts.getExecutor();
 
 		if (!executor) {
-			return library.logger("secret is null")
+			return library.logger("Secret is null")
 		}
 
 		if (res.authorId == executor.address) {
