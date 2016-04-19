@@ -1,7 +1,7 @@
-var extend = require('extend');
-var util = require('util');
-var crypto = require('crypto-browserify');
-var bignum = require('browserify-bignum');
+var extend = require("extend");
+var util = require("util");
+var crypto = require("crypto-browserify");
+var bignum = require("browserify-bignum");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -17,12 +17,12 @@ Token.prototype.addToken = function (cb, query) {
 	var keypair = modules.api.crypto.keypair(query.secret);
 
 	library.sequence.add(function (cb) {
-		modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString('hex')}, function (err, account) {
+		modules.blockchain.accounts.getAccount({publicKey: keypair.publicKey.toString("hex")}, function (err, account) {
 			if (err) {
 				return cb(err.toString());
 			}
 			if (!account || !account.publicKey) {
-				return cb("COMMON.OPEN_ACCOUNT");
+				return cb("Account not found");
 			}
 
 			try {
@@ -63,19 +63,19 @@ Token.prototype.getTokens = function (cb, query) {
 					"table": "transactions",
 					"alias": "t",
 					"on": {
-						"tkn.transactionId": "t.id"
+						"tkn.\"transactionId\"": "t.\"id\""
 					}
 				}
 			],
 			fields: [
-				{"tkn.transactionId": "transactionId"},
-				{"tkn.name": "name"},
-				{"t.senderId": "owner"},
-				{"tkn.fund": "fund"},
-				{"tkn.description": "description"},
+				{"tkn.\"transactionId\"": "transactionId"},
+				{"tkn.\"name\"": "name"},
+				{"t.\"senderId\"": "owner"},
+				{"tkn.\"fund\"": "fund"},
+				{"tkn.\"description\"": "description"},
 				{
 					"name": "balance",
-					expression: "tkn.fund - ifnull((select sum(amount) from dapp_" + res.dappid + "_transactions where senderId = t.senderId and token = tkn.name), 0)"
+					expression: "tkn.\"fund\" - IFNULL((SELECT SUM(\"amount\")::bigint AS \"amount\" FROM dapp_" + res.dappid + "_transactions WHERE \"senderId\" = t.\"senderId\" AND \"token\" = tkn.\"name\"), 0)"
 				}
 			]
 		}, {
