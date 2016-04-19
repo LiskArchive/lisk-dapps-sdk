@@ -3,7 +3,6 @@ var util = require('util');
 var private = {}, self = null,
 	library = null, modules = null;
 
-
 /**
  * Creates instance of Sql API. Use *modules.api.sql* to get existing object.
  *
@@ -25,25 +24,35 @@ private.row2object = function (row) {
 	) {
 		out[this[i]] = row[i];
 	}
+
 	return out;
 }
 
 private.row2parsed = function (row) {
+	var values = [];
+	for (var key of Object.keys(row)) {
+		values.push(row[key]);
+	}
+
 	for (var
 			 out = {},
+			 value = null,
 			 fields = this.f,
 			 parsers = this.p,
 			 length = fields.length,
 			 i = 0; i < length; i++
 	) {
+		value = values[i];
+
 		if (parsers[i] === Buffer) {
-			out[fields[i]] = parsers[i](row[i], 'hex');
+			out[fields[i]] = parsers[i](value, 'hex');
 		} else if (parsers[i] === Array) {
-			out[fields[i]] = row[i] ? row[i].split(",") : []
-		} else {
-			out[fields[i]] = parsers[i](row[i]);
+			out[fields[i]] = values ? value.split(",") : [];
+		} else if (value) {
+			out[fields[i]] = parsers[i](value);
 		}
 	}
+
 	return out;
 }
 

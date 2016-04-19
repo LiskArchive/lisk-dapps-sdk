@@ -39,9 +39,10 @@ d.run(function () {
 				scope.logger("Failed to load blockchain.json");
 			}
 
-			var fields = [];
-			var alias = {};
-			var selector = {};
+			var fields = [],
+			    aliasedFields = [],
+			    types = {},
+			    selector = {};
 
 			function getType(type) {
 				var nativeType;
@@ -57,16 +58,23 @@ d.run(function () {
 				return nativeType;
 			}
 
-			for (var i = 0; i < db.length; i++) {
-				for (var n = 0; n < db[i].tableFields.length; n++) {
-					fields.push(db[i].alias + "." + db[i].tableFields[n].name);
-					alias[db[i].alias + "_" + db[i].tableFields[n].name] = getType(db[i].tableFields[n].type);
+			var i, n, __field, __alias, __type;
+
+			for (i = 0; i < db.length; i++) {
+				for (n = 0; n < db[i].tableFields.length; n++) {
+					__field = db[i].alias + "." + db[i].tableFields[n].name;;
+					__alias = db[i].alias + "_" + db[i].tableFields[n].name;
+					__type  = db[i].tableFields[n].type;
+
+					fields.push(__field);
+					aliasedFields.push({ field: __field, alias: __alias });
+					types[__alias] = getType(__type);
 				}
 
 				selector[db[i].table] = extend(db[i], {tableFields: undefined});
 			}
 
-			cb(null, {scheme: db, fields: fields, alias: alias, selector: selector});
+			cb(null, {scheme: db, fields: fields, aliasedFields: aliasedFields, types: types, selector: selector});
 		}],
 
 		validator: function (cb) {

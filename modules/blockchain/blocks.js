@@ -756,19 +756,19 @@ Blocks.prototype.getLastBlock = function () {
 Blocks.prototype.getBlock = function (cb, query) {
 	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
 		condition: {"b.id": query.id},
-		fields: library.scheme.fields
-	}), library.scheme.alias, cb);
+		fields: library.scheme.aliasedFields
+	}), library.scheme.types, cb);
 }
 
 Blocks.prototype.getBlocks = function (cb, query) {
 	modules.api.sql.select(extend({}, library.scheme.selector["blocks"], {
 		limit: !query.limit || query.limit > 1000 ? 1000 : query.limit,
 		offset: !query.offset || query.offset < 0 ? 0 : query.offset,
-		fields: library.scheme.fields,
+		fields: library.scheme.aliasedFields,
 		sort: {
 			height: 1
 		}
-	}), library.scheme.alias, cb);
+	}), library.scheme.types, cb);
 }
 
 Blocks.prototype.getBlocksAfter = function (cb, query) {
@@ -777,11 +777,11 @@ Blocks.prototype.getBlocksAfter = function (cb, query) {
 		condition: {
 			"b.height": {$gt: query.lastBlockHeight}
 		},
-		fields: library.scheme.fields,
+		fields: library.scheme.aliasedFields,
 		sort: {
 			height: 1
 		}
-	}), library.scheme.alias, cb);
+	}), library.scheme.types, cb);
 }
 
 Blocks.prototype.onMessage = function (query) {
