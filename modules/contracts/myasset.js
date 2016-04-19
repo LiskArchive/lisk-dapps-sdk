@@ -1,5 +1,5 @@
-var util = require('util');
-var Insidetransfer = require('./insidetransfer.js');
+var util = require("util");
+var Insidetransfer = require("./insidetransfer.js");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -19,7 +19,7 @@ MyAsset.prototype.create = function (data, trs) {
 
 MyAsset.prototype.getBytes = function (trs) {
 	try {
-		var buf = new Buffer(trs.asset.myasset.text, 'utf8');
+		var buf = new Buffer(trs.asset.myasset.text, "utf8");
 	} catch (e) {
 		throw Error(e.toString());
 	}
@@ -33,7 +33,7 @@ MyAsset.prototype.verify = function (trs, sender, cb, scope) {
 			return cb(err);
 		}
 		if (!trs.asset.myasset.text) {
-			return cb("TRANSACTIONS.EMPTY_TEXT");
+			return cb("Invalid transaction asset");
 		}
 		cb(null, trs)
 	}, scope);
