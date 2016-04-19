@@ -1,6 +1,6 @@
-var util = require('util');
-var async = require('async');
-var constants = require('../helpers/constants.js');
+var util = require("util");
+var async = require("async");
+var constants = require("../helpers/constants.js");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -33,7 +33,7 @@ Token.prototype.calculateFee = function (trs) {
 
 Token.prototype.getBytes = function (trs) {
 	try {
-		var buf = new Buffer(trs.asset.token.name + trs.asset.token.description + trs.asset.token.fund, 'utf8');
+		var buf = new Buffer(trs.asset.token.name + trs.asset.token.description + trs.asset.token.fund, "utf8");
 	} catch (e) {
 		throw Error(e.toString());
 	}
@@ -43,27 +43,27 @@ Token.prototype.getBytes = function (trs) {
 
 Token.prototype.verify = function (trs, sender, cb, scope) {
 	if (trs.recipientId) {
-		return cb("TRANSACTIONS.INVALID_RECIPIENT");
+		return cb("Invalid recipient");
 	}
 	if (trs.amount != 0) {
-		return cb("TRANSACTIONS.INVALID_AMOUNT");
+		return cb("Invalid transaction amount");
 	}
 	if (!trs.asset.token.name) {
-		return cb("TRANSACTIONS.EMPTY_NAME");
+		return cb("Invalid token name");
 	}
 	if (trs.asset.token.name.length > 16) {
-		return cb("Token name is more then 16 symbols");
+		return cb("Token name must be 16 characters or less");
 	}
 	if (!trs.asset.token.description) {
-		return cb("TRANSACTIONS.EMPTY_DESCRIPTION");
+		return cb("Invalid token description");
 	}
 	if (typeof trs.asset.token.fund != "number") {
-		return cb("TRANSACTIONS.EMPTY_FUND");
+		return cb("Invalid tokek fund");
 	}
 
 	var isToken = /^[A-Z]+$/g;
 	if (!isToken.test(trs.asset.token.name)){
-		return setImmediate(cb, 'Token has wrong hame');
+		return setImmediate(cb, "Invalid token name");
 	}
 
 	cb(null, trs);
@@ -74,7 +74,7 @@ Token.prototype.apply = function (trs, sender, cb, scope) {
 	private.tokens[trs.asset.token.name] = trs.id;
 
 	if (sender.balance["LISK"] < trs.fee) {
-		return setImmediate(cb, "Balance has no LISK: " + trs.id);
+		return setImmediate(cb, "Account does not have enouh LISK: " + trs.id);
 	}
 
 	async.series([
@@ -121,11 +121,11 @@ Token.prototype.undo = function (trs, sender, cb, scope) {
 
 Token.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	if (sender.u_balance["LISK"] < trs.fee) {
-		return setImmediate(cb, 'Account has no balance: ' + trs.id);
+		return setImmediate(cb, "Account does not have enough LISK: " + trs.id);
 	}
 
 	if (private.u_tokens[trs.asset.token.name] || private.tokens[trs.asset.token.name]){
-		return setImmediate(cb, 'Token already exists: ' + trs.id);
+		return setImmediate(cb, "Token already exists: " + trs.id);
 	}
 
 	private.u_tokens[trs.asset.token.name] = trs.id;
