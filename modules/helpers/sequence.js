@@ -1,5 +1,5 @@
-var util = require('util');
-var extend = require('extend');
+var util = require("util");
+var extend = require("extend");
 
 function Sequence(config) {
 	var _default = {
@@ -30,11 +30,11 @@ function Sequence(config) {
 }
 
 Sequence.prototype.add = function (worker, args, done) {
-	if (!done && args && typeof(args) == 'function') {
+	if (!done && args && typeof(args) == "function") {
 		done = args;
 		args = undefined;
 	}
-	if (worker && typeof(worker) == 'function') {
+	if (worker && typeof(worker) == "function") {
 		var task = {worker: worker, done: done};
 		if (util.isArray(args)) {
 			task.args = args;
