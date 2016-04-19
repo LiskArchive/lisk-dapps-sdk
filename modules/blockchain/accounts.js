@@ -139,7 +139,7 @@ Accounts.prototype.getAccount = function (filter, cb, scope) {
 		address = self.generateAddressByPublicKey(filter.publicKey);
 	}
 	if (!address) {
-		return cb("Missing address or publicKey");
+		return cb("Account not found");
 	}
 
 	cb(null, private.getAccount(address, scope));

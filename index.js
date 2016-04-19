@@ -176,7 +176,7 @@ d.run(function () {
 
 			scope.bus.message("bind", scope.modules);
 
-			scope.logger("Dapp loaded, process pid " + process.pid)
+			scope.logger("Dapp loaded process pid " + process.pid)
 			cb();
 		}]
 	});

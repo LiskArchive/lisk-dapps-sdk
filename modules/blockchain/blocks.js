@@ -86,10 +86,9 @@ private.verify = function (block, cb, scope) {
 		} catch (e) {
 			return cb(e.toString());
 		}
-		if (!valid) {
-			// Skip now for genesis, because i don't know how to generate (pending paul)
+		// if (!valid) {
 			// return cb("Invalid block");
-		}
+		// }
 		return cb();
 	} else {
 		if (block.delegates) {
