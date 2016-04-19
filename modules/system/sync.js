@@ -114,10 +114,10 @@ private.blockSync = function (cb) {
 		modules.api.transport.getRandomPeer("get", "/blocks/height", null, function (err, res) {
 			if (!err && res.body && res.body.success) {
 				if (bignum(lastBlock.height).lt(res.body.response)) {
-					console.log("Received blocks from peer: " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
+					console.log("Received blocks from peer: " + res.peer.ip + ":" + res.peer.port);
 					private.findUpdate(lastBlock, res.peer, cb);
 				} else {
-					// console.log("Failed to load blocks from peer: " + ip.fromLong(res.peer.ip) + ":" + res.peer.port);
+					// console.log("Failed to load blocks from peer: " + res.peer.ip + ":" + res.peer.port);
 					setImmediate(cb);
 				}
 			} else {
