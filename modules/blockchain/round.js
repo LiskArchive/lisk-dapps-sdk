@@ -1,6 +1,6 @@
-var async = require('async');
-var crypto = require('crypto-browserify');
-var slots = require('../helpers/slots.js');
+var async = require("async");
+var crypto = require("crypto-browserify");
+var slots = require("../helpers/slots.js");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -21,7 +21,7 @@ private.loop = function (point, cb) {
 		}
 
 		if (!private.loaded) {
-			library.logger('loop', 'exit: syncing');
+			library.logger("Loop", "exit: syncing");
 			return setImmediate(cb);
 		}
 
@@ -29,13 +29,13 @@ private.loop = function (point, cb) {
 		var lastBlock = modules.blockchain.blocks.getLastBlock();
 
 		if (currentSlot == slots.getSlotNumber(lastBlock.timestamp)) {
-			//library.logger.log('loop', 'exit: lastBlock is in the same slot');
+			// library.logger.log("Loop", "exit: lastBlock is in the same slot");
 			return setImmediate(cb);
 		}
 
 		var currentBlockData = private.getState(executor, point.height);
 		if (currentBlockData === null) {
-			library.logger('loop', 'skip slot');
+			library.logger("Loop", "exit: skipping slot");
 			return setImmediate(cb);
 		}
 
@@ -50,7 +50,7 @@ private.loop = function (point, cb) {
 				library.logger("Problem in block generation", err);
 			} else {
 				var lastBlock = modules.blockchain.blocks.getLastBlock();
-				library.logger("new dapp block id: " + lastBlock.id + " height: " + lastBlock.height + " via point: " + lastBlock.pointHeight);
+				library.logger("New dapp block id: " + lastBlock.id + " height: " + lastBlock.height + " via point: " + lastBlock.pointHeight);
 			}
 			cb(err);
 		})
@@ -85,7 +85,7 @@ Round.prototype.generateDelegateList = function (height) {
 
 	var delegates = private.delegates.slice(0);
 
-	var currentSeed = crypto.createHash('sha256').update(seedSource, 'utf8').digest();
+	var currentSeed = crypto.createHash("sha256").update(seedSource, "utf8").digest();
 	for (var i = 0, delCount = delegates.length; i < delCount; i++) {
 		for (var x = 0; x < 4 && i < delCount; i++, x++) {
 			var newIndex = currentSeed[x] % delCount;
@@ -93,7 +93,7 @@ Round.prototype.generateDelegateList = function (height) {
 			delegates[newIndex] = delegates[i];
 			delegates[i] = b;
 		}
-		currentSeed = crypto.createHash('sha256').update(currentSeed).digest();
+		currentSeed = crypto.createHash("sha256").update(currentSeed).digest();
 	}
 
 	return delegates;
@@ -121,7 +121,7 @@ Round.prototype.onMessage = function (query) {
 		var block = query.message;
 		private.loop(block, function (err) {
 			if (err) {
-				library.logger("loop error", err)
+				library.logger("Loop error", err)
 			}
 		});
 	}
