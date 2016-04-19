@@ -12,7 +12,6 @@ function getEpochTime(time) {
 	return Math.floor((time - t) / 1000);
 }
 
-
 module.exports = {
 	interval: 10,
 	delegates: 101,
