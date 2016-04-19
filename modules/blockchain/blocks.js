@@ -711,13 +711,13 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 					modules.api.sql.select({
 						table: "blocks",
 						condition: condition,
-						fields: [{expression: "COUNT(\"id\")", alias: "cnt"}]
+						fields: [{expression: "COUNT(\"id\")::bigint", alias: "count"}]
 					}, {"cnt": Number}, function (err, rows) {
 						if (err || !rows.length) {
 							return next(err || "Block comparision failed");
 						}
 
-						if (rows[0].cnt) {
+						if (rows[0].count) {
 							commonBlock = data.body.response;
 						}
 						next();
@@ -735,7 +735,8 @@ Blocks.prototype.count = function (cb) {
 	modules.api.sql.select({
 		table: "blocks",
 		fields: [{
-			expression: "COUNT(*)"
+			expression: "COUNT(\"id\")::bigint",
+			alias: "count"
 		}]
 	}, {count: Number}, function (err, rows) {
 		if (err) {
