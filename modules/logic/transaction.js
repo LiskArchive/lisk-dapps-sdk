@@ -153,7 +153,7 @@ Transaction.prototype.process = function (trs, sender, cb) {
 
 		modules.api.transactions.getTransaction(trs.id, function (err, data) {
 			if (err != "Transaction not found") {
-				return cb("Can"t process transaction, transaction already confirmed");
+				return cb("Failed to process already confirmed transaction");
 			}
 
 			cb(null, trs);
