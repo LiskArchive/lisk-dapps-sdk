@@ -1,7 +1,7 @@
 var extend = require("extend");
-var ByteBuffer = require('bytebuffer');
-var bignum = require('browserify-bignum');
-var timeHelper = require('../helpers/time.js');
+var ByteBuffer = require("bytebuffer");
+var bignum = require("browserify-bignum");
+var timeHelper = require("../helpers/time.js");
 
 var private = {}, self = null,
 	library = null, modules = null;
@@ -17,15 +17,15 @@ function Transaction(cb, _library) {
 //public methods
 Transaction.prototype.create = function (data) {
 	if (!private.types[data.type]) {
-		throw Error('Unknown transaction type ' + data.type);
+		throw Error("Unknown transaction type " + data.type);
 	}
 
 	if (!data.sender) {
-		throw Error("Can't find sender");
+		throw Error("Missing sender");
 	}
 
 	if (!data.keypair) {
-		throw Error("Can't find keypair");
+		throw Error("Missing keypair");
 	}
 
 	var trs = {
@@ -52,22 +52,22 @@ Transaction.prototype.create = function (data) {
 }
 
 Transaction.prototype.attachAssetType = function (typeId, instance) {
-	if (instance && typeof instance.create == 'function' && typeof instance.getBytes == 'function' &&
-		typeof instance.calculateFee == 'function' && typeof instance.verify == 'function' &&
-		typeof instance.apply == 'function' && typeof instance.undo == 'function' &&
-		typeof instance.applyUnconfirmed == 'function' && typeof instance.undoUnconfirmed == 'function' &&
-		typeof instance.save == 'function' && typeof instance.dbRead == 'function' &&
-		typeof instance.ready == 'function' && typeof instance.normalize == 'function'
+	if (instance && typeof instance.create == "function" && typeof instance.getBytes == "function" &&
+		typeof instance.calculateFee == "function" && typeof instance.verify == "function" &&
+		typeof instance.apply == "function" && typeof instance.undo == "function" &&
+		typeof instance.applyUnconfirmed == "function" && typeof instance.undoUnconfirmed == "function" &&
+		typeof instance.save == "function" && typeof instance.dbRead == "function" &&
+		typeof instance.ready == "function" && typeof instance.normalize == "function"
 	) {
 		private.types[typeId] = instance;
 	} else {
-		throw Error('Invalid instance interface');
+		throw Error("Invalid instance interface");
 	}
 }
 
 Transaction.prototype.getBytes = function (trs, skipSignature) {
 	if (!private.types[trs.type]) {
-		throw Error('Unknown transaction type ' + trs.type);
+		throw Error("Unknown transaction type " + trs.type);
 	}
 
 	try {
@@ -76,14 +76,14 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 
 		var tokenBytes = [];
 		if (trs.token != "LISK") {
-			tokenBytes = new Buffer(trs.token, 'utf8');
+			tokenBytes = new Buffer(trs.token, "utf8");
 		}
 
 		var bb = new ByteBuffer(1 + 4 + 32 + 8 + 8 + 64 + 64 + assetSize + tokenBytes.length, true);
 		bb.writeByte(trs.type);
 		bb.writeInt(trs.timestamp);
 
-		var senderPublicKeyBuffer = new Buffer(trs.senderPublicKey, 'hex');
+		var senderPublicKeyBuffer = new Buffer(trs.senderPublicKey, "hex");
 		for (var i = 0; i < senderPublicKeyBuffer.length; i++) {
 			bb.writeByte(senderPublicKeyBuffer[i]);
 		}
@@ -116,7 +116,7 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 		}
 
 		if (!skipSignature && trs.signature) {
-			var signatureBuffer = new Buffer(trs.signature, 'hex');
+			var signatureBuffer = new Buffer(trs.signature, "hex");
 			for (var i = 0; i < signatureBuffer.length; i++) {
 				bb.writeByte(signatureBuffer[i]);
 			}
@@ -131,14 +131,14 @@ Transaction.prototype.getBytes = function (trs, skipSignature) {
 
 Transaction.prototype.process = function (trs, sender, cb) {
 	if (!private.types[trs.type]) {
-		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+		return setImmediate(cb, "Unknown transaction type " + trs.type);
 	}
 
 	try {
 		var trsBytes = self.getBytes(trs);
 		var txId = modules.api.crypto.getId(trsBytes);
 	} catch (e) {
-		return setImmediate(cb, "Can't get transaction id");
+		return setImmediate(cb, "Failed to get transaction bytes");
 	}
 	if (trs.id && trs.id != txId) {
 		return setImmediate(cb, "Invalid transaction id");
@@ -148,12 +148,12 @@ Transaction.prototype.process = function (trs, sender, cb) {
 
 	modules.blockchain.transactions.getUnconfirmedTransaction(trs.id, function (err, tx) {
 		if (err || tx) {
-			return cb(err ? err.toString() : "This transaction in unconfirmed list already");
+			return cb(err ? err.toString() : "Transaction is already unconfirmed");
 		}
 
 		modules.api.transactions.getTransaction(trs.id, function (err, data) {
 			if (err != "Transaction not found") {
-				return cb("Can't process transaction, transaction already confirmed");
+				return cb("Can"t process transaction, transaction already confirmed");
 			}
 
 			cb(null, trs);
@@ -163,7 +163,7 @@ Transaction.prototype.process = function (trs, sender, cb) {
 
 Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
 	if (!private.types[trs.type]) {
-		throw Error('Unknown transaction type ' + trs.type);
+		throw Error("Unknown transaction type " + trs.type);
 	}
 
 	if (!signature) return false;
@@ -180,12 +180,12 @@ Transaction.prototype.verifySignature = function (trs, publicKey, signature) {
 
 Transaction.prototype.verify = function (trs, sender, cb, scope) { //inheritance
 	if (!private.types[trs.type]) {
-		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+		return setImmediate(cb, "Unknown transaction type " + trs.type);
 	}
 
 	//check sender
 	if (!sender) {
-		return setImmediate(cb, "Can't find sender");
+		return setImmediate(cb, "Missing sender");
 	}
 
 	//verify signature
@@ -195,7 +195,7 @@ Transaction.prototype.verify = function (trs, sender, cb, scope) { //inheritance
 		return setImmediate(cb, e.toString());
 	}
 	if (!valid) {
-		return setImmediate(cb, "Can't verify transaction signature");
+		return setImmediate(cb, "Failed to verify transaction signature");
 	}
 
 	//check sender
@@ -209,12 +209,12 @@ Transaction.prototype.verify = function (trs, sender, cb, scope) { //inheritance
 		return setImmediate(cb, "Invalid transaction type/fee: " + trs.id);
 	}
 	//check amount
-	if (trs.amount < 0 || trs.amount > 100000000 * Math.pow(10, 8) || String(trs.amount).indexOf('.') >= 0 || trs.amount.toString().indexOf('e') >= 0) {
+	if (trs.amount < 0 || trs.amount > 100000000 * Math.pow(10, 8) || String(trs.amount).indexOf(".") >= 0 || trs.amount.toString().indexOf("e") >= 0) {
 		return setImmediate(cb, "Invalid transaction amount: " + trs.id);
 	}
 
 	if (trs.timestamp > timeHelper.getNow()) {
-		return setImmediate(cb, "Can't process transaction, it sent in feature");
+		return setImmediate(cb, "Invalid timestamp");
 	}
 
 	private.types[trs.type].verify(trs, sender, cb, scope);
@@ -222,7 +222,7 @@ Transaction.prototype.verify = function (trs, sender, cb, scope) { //inheritance
 
 Transaction.prototype.ready = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
-		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+		return setImmediate(cb, "Unknown transaction type " + trs.type);
 	}
 
 	private.types[trs.type].ready(trs, sender, cb, scope);
@@ -230,7 +230,7 @@ Transaction.prototype.ready = function (trs, sender, cb, scope) {
 
 Transaction.prototype.apply = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
-		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+		return setImmediate(cb, "Unknown transaction type " + trs.type);
 	}
 
 	private.types[trs.type].apply(trs, sender, cb, scope);
@@ -238,7 +238,7 @@ Transaction.prototype.apply = function (trs, sender, cb, scope) {
 
 Transaction.prototype.undo = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
-		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+		return setImmediate(cb, "Unknown transaction type " + trs.type);
 	}
 
 	private.types[trs.type].undo(trs, sender, cb, scope);
@@ -246,7 +246,7 @@ Transaction.prototype.undo = function (trs, sender, cb, scope) {
 
 Transaction.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
-		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+		return setImmediate(cb, "Unknown transaction type " + trs.type);
 	}
 
 	private.types[trs.type].applyUnconfirmed(trs, sender, cb, scope);
@@ -254,7 +254,7 @@ Transaction.prototype.applyUnconfirmed = function (trs, sender, cb, scope) {
 
 Transaction.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 	if (!private.types[trs.type]) {
-		return setImmediate(cb, 'Unknown transaction type ' + trs.type);
+		return setImmediate(cb, "Unknown transaction type " + trs.type);
 	}
 
 	private.types[trs.type].undoUnconfirmed(trs, sender, cb, scope);
@@ -262,7 +262,7 @@ Transaction.prototype.undoUnconfirmed = function (trs, sender, cb, scope) {
 
 Transaction.prototype.save = function (trs, cb) {
 	if (!private.types[trs.type]) {
-		return cb('Unknown transaction type ' + trs.type);
+		return cb("Unknown transaction type " + trs.type);
 	}
 
 	modules.api.sql.insert({
@@ -290,11 +290,11 @@ Transaction.prototype.save = function (trs, cb) {
 
 Transaction.prototype.normalize = function (tx, cb) {
 	if (!private.types[tx.type]) {
-		return cb('Unknown transaction type ' + tx.type);
+		return cb("Unknown transaction type " + tx.type);
 	}
 
 	for (var i in tx) {
-		if (tx[i] === null || typeof tx[i] === 'undefined') {
+		if (tx[i] === null || typeof tx[i] === "undefined") {
 			delete tx[i];
 		}
 	}
@@ -343,7 +343,7 @@ Transaction.prototype.normalize = function (tx, cb) {
 				type: "object"
 			}
 		},
-		required: ['id', 'type', 'timestamp', 'senderPublicKey']
+		required: ["id", "type", "timestamp", "senderPublicKey"]
 	}, function (err) {
 		if (err) {
 			return cb(err[0].message);
@@ -374,7 +374,7 @@ Transaction.prototype.dbRead = function (row) {
 	};
 
 	if (!private.types[trs.type]) {
-		return cb('Unknown transaction type ' + trs.type);
+		throw new Error("Unknown transaction type " + trs.type);
 	}
 
 	var asset = private.types[trs.type].dbRead(row);
