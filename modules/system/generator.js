@@ -22,10 +22,6 @@ Generator.prototype.onBind = function (_modules) {
 		}
 
 		if (res.authorId == executor.address) {
-
-		}
-		var q = {
-			associate: res.associate
 		}
 
 		var genesisBlock = {
