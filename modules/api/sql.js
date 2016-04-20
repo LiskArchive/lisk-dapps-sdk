@@ -66,9 +66,9 @@ private.parseFields = function ($fields) {
 	) {
 		current = $fields[fields[i]];
 		parsers[i] = current === Boolean ?
-			$Boolean : (
+			Boolean : (
 			current === Date ?
-				$Date :
+				Date :
 			current || String
 		)
 		;
