@@ -711,7 +711,7 @@ Blocks.prototype.getCommonBlock = function (height, peer, cb) {
 						table: "blocks",
 						condition: condition,
 						fields: [{expression: "COUNT(\"id\")::bigint", alias: "count"}]
-					}, {"cnt": Number}, function (err, rows) {
+					}, {"count": Number}, function (err, rows) {
 						if (err || !rows.length) {
 							return next(err || "Block comparision failed");
 						}
