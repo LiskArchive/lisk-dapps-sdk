@@ -105,7 +105,9 @@ Accounts.prototype.clone = function (cb) {
 }
 
 Accounts.prototype.getExecutor = function (cb) {
-	if (!process.argv[2]) return setImmediate(cb, "Secret is null");
+	if (!process.argv[2]) {
+		return setImmediate(cb, "Secret is null");
+	}
 	if (private.executor) {
 		return setImmediate(cb, null, private.executor);
 	}
