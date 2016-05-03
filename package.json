@@ -1,6 +1,6 @@
 {
 	"name": "lisk-dapps-sdk",
-	"version": "1.0.0",
+	"version": "0.2.1",
 	"description": "Official SDK for the Lisk decentralized application platform",
 	"repository": "git@github.com:LiskHQ/lisk-dapps-sdk.git",
 	"main": "index.js",
