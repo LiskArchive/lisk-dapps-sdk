@@ -70,6 +70,10 @@ Transactions.prototype.undoTransaction = function (transaction, cb, scope) {
 }
 
 Transactions.prototype.processUnconfirmedTransaction = function (transaction, cb, scope) {
+
+	// workaround, transaction.amount should be a Number, not a String
+	transaction.amount = Number(transaction.amount);
+
 	function done(err) {
 		if (err) {
 			return cb(err);
