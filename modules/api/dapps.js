@@ -115,8 +115,19 @@ Dapps.prototype.getBalanceTransactions = function (lastTransactionId, cb) {
 		}
 	};
 
-	library.sandbox.sendMessage(message, cb);
+	library.sandbox.sendMessage(message, function (err, transactions) {
+
+		// convert amount to Number
+		var transactions2 = transactions.map(function (tx, idx, array) {
+			tx.amount = Number(tx.amount);
+			return tx;
+		});
+
+		cb(err, transactions2);
+	});
 }
+
+
 
 Dapps.prototype.onBind = function (_modules) {
 	modules = _modules;
