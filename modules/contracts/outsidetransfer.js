@@ -41,11 +41,14 @@ OutsideTransfer.prototype.verify = function (trs, sender, cb, scope) {
 		condition: {
 			src_id: trs.asset.outsidetransfer.src_id
 		},
-		fields: ["id"]
+    fields: [{"src_id" : "id"}]
 	}, function (err, found) {
-		if (err || found.length) {
-			return cb("Transaction already exists");
+		if (err) {
+			return cb(err);
 		}
+    if (found.length) {
+      return cb("Transaction already exists");
+    }
 		cb(null, trs);
 	});
 }
