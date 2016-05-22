@@ -1,6 +1,6 @@
 # Lisk Apps SDK
 
-The official SDK for building blockchain apps on the [Lisk](https://lisk.io) decentralized application platform.
+The official SDK for building blockchain apps on the [Lisk](https://lisk.io) platform.
 
 ## Directory Structure
 
