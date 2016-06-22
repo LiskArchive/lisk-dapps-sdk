@@ -5,15 +5,15 @@
 
     <script type="text/javascript">
         // get dapp_id and urls
-        var url_parts = window.location.href.split('/');                          
-        var dapp_id = url_parts[4];                                                
+        var url_parts = window.location.href.split('/');
+        var dapp_id = url_parts[4];
         var node_url = window.location.origin;
-        var dapp_api_url = node_url + "/api/dapps/" + dapp_id + "/api/";
+        var dapp_api_url = node_url + "/api/dapps/" + dapp_id + "/api";
 
         // Get Hello World API json response
         $(document).ready(function(){
             $.ajax({
-                url: dapp_api_url,
+                url: dapp_api_url + '/',
                 type: 'GET',
                 dataType: 'json'
             }).done(function(data) {
