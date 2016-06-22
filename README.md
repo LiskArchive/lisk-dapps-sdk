@@ -13,7 +13,7 @@ The official SDK for building blockchain apps on the [Lisk](https://lisk.io) pla
   * **modules.full.json** - JSON file containing a list of defined modules, required by **index.js**.
   * **routes.json** - JSON file defining the HTTP routes of every endpoint in your app's API.
 
-Full documentation is available [here](https://github.com/LiskHQ/lisk-apps-docs).
+Full documentation is available [here](https://github.com/LiskHQ/lisk-dapps-docs).
 
 ## Authors
 
