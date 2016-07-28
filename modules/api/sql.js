@@ -22,7 +22,7 @@ private.row2object = function (row) {
 			 length = this.length,
 			 i = 0; i < length; i++
 	) {
-		out[this[i]] = row[i];
+		out[this[i]] = row[this[i]];
 	}
 
 	return out;
