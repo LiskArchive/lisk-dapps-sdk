@@ -178,7 +178,7 @@ private.getIdSequence = function (height, cb) {
 			limit: 1000
 		},
 		alias: "s",
-		fields: [{height: "height"}, {expression: "ARRAY_AGG(s.\"id\")", alias: "ids"}],
+		fields: [{height: "height"}, {expression: "ARRAY_TO_STRING(ARRAY_AGG(s.\"id\"), ',')", alias: "ids"}],
 		group: ["height"]
 	}, {height: Number, ids: Array}, function (err, rows) {
 		if (err || !rows.length) {
