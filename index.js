@@ -167,7 +167,7 @@ d.run(function () {
 			})
 
 			async.parallel(tasks, function (err) {
-				cb(err, modules);
+				async.setImmediate(cb, err, modules);
 			});
 		}],
 
