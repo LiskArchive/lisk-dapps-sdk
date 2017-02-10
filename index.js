@@ -32,7 +32,7 @@ d.run(function () {
 			cb(null, require("./config.json"));
 		},
 
-		scheme: ["logger", function (cb, scope) {
+		scheme: ["logger", function (scope, cb) {
 			try {
 				var db = require("./blockchain.json");
 			} catch (e) {
@@ -142,7 +142,7 @@ d.run(function () {
 			cb(null, sequence);
 		},
 
-		modules: ["sandbox", "config", "logger", "bus", "sequence", function (cb, scope) {
+		modules: ["sandbox", "config", "logger", "bus", "sequence", function (scope, cb) {
 			var module = path.join(__dirname, process.argv[3] || "modules.full.json");
 			var lib = require(module);
 
@@ -171,7 +171,7 @@ d.run(function () {
 			});
 		}],
 
-		ready: ["modules", "bus", "logger", function (cb, scope) {
+		ready: ["modules", "bus", "logger", function (scope, cb) {
 			ready = true;
 
 			scope.bus.message("bind", scope.modules);
