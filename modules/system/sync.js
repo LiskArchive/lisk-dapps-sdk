@@ -184,6 +184,7 @@ private.withdrawalSync = function (cb) {
 							secret: executor.secret,
 							amount: transaction.amount,
 							recipientId: address,
+							dappId: executor.dappId,
 							transactionId: transaction.id,
 							multisigAccountPublicKey: executor.keypair.publicKey.toString("hex")
 						}, cb);

@@ -42,6 +42,7 @@ Dapps.prototype.getGenesis = function (cb) {
  * @param opts.secret - Secret of account to withdrawal
  * @param opts.amount - Amount to withdrawal
  * @param opts.recipientId - Recipient of withdrawal
+ * @param opts.dappId - id of the dapp account
  * @param opts.transactionId - Transaction id of request to withdrawal.
  * @param opts.secondSecret - Second secret to withdrawal (optional).
  * @param opts.publicKey - Public key of account (optional).

@@ -114,11 +114,14 @@ Accounts.prototype.getExecutor = function (cb) {
 	var keypair = modules.api.crypto.keypair(process.argv[2]);
 	modules.api.dapps.getGenesis(function (err, res) {
 		var address = self.generateAddressByPublicKey(keypair.publicKey.toString("hex"));
+		var parts   = process.argv[1].split('/');  // /path/to/the/dapps/dappId/index.js
+		var dappId  = parts[parts.length-2];
 		private.executor = {
 			address: address,
 			keypair: keypair,
 			secret: process.argv[2],
-			isAuthor: res.authorId == address
+			isAuthor: res.authorId == address,
+			dappId: dappId
 		}
 		cb(err, private.executor);
 	});
