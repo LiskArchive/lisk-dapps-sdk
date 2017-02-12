@@ -1,8 +1,29 @@
 <html>
 <head>
-    <title>Hello, world!</title>
+    <title>Lisk DAPP: Hello, world!</title>
+    <script src="js/jquery.js"></script>
+
+    <script type="text/javascript">
+        // get dapp_id and urls
+        var url_parts = window.location.href.split('/');
+        var dapp_id = url_parts[4];
+        var node_url = window.location.origin;
+        var dapp_api_url = node_url + "/api/dapps/" + dapp_id + "/api";
+
+        // Get Hello World API json response
+        $(document).ready(function(){
+            $.ajax({
+                url: dapp_api_url + '/',
+                type: 'GET',
+                dataType: 'json'
+            }).done(function(data) {
+                $('#api_response').append(JSON.stringify(data));
+            });
+        });
+    </script>
 </head>
+
 <body>
-<h1>Hello, world!</h1>
+    <h1>API Response: <span id="api_response"></span></h1>
 </body>
 </html>
